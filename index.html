@@ -926,12 +926,13 @@ const JUL_VASTE_LASTEN_CATS = ["Hypotheek","Auto","Verzekeringen","Bankkosten","
 const ALLE_CATEGORIEEN = ["Abonnementen", "Auto", "Autokosten", "Bankkosten", "Belastingteruggave", "Boodschappen", "Casa 3S", "Casa 3S (project)", "Eten & drinken", "Familie", "Goede doelen", "Hobby", "Hypotheek", "Kleding", "Medisch", "Muziek", "Nutsvoorzieningen", "Overig", "Overig inkomen", "Paardrijden", "Parkeren", "Reizen", "Salaris", "Shopping", "Sparen", "Sport", "Vakbond", "Verzekeringen", "Verzorging", "Wonen", "Zakelijk"];
 /* Begroot bedrag per categorie (jouw eigen Excel-budget) — gebruikt in Lopende maand om begroot vs. uitgegeven te tonen.
    Autokosten/Parkeren blijven bewust ongemapt (apart gehouden, geen samengevoegd budget nodig).
-   "Luxe + Extra's" (€750) = Eten & drinken (luxe uit eten). Sport heeft nog geen eigen budget — was onderdeel van "Sport / Paardrijden" (€495), nu volledig aan Paardrijden toegekend totdat er een aparte verdeling is. */
+   "Luxe + Extra's" (€750) = Eten & drinken (luxe uit eten). Sport heeft nog geen eigen budget — was onderdeel van "Sport / Paardrijden" (€495), nu volledig aan Paardrijden toegekend totdat er een aparte verdeling is.
+   Verzekeringen: excel-cijfer (349,55) is alleen zorgverzekering, maar de categorie "Verzekeringen" hier omvat ook Schadeverzekeringen + Interpolis — daarom nog even geen begroot bedrag tonen voor deze categorie totdat het volledige cijfer bekend is (anders misleidend rood).
+   Ontbreken nog: Hypotheek, Auto, Casa 3S (structureel), Verzekeringen (totaal). Medisch/Zakelijk/Nutsvoorzieningen bewust niet gebudgetteerd (seizoens-/onvoorspelbaar) — daar hoort t.z.t. een voorspelling i.p.v. een vast budget. */
 const BUDGET_CATEGORIE_MAP = {
   "Boodschappen": 1500.00,
   "Kleding": 600.00,
   "Paardrijden": 495.00,
-  "Verzekeringen": 349.55,
   "Abonnementen": 133.65,
   "Muziek": 134.79,
   "Vakbond": 27.94,
@@ -1200,7 +1201,7 @@ function renderLopendeMaandView(){
         const budget = (expandKey==='vast'||expandKey==='dagelijks') ? BUDGET_CATEGORIE_MAP[name] : null;
         if(budget!=null){
           const over = val > budget;
-          return `${fmt(spendAmt)} <span style="color:${over?'var(--rose)':'var(--muted)'};font-size:11px;font-family:'IBM Plex Mono',monospace;">/ begroot ${fmt(budget).replace('€','€ ')}</span>`;
+          return `${fmt(spendAmt)} <span style="color:${over?'var(--rose)':'#4ade80'};font-size:11px;font-family:'IBM Plex Mono',monospace;">/ begroot ${fmt(budget).replace('€','€ ')}</span>`;
         }
         return fmt(spendAmt);
       },
