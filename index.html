@@ -889,7 +889,7 @@ const SPAAR_POTJES = {"Casa 3S":98930, "Italië (vakantie)":5595, "Thailand (vak
 /* status: 'lopend' = echt, budget vastgesteld, sparen loopt | 'planning' = wordt nu gepland, budget nog niet definitief | 'idee' = richtbedrag, kan nog helemaal wijzigen */
 const REIZEN_PLANNING = [
   {id:'italie-2026', jaar:2026, naam:'Italië', timing:'zomer', budget:15000, status:'lopend', potje:'Italië (vakantie)'},
-  {id:'thailand-2026', jaar:2026, naam:'Thailand', timing:'dec', budget:14000, status:'lopend', potje:'Thailand (vakantie)'},
+  {id:'thailand-2026', jaar:2026, naam:'Thailand', timing:'dec', budget:14483, status:'lopend', potje:'Thailand (vakantie)', handmatig:{begroot:14483, betaald:7959, saldo:5775, bron:'eigen begroting (Basis)'}},
   {id:'japan-2027', jaar:2027, naam:'Japan', timing:'mei', budget:25000, status:'planning', potje:'Japan (nieuw doel)'},
   {id:'italie-2027', jaar:2027, naam:'Italië', timing:'zomer', budget:4000, status:'idee'},
   {id:'china-2028', jaar:2028, naam:'China', timing:'mei', budget:12000, status:'idee'},
@@ -933,7 +933,11 @@ const JUL_INTERN_CATS = ["__INTERN_RABO__","__INTERN_ING__","__INTERN_SPAREN__",
 const JUL_VASTE_LASTEN_CATS = ["Hypotheek","Auto","Verzekeringen","Bankkosten","Abonnementen","Nutsvoorzieningen","Vakbond","Muziek","Medisch","Goede doelen","Casa 3S","Zakelijk","Paardrijden"];
 const ALLE_CATEGORIEEN = ["Abonnementen", "Auto", "Autokosten", "Bankkosten", "Belastingteruggave", "Boodschappen", "Casa 3S", "Casa 3S (project)", "Eten & drinken", "Familie", "Goede doelen", "Hobby", "Hypotheek", "Kleding", "Medisch", "Muziek", "Nutsvoorzieningen", "Overig", "Overig inkomen", "Paardrijden", "Parkeren", "Reizen", "Salaris", "Shopping", "Sparen", "Vakbond", "Verzekeringen", "Verzorging", "Wonen", "Zakelijk"];
 
-/* ---------- Categorie-overrides: opgeslagen per gebruiker, blijven bewaard ---------- */
+/* ---------- Categorie-/reis-overrides: opgeslagen in Supabase, blijven bewaard over sessies en devices heen ---------- */
+const SUPABASE_URL = 'https://apleozatyqmqtzofxbky.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_zJvAXTWjMdAHDbpBXb3Z1A_zwn9jn-D';
+const SUPABASE_HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer '+SUPABASE_KEY, 'Content-Type': 'application/json' };
+
 let categoryOverrides = {};
 let reisOverrides = {}; // txKey -> reis-id ('' = expliciet losgekoppeld van een reis)
 let overridesLoaded = false;
@@ -957,15 +961,33 @@ function effectiveReis(t){
 }
 async function loadOverrides(){
   try{
-    const res = await window.storage.get('category-overrides');
-    if(res && res.value) categoryOverrides = JSON.parse(res.value);
-  }catch(e){ /* nog geen overrides opgeslagen */ }
-  try{
-    const res2 = await window.storage.get('reis-overrides');
-    if(res2 && res2.value) reisOverrides = JSON.parse(res2.value);
-  }catch(e){ /* nog geen reis-overrides opgeslagen */ }
+    const res = await fetch(SUPABASE_URL+'/rest/v1/overrides?select=key,kind,value', {headers: SUPABASE_HEADERS});
+    if(res.ok){
+      const rows = await res.json();
+      rows.forEach(r=>{
+        if(r.kind==='category') categoryOverrides[r.key] = r.value;
+        else if(r.kind==='reis') reisOverrides[r.key] = r.value;
+      });
+    }
+  }catch(e){ /* geen verbinding met Supabase — start leeg, blijft lokaal werken */ }
   overridesLoaded = true;
   render();
+}
+async function saveOverrideRow(kind, key, value){
+  try{
+    await fetch(SUPABASE_URL+'/rest/v1/overrides?on_conflict=kind,key', {
+      method: 'POST',
+      headers: {...SUPABASE_HEADERS, 'Prefer': 'resolution=merge-duplicates'},
+      body: JSON.stringify([{key, kind, value}])
+    });
+  }catch(e){ /* offline: verandering blijft lokaal staan tot volgende succesvolle save */ }
+}
+async function deleteOverrideRow(kind, key){
+  try{
+    await fetch(SUPABASE_URL+'/rest/v1/overrides?kind=eq.'+encodeURIComponent(kind)+'&key=eq.'+encodeURIComponent(key), {
+      method: 'DELETE', headers: SUPABASE_HEADERS
+    });
+  }catch(e){}
 }
 function exportOverrides(){
   const payload = {categorieën: categoryOverrides, reizen: reisOverrides};
@@ -985,19 +1007,20 @@ function importOverrides(file){
     try{
       const imported = JSON.parse(e.target.result);
       let n = 0;
+      let cat = {}, reis = {};
       if(imported.categorieën || imported.reizen){
-        categoryOverrides = {...categoryOverrides, ...(imported.categorieën||{})};
-        reisOverrides = {...reisOverrides, ...(imported.reizen||{})};
-        n = Object.keys(imported.categorieën||{}).length + Object.keys(imported.reizen||{}).length;
+        cat = imported.categorieën||{};
+        reis = imported.reizen||{};
       } else {
-        // oud exportformaat: platte categorie-aanpassingen
-        categoryOverrides = {...categoryOverrides, ...imported};
-        n = Object.keys(imported).length;
+        cat = imported; // oud exportformaat: platte categorie-aanpassingen
       }
-      try{ await window.storage.set('category-overrides', JSON.stringify(categoryOverrides)); }catch(err){}
-      try{ await window.storage.set('reis-overrides', JSON.stringify(reisOverrides)); }catch(err){}
+      categoryOverrides = {...categoryOverrides, ...cat};
+      reisOverrides = {...reisOverrides, ...reis};
+      n = Object.keys(cat).length + Object.keys(reis).length;
+      Object.entries(cat).forEach(([k,v])=>saveOverrideRow('category', k, v));
+      Object.entries(reis).forEach(([k,v])=>saveOverrideRow('reis', k, v));
       render();
-      alert('Aanpassingen geïmporteerd: ' + n + ' regels.');
+      alert('Aanpassingen geïmporteerd en gesynchroniseerd: ' + n + ' regels.');
     }catch(err){
       alert('Kon het bestand niet lezen — is het een geldige export?');
     }
@@ -1007,19 +1030,21 @@ function importOverrides(file){
 async function setOverrideByKey(key, newCat){
   if(newCat && newCat.trim()){
     categoryOverrides[key] = newCat.trim();
+    saveOverrideRow('category', key, categoryOverrides[key]);
   } else {
     delete categoryOverrides[key];
+    deleteOverrideRow('category', key);
   }
-  try{ await window.storage.set('category-overrides', JSON.stringify(categoryOverrides)); }catch(e){}
   render();
 }
 async function setReisOverrideByKey(key, newReis){
   if(newReis === '__AUTO__'){
     delete reisOverrides[key]; // terug naar automatische herkenning
+    deleteOverrideRow('reis', key);
   } else {
     reisOverrides[key] = newReis; // '' = expliciet "geen reis"
+    saveOverrideRow('reis', key, newReis);
   }
-  try{ await window.storage.set('reis-overrides', JSON.stringify(reisOverrides)); }catch(e){}
   render();
 }
 function promptEditCategoryByKey(key, huidigeCat){
@@ -1285,6 +1310,12 @@ function renderReisDetailCard(p, data){
         <div class="stat-sub">${restPotje>=0?'bij afsluiting: overschot terug naar sparen':'bij afsluiting: tekort op huishoudbudget'}</div>
       </div>
     </div>
+    ${p.handmatig ? `
+    <div class="note-card card" style="margin-bottom:12px;">
+      <b>Eigen begroting (${p.handmatig.bron})</b> — apart bijgehouden, los van wat via de rekeningen te herkennen is:
+      <br>Begroot <b>${fmt(p.handmatig.begroot)}</b> · Betaald <b>${fmt(p.handmatig.betaald)}</b> · Nog te betalen <b>${fmt(p.handmatig.saldo)}</b>
+      <br><span style="color:var(--muted);font-size:11.5px;">Dit staat los van "Uitgegeven tot nu toe" hierboven — dat is alleen wat we uit de RABO/ING/AMEX/ING CC-transacties kunnen herkennen (nu ${fmt(-uitgegeven)}). Grote vooruitbetalingen (bv. de vlucht) lopen mogelijk via een rekening/kaart die niet in dit dashboard zit.</span>
+    </div>` : ''}
   `;
 }
 
