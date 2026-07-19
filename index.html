@@ -924,11 +924,14 @@ const JUL_INCOME_CATS = ["Salaris","Belastingteruggave","Overig inkomen"];
 const JUL_INTERN_CATS = ["__INTERN_RABO__","__INTERN_ING__","__INTERN_SPAREN__","__AMEX_BETALING__","__INGCC_BETALING__","__SPAREN_NAAR_C3S__","__SPAREN_NAAR_REIZEN__"];
 const JUL_VASTE_LASTEN_CATS = ["Hypotheek","Auto","Verzekeringen","Bankkosten","Abonnementen","Nutsvoorzieningen","Vakbond","Muziek","Medisch","Goede doelen","Casa 3S","Zakelijk","Paardrijden"];
 const ALLE_CATEGORIEEN = ["Abonnementen", "Auto", "Autokosten", "Bankkosten", "Belastingteruggave", "Boodschappen", "Casa 3S", "Casa 3S (project)", "Eten & drinken", "Familie", "Goede doelen", "Hobby", "Hypotheek", "Kleding", "Medisch", "Muziek", "Nutsvoorzieningen", "Overig", "Overig inkomen", "Paardrijden", "Parkeren", "Reizen", "Salaris", "Shopping", "Sparen", "Sport", "Vakbond", "Verzekeringen", "Verzorging", "Wonen", "Zakelijk"];
-/* Begroot bedrag per categorie (jouw eigen Excel-budget) — gebruikt in Lopende maand om begroot vs. uitgegeven te tonen.
+/* Begroot bedrag per categorie (jouw eigen Excel-budget + eerdere analyse van Rabo-vaste lasten) — gebruikt in Lopende maand om begroot vs. uitgegeven te tonen.
    Autokosten/Parkeren blijven bewust ongemapt (apart gehouden, geen samengevoegd budget nodig).
    "Luxe + Extra's" (€750) = Eten & drinken (luxe uit eten). Sport heeft nog geen eigen budget — was onderdeel van "Sport / Paardrijden" (€495), nu volledig aan Paardrijden toegekend totdat er een aparte verdeling is.
-   Verzekeringen: excel-cijfer (349,55) is alleen zorgverzekering, maar de categorie "Verzekeringen" hier omvat ook Schadeverzekeringen + Interpolis — daarom nog even geen begroot bedrag tonen voor deze categorie totdat het volledige cijfer bekend is (anders misleidend rood).
-   Ontbreken nog: Hypotheek, Auto, Casa 3S (structureel), Verzekeringen (totaal). Medisch/Zakelijk/Nutsvoorzieningen bewust niet gebudgetteerd (seizoens-/onvoorspelbaar) — daar hoort t.z.t. een voorspelling i.p.v. een vast budget. */
+   Auto = VWPFS (€549,68) + TLFS (€346,85) lease, samen €896,53.
+   Verzekeringen = VGZ zorg (€349,55) + Bakkersparkweg schade/overlijden: OHRA (€77,26) + Interpolis (€86,07) = €512,88 totaal — dekt exact de VGZ+Schadeverzekeringen+Interpolis-transacties in deze categorie.
+   Hypotheek: bewust NOG NIET opgenomen — loopt maandelijks af (9 deelleningen), huidig bedrag moet opnieuw bepaald worden. Nog te bespreken.
+   Casa 3S: geen vast getal hier — wordt hieronder dynamisch berekend (basis + Enel 2-maandelijks + IMU mei/nov), afhankelijk van de maand van deze periode.
+   Medisch/Zakelijk/Nutsvoorzieningen bewust niet gebudgetteerd (seizoens-/onvoorspelbaar) — daar hoort t.z.t. een voorspelling i.p.v. een vast budget. */
 const BUDGET_CATEGORIE_MAP = {
   "Boodschappen": 1500.00,
   "Kleding": 600.00,
@@ -938,6 +941,8 @@ const BUDGET_CATEGORIE_MAP = {
   "Vakbond": 27.94,
   "Bankkosten": 4.60,
   "Eten & drinken": 750.00,
+  "Auto": 896.53,
+  "Verzekeringen": 349.55 + 77.26 + 86.07,
 };
 
 /* ---------- Categorie-/reis-overrides: opgeslagen in Supabase, blijven bewaard over sessies en devices heen ---------- */
@@ -1105,6 +1110,14 @@ function renderLopendeMaandView(){
   // ING Creditcard bevat meerdere jaren geschiedenis; die willen we hier NIET laten meetellen (wel bruikbaar voor patroonherkenning/Reizen).
   const periodeBronnen = [...RABO_TX_JUL, ...ING_TX_JUL, ...AMEX_TX_JUL];
   const periodeStart = periodeBronnen.reduce((min,r)=>r.date<min?r.date:min, periodeBronnen[0].date);
+  const periodeEind = periodeBronnen.reduce((max,r)=>r.date>max?r.date:max, periodeBronnen[0].date);
+  const DUTCH_MAAND3 = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+  const maandenInPeriode = new Set([DUTCH_MAAND3[new Date(periodeStart).getUTCMonth()], DUTCH_MAAND3[new Date(periodeEind).getUTCMonth()]]);
+  const casa3sEnel = [...maandenInPeriode].some(m=>ENEL_MAANDEN.has(m)) ? ENEL_BEDRAG : 0;
+  const casa3sImu = [...maandenInPeriode].some(m=>IMU_MAANDEN.has(m)) ? IMU_BEDRAG : 0;
+  const casa3sBudget = CASA_LENING + casa3sEnel + casa3sImu;
+  const budgetMap = {...BUDGET_CATEGORIE_MAP, 'Casa 3S': casa3sBudget};
+
   const all = buildCombinedJul().filter(r=>r.date>=periodeStart);
   const income = all.filter(r=>JUL_INCOME_CATS.includes(r.category));
   const spend = all.filter(r=>!JUL_INCOME_CATS.includes(r.category) && !JUL_INTERN_CATS.includes(r.category) && r.category!=='Sparen' && r.category!=='Reizen' && r.category!=='Casa 3S (project)');
@@ -1198,7 +1211,7 @@ function renderLopendeMaandView(){
     const barHtml = renderBarList(donut.sorted, donut.total, {
       formatAmt: (val,name)=>{
         const spendAmt = isIncomeLike ? val : -val;
-        const budget = (expandKey==='vast'||expandKey==='dagelijks') ? BUDGET_CATEGORIE_MAP[name] : null;
+        const budget = (expandKey==='vast'||expandKey==='dagelijks') ? budgetMap[name] : null;
         if(budget!=null){
           const over = val > budget;
           return `${fmt(spendAmt)} <span style="color:${over?'var(--rose)':'#4ade80'};font-size:11px;font-family:'IBM Plex Mono',monospace;">/ begroot ${fmt(budget).replace('€','€ ')}</span>`;
