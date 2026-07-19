@@ -459,15 +459,7 @@ function categoryTotals(m){
   const map={}; txForMonth(m).forEach(r=>{ map[r.category]=(map[r.category]||0)+r.amount; });
   return Object.entries(map).filter(([,v])=>v>0.001).sort((a,b)=>b[1]-a[1]);
 }
-function renderDonutCSS(cats, total){
-  let acc=0;
-  const stops = cats.map(([name,val])=>{
-    const start=acc/total*360; acc+=val; const end=acc/total*360;
-    return `${CATEGORY_COLORS[name]||'var(--c-overig)'} ${start}deg ${end}deg`;
-  }).join(', ');
-  return `background: conic-gradient(${stops});`;
-}
-/* ---------- Bar-list: vervanging voor de donutgrafiek — gerangschikte lijst met proportionele balkjes ---------- */
+/* ---------- Bar-list: gerangschikte lijst met proportionele balkjes (in plaats van een donutgrafiek) ---------- */
 function renderBarList(sorted, total, opts={}){
   const colorFor = opts.colorFor || ((name)=>CATEGORY_COLORS[name]||'var(--c-overig)');
   const formatAmt = opts.formatAmt || ((v)=>fmt(v));
@@ -931,7 +923,21 @@ const REIZEN_KEYWORDS = {
 const JUL_INCOME_CATS = ["Salaris","Belastingteruggave","Overig inkomen"];
 const JUL_INTERN_CATS = ["__INTERN_RABO__","__INTERN_ING__","__INTERN_SPAREN__","__AMEX_BETALING__","__INGCC_BETALING__","__SPAREN_NAAR_C3S__","__SPAREN_NAAR_REIZEN__"];
 const JUL_VASTE_LASTEN_CATS = ["Hypotheek","Auto","Verzekeringen","Bankkosten","Abonnementen","Nutsvoorzieningen","Vakbond","Muziek","Medisch","Goede doelen","Casa 3S","Zakelijk","Paardrijden"];
-const ALLE_CATEGORIEEN = ["Abonnementen", "Auto", "Autokosten", "Bankkosten", "Belastingteruggave", "Boodschappen", "Casa 3S", "Casa 3S (project)", "Eten & drinken", "Familie", "Goede doelen", "Hobby", "Hypotheek", "Kleding", "Medisch", "Muziek", "Nutsvoorzieningen", "Overig", "Overig inkomen", "Paardrijden", "Parkeren", "Reizen", "Salaris", "Shopping", "Sparen", "Vakbond", "Verzekeringen", "Verzorging", "Wonen", "Zakelijk"];
+const ALLE_CATEGORIEEN = ["Abonnementen", "Auto", "Autokosten", "Bankkosten", "Belastingteruggave", "Boodschappen", "Casa 3S", "Casa 3S (project)", "Eten & drinken", "Familie", "Goede doelen", "Hobby", "Hypotheek", "Kleding", "Medisch", "Muziek", "Nutsvoorzieningen", "Overig", "Overig inkomen", "Paardrijden", "Parkeren", "Reizen", "Salaris", "Shopping", "Sparen", "Sport", "Vakbond", "Verzekeringen", "Verzorging", "Wonen", "Zakelijk"];
+/* Begroot bedrag per categorie (jouw eigen Excel-budget) — gebruikt in Lopende maand om begroot vs. uitgegeven te tonen.
+   Autokosten/Parkeren blijven bewust ongemapt (apart gehouden, geen samengevoegd budget nodig).
+   "Luxe + Extra's" (€750) = Eten & drinken (luxe uit eten). Sport heeft nog geen eigen budget — was onderdeel van "Sport / Paardrijden" (€495), nu volledig aan Paardrijden toegekend totdat er een aparte verdeling is. */
+const BUDGET_CATEGORIE_MAP = {
+  "Boodschappen": 1500.00,
+  "Kleding": 600.00,
+  "Paardrijden": 495.00,
+  "Verzekeringen": 349.55,
+  "Abonnementen": 133.65,
+  "Muziek": 134.79,
+  "Vakbond": 27.94,
+  "Bankkosten": 4.60,
+  "Eten & drinken": 750.00,
+};
 
 /* ---------- Categorie-/reis-overrides: opgeslagen in Supabase, blijven bewaard over sessies en devices heen ---------- */
 const SUPABASE_URL = 'https://apleozatyqmqtzofxbky.supabase.co';
@@ -939,10 +945,28 @@ const SUPABASE_KEY = 'sb_publishable_zJvAXTWjMdAHDbpBXb3Z1A_zwn9jn-D';
 const SUPABASE_HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer '+SUPABASE_KEY, 'Content-Type': 'application/json' };
 
 let categoryOverrides = {};
+let vendorOverrides = {}; // vendorKey -> categorie, leert per leverancier i.p.v. per losse transactie
 let reisOverrides = {}; // txKey -> reis-id ('' = expliciet losgekoppeld van een reis)
 let overridesLoaded = false;
 function txKey(t){ return t.date+'|'+t.vendor+'|'+t.amount; }
-function effectiveCategory(t){ return categoryOverrides[txKey(t)] || t.category; }
+/* Normaliseert een leveranciersnaam tot een stabiele sleutel, zodat "ALBERT HEIJN 1860 RHOON NLD" en
+   "ALBERT HEIJN 1345 BARENDRECHT" allebei op "albert heijn" uitkomen — ongeacht filiaal/stad/land/store-nummer. */
+function vendorKey(vendor){
+  let v = vendor.toLowerCase();
+  v = v.replace(/\d+/g, ' ');
+  v = v.replace(/\b(nld|deu|gbr|usa|hrv|svn|aut|tur|tha|irl|cyp|ita)\b/g, ' ');
+  v = v.replace(/\b(b\.?v\.?|n\.?v\.?|via [a-z]+)\b/g, ' ');
+  v = v.replace(/[^a-z\s]/g, ' ');
+  v = v.replace(/\s+/g, ' ').trim();
+  return v.split(' ').filter(Boolean).slice(0, 2).join(' ');
+}
+function effectiveCategory(t){
+  const key = txKey(t);
+  if(categoryOverrides[key]) return categoryOverrides[key]; // uitzondering voor deze ene transactie wint altijd
+  const vk = vendorOverrides[vendorKey(t.vendor)];
+  if(vk) return vk; // geleerde regel voor deze leverancier, geldt voor alle (ook toekomstige) transacties
+  return t.category;
+}
 function autoDetectReis(t){
   if(t.category!=='Reizen' && t.category!=='__SPAREN_NAAR_REIZEN__') return null;
   const v = t.vendor.toLowerCase();
@@ -967,6 +991,7 @@ async function loadOverrides(){
       rows.forEach(r=>{
         if(r.kind==='category') categoryOverrides[r.key] = r.value;
         else if(r.kind==='reis') reisOverrides[r.key] = r.value;
+        else if(r.kind==='vendor') vendorOverrides[r.key] = r.value;
       });
     }
   }catch(e){ /* geen verbinding met Supabase — start leeg, blijft lokaal werken */ }
@@ -990,7 +1015,7 @@ async function deleteOverrideRow(kind, key){
   }catch(e){}
 }
 function exportOverrides(){
-  const payload = {categorieën: categoryOverrides, reizen: reisOverrides};
+  const payload = {categorieën: categoryOverrides, reizen: reisOverrides, leveranciers: vendorOverrides};
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1007,18 +1032,21 @@ function importOverrides(file){
     try{
       const imported = JSON.parse(e.target.result);
       let n = 0;
-      let cat = {}, reis = {};
-      if(imported.categorieën || imported.reizen){
+      let cat = {}, reis = {}, vend = {};
+      if(imported.categorieën || imported.reizen || imported.leveranciers){
         cat = imported.categorieën||{};
         reis = imported.reizen||{};
+        vend = imported.leveranciers||{};
       } else {
         cat = imported; // oud exportformaat: platte categorie-aanpassingen
       }
       categoryOverrides = {...categoryOverrides, ...cat};
       reisOverrides = {...reisOverrides, ...reis};
-      n = Object.keys(cat).length + Object.keys(reis).length;
+      vendorOverrides = {...vendorOverrides, ...vend};
+      n = Object.keys(cat).length + Object.keys(reis).length + Object.keys(vend).length;
       Object.entries(cat).forEach(([k,v])=>saveOverrideRow('category', k, v));
       Object.entries(reis).forEach(([k,v])=>saveOverrideRow('reis', k, v));
+      Object.entries(vend).forEach(([k,v])=>saveOverrideRow('vendor', k, v));
       render();
       alert('Aanpassingen geïmporteerd en gesynchroniseerd: ' + n + ' regels.');
     }catch(err){
@@ -1031,6 +1059,13 @@ async function setOverrideByKey(key, newCat){
   if(newCat && newCat.trim()){
     categoryOverrides[key] = newCat.trim();
     saveOverrideRow('category', key, categoryOverrides[key]);
+    // Leer meteen ook de leverancier-regel, zodat toekomstige (en al geladen) transacties van dezelfde leverancier hetzelfde meekrijgen.
+    const vendorNaam = key.split('|')[1] || '';
+    const vk = vendorKey(vendorNaam);
+    if(vk){
+      vendorOverrides[vk] = newCat.trim();
+      saveOverrideRow('vendor', vk, newCat.trim());
+    }
   } else {
     delete categoryOverrides[key];
     deleteOverrideRow('category', key);
@@ -1065,7 +1100,11 @@ function buildCombinedJul(){
 }
 
 function renderLopendeMaandView(){
-  const all = buildCombinedJul();
+  // Periode = de daadwerkelijke lopende maand, afgeleid uit RABO/ING/AMEX (die zijn altijd al tot die maand beperkt).
+  // ING Creditcard bevat meerdere jaren geschiedenis; die willen we hier NIET laten meetellen (wel bruikbaar voor patroonherkenning/Reizen).
+  const periodeBronnen = [...RABO_TX_JUL, ...ING_TX_JUL, ...AMEX_TX_JUL];
+  const periodeStart = periodeBronnen.reduce((min,r)=>r.date<min?r.date:min, periodeBronnen[0].date);
+  const all = buildCombinedJul().filter(r=>r.date>=periodeStart);
   const income = all.filter(r=>JUL_INCOME_CATS.includes(r.category));
   const spend = all.filter(r=>!JUL_INCOME_CATS.includes(r.category) && !JUL_INTERN_CATS.includes(r.category) && r.category!=='Sparen' && r.category!=='Reizen' && r.category!=='Casa 3S (project)');
   const sparenRegels = all.filter(r=>r.category==='Sparen');
@@ -1119,20 +1158,6 @@ function renderLopendeMaandView(){
       <button data-clear-filter="1" style="background:none;border:1px solid var(--rule);color:var(--muted);border-radius:20px;padding:2px 10px;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;">× wis filter</button>
     </div>` : '';
 
-  function donutCard(title, donut, filterVal){
-    return `<div class="card">
-      <div class="card-label" data-filter-src="${filterVal}" style="cursor:pointer;">${title} — tik voor detail</div>
-      <div class="donut-wrap">
-        <div class="donut" style="${renderDonutCSS(donut.sorted, donut.total)}">
-          <div class="donut-hole"><span>totaal</span><b>${fmt(donut.total).replace('€','€ ')}</b></div>
-        </div>
-        <ul class="legend">
-          ${donut.sorted.slice(0,7).map(([name,val])=>`<li data-filter-cat="${name}" style="cursor:pointer;"><span class="dot" style="background:${CATEGORY_COLORS[name]||'var(--c-overig)'}"></span><span class="name">${name}</span><span class="amt">${fmt(-val)}</span></li>`).join('')}
-        </ul>
-      </div>
-    </div>`;
-  }
-
   const incomeDonut = donutFor(income);
   const sparenDonutRows = [
     {category:'Overboeking Casa Tre Sorelle', amount:-sparenTransfer},
@@ -1170,7 +1195,15 @@ function renderLopendeMaandView(){
     }
     const isIncomeLike = (expandKey==='inkomen'||expandKey==='sparen');
     const barHtml = renderBarList(donut.sorted, donut.total, {
-      formatAmt: (val)=>fmt(isIncomeLike?val:-val),
+      formatAmt: (val,name)=>{
+        const spendAmt = isIncomeLike ? val : -val;
+        const budget = (expandKey==='vast'||expandKey==='dagelijks') ? BUDGET_CATEGORIE_MAP[name] : null;
+        if(budget!=null){
+          const over = val > budget;
+          return `${fmt(spendAmt)} <span style="color:${over?'var(--rose)':'var(--muted)'};font-size:11px;font-family:'IBM Plex Mono',monospace;">/ begroot ${fmt(budget).replace('€','€ ')}</span>`;
+        }
+        return fmt(spendAmt);
+      },
       rowAttrs: (name)=>{ const catKey=expandKey+'|'+name; return ` data-cat-toggle="${catKey}" style="cursor:pointer;${categoryExpand===catKey?'font-weight:600;':''}"`; },
       indicator: (name)=>{ const catKey=expandKey+'|'+name; return categoryExpand===catKey?' ▾':''; },
     });
