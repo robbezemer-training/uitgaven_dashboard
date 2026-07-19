@@ -185,8 +185,9 @@
   .bar-row-top{ display:flex; justify-content:space-between; align-items:baseline; gap: 10px; font-size: 13px; }
   .bar-name{ color: var(--paper); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .bar-amt{ font-family:'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--paper-dim); white-space:nowrap; flex: 0 0 auto; }
-  .bar-track{ height: 7px; border-radius: 4px; background: rgba(255,255,255,0.07); overflow:hidden; }
+  .bar-track{ height: 7px; border-radius: 4px; background: rgba(255,255,255,0.07); overflow:visible; position:relative; }
   .bar-fill{ height: 100%; border-radius: 4px; min-width: 2px; transition: width .2s ease; }
+  .bar-marker{ position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--paper-dim); opacity:0.55; border-radius:1px; }
   .bar-row[data-cat-toggle], .bar-row[data-filter-cat]{ transition: background .1s ease, transform .1s ease; border-radius: 4px; padding: 3px 4px; margin: -3px -4px; }
   .bar-row[data-cat-toggle]:active, .bar-row[data-filter-cat]:active{ background: rgba(201,162,39,0.15); transform: scale(0.98); }
 
@@ -461,16 +462,30 @@ function categoryTotals(m){
 }
 /* ---------- Bar-list: gerangschikte lijst met proportionele balkjes (in plaats van een donutgrafiek) ---------- */
 function renderBarList(sorted, total, opts={}){
-  const colorFor = opts.colorFor || ((name)=>CATEGORY_COLORS[name]||'var(--c-overig)');
   const formatAmt = opts.formatAmt || ((v)=>fmt(v));
   const rowAttrs = opts.rowAttrs || (()=>'');
   const indicator = opts.indicator || (()=>'');
+  const budgetFor = opts.budgetFor || (()=>null); // (name) => begroot bedrag, of null als er geen budget is
   const limit = opts.limit || sorted.length;
   const rows = sorted.slice(0, limit).map(([name,val],i)=>{
-    const pct = total>0 ? Math.max(val/total*100, val>0.0009?2.5:0) : 0;
+    const budget = budgetFor(name);
+    let fillPct, markerPct, barColor;
+    if(budget!=null && budget>0){
+      const schaal = Math.max(val/budget, 1.15); // altijd wat ruimte na de 100%-streep, ook bij overschrijding
+      fillPct = Math.min(val/budget/schaal*100, 100);
+      markerPct = Math.min(1/schaal*100, 100);
+      barColor = val>budget ? 'var(--rose)' : '#4ade80';
+    } else {
+      fillPct = total>0 ? Math.max(val/total*100, val>0.0009?2.5:0) : 0;
+      markerPct = null;
+      barColor = 'var(--muted)';
+    }
     return `<li class="bar-row"${rowAttrs(name,i)}>
       <div class="bar-row-top"><span class="bar-name">${name}${indicator(name)}</span><span class="bar-amt">${formatAmt(val,name)}</span></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${colorFor(name,i)};"></div></div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${fillPct.toFixed(1)}%;background:${barColor};"></div>
+        ${markerPct!=null?`<div class="bar-marker" style="left:${markerPct.toFixed(1)}%;"></div>`:''}
+      </div>
     </li>`;
   }).join('');
   return `<ul class="bar-list">${rows}</ul>`;
@@ -1209,6 +1224,7 @@ function renderLopendeMaandView(){
     }
     const isIncomeLike = (expandKey==='inkomen'||expandKey==='sparen');
     const barHtml = renderBarList(donut.sorted, donut.total, {
+      budgetFor: (name)=> (expandKey==='vast'||expandKey==='dagelijks') ? budgetMap[name] : null,
       formatAmt: (val,name)=>{
         const spendAmt = isIncomeLike ? val : -val;
         const budget = (expandKey==='vast'||expandKey==='dagelijks') ? budgetMap[name] : null;
