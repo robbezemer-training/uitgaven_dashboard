@@ -14,40 +14,42 @@
     --paper: #edeae2;
     --paper-dim: #a8adaf;
     --muted: #8b93a3;
-    --brass: #e0b429;
-    --brass-dim: #a8811f;
-    --teal: #2dd4bf;
-    --rose: #f45d9c;
-    --ingcc: #8b93f0;
+    --brass: #c9a66b;
+    --brass-dim: #a8875e;
+    --teal: #6fac9e;
+    --rose: #ba7a90;
+    --ingcc: #868ebd;
+    --dot-ok: #5cb37e;
+    --dot-over: #cf7089;
 
-    --c-abonnementen: #2dd4bf;
-    --c-reizen: #f5a623;
-    --c-vervoer: #5b8def;
-    --c-shopping: #ff8a5c;
-    --c-kleding: #b565e8;
-    --c-wonen: #4ade80;
-    --c-entertainment: #fbbf24;
-    --c-bankkosten: #94a3b8;
-    --c-persoonlijk: #f45d9c;
-    --c-zakelijk: #3b82f6;
-    --c-eten: #e0a030;
-    --c-goededoelen: #22d3a5;
-    --c-overig: #9c9690;
-    --c-hypotheek: #c9852e;
-    --c-verzekeringen: #4f9cf9;
-    --c-nuts: #34d399;
-    --c-telecom: #c084fc;
-    --c-auto: #e08a3e;
-    --c-italie: #ef6f5a;
-    --c-vakbond: #a3c957;
-    --c-educatie: #f0a8dd;
-    --c-verzorging: #f0c14b;
-    --c-kids: #38bdf8;
-    --c-boodschappen: #b4e04a;
-    --c-familie: #e08bd6;
-    --c-cadeaus: #ffb03e;
-    --c-sparen: #38b6d9;
-    --c-onbekend: #ff7452;
+    --c-abonnementen: #6fac9e;
+    --c-reizen: #c99a5c;
+    --c-vervoer: #7a94c0;
+    --c-shopping: #c48a70;
+    --c-kleding: #9b81b0;
+    --c-wonen: #74a684;
+    --c-entertainment: #c3ab6e;
+    --c-bankkosten: #8b93a3;
+    --c-persoonlijk: #ba7a90;
+    --c-zakelijk: #7188b5;
+    --c-eten: #c19d61;
+    --c-goededoelen: #6bab97;
+    --c-overig: #93897f;
+    --c-hypotheek: #b68a5f;
+    --c-verzekeringen: #7599c0;
+    --c-nuts: #6bab8a;
+    --c-telecom: #a689bd;
+    --c-auto: #c08f60;
+    --c-italie: #bd7f70;
+    --c-vakbond: #93aa6e;
+    --c-educatie: #bf9ab0;
+    --c-verzorging: #c1a86e;
+    --c-kids: #74a3bd;
+    --c-boodschappen: #9bb072;
+    --c-familie: #b98cae;
+    --c-cadeaus: #c3a35f;
+    --c-sparen: #6ea6b6;
+    --c-onbekend: #bd7a63;
   }
 
   *{ box-sizing: border-box; }
@@ -60,7 +62,7 @@
     min-height: 100vh;
     padding: 40px 20px 80px;
   }
-  .app{ max-width: 1000px; margin: 0 auto; }
+  .app{ max-width: 1000px; margin: 0 auto; min-width: 0; overflow-x: hidden; }
 
   header{
     display:flex; align-items:flex-end; justify-content: space-between;
@@ -114,8 +116,8 @@
   .month-tab:hover{ border-color: var(--brass-dim); color: var(--paper); }
   .month-tab.active{ background: var(--brass); border-color: var(--brass); color: #1a1608; font-weight: 500; }
 
-  .hero{ display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-  .hero4{ display:grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 20px; }
+  .hero{ display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; min-width: 0; }
+  .hero4{ display:grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 20px; min-width: 0; }
   @media (max-width: 900px){ .hero4{ grid-template-columns: 1fr 1fr 1fr; } }
   @media (max-width: 720px){ .hero{ grid-template-columns: 1fr; } .hero4{ grid-template-columns: 1fr 1fr; } }
   @media (max-width: 480px){
@@ -149,7 +151,7 @@
     footer{ font-size: 11px; }
   }
 
-  .card{ background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 24px; }
+  .card{ background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 24px; min-width: 0; overflow-x: hidden; }
   .card-label{
     font-family:'IBM Plex Mono', monospace;
     font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
@@ -183,13 +185,32 @@
   .bar-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap: 11px; }
   .bar-row{ display:flex; flex-direction:column; gap: 4px; }
   .bar-row-top{ display:flex; justify-content:space-between; align-items:baseline; gap: 10px; font-size: 13px; }
-  .bar-name{ color: var(--paper); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .bar-amt{ font-family:'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--paper-dim); white-space:nowrap; flex: 0 0 auto; }
+  .bar-name{ color: var(--paper); min-width: 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar-amt{ font-family:'IBM Plex Mono', monospace; font-size: 13px; color: var(--paper); white-space:nowrap; flex: 0 0 auto; }
   .bar-track{ height: 7px; border-radius: 4px; background: rgba(255,255,255,0.07); overflow:visible; position:relative; }
   .bar-fill{ height: 100%; border-radius: 4px; min-width: 2px; transition: width .2s ease; }
   .bar-marker{ position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--paper-dim); opacity:0.55; border-radius:1px; }
   .bar-row[data-cat-toggle], .bar-row[data-filter-cat]{ transition: background .1s ease, transform .1s ease; border-radius: 4px; padding: 3px 4px; margin: -3px -4px; }
   .bar-row[data-cat-toggle]:active, .bar-row[data-filter-cat]:active{ background: rgba(201,162,39,0.15); transform: scale(0.98); }
+  .cat-dot{ display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:8px; flex:0 0 auto; }
+  .cat-detail-tile{ margin: 10px 0 2px; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--rule); border-radius: 8px; min-width: 0; max-width: 100%; overflow: hidden; }
+  .cdt-total{ font-family:'Space Grotesk', sans-serif; font-size: 19px; font-weight: 500; color: var(--paper); }
+  .cdt-budget{ font-family:'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .cdt-divider{ height:1px; background: var(--rule); margin: 12px 0; border-top: 1px dashed var(--rule); background: none; }
+  .cdt-sum{ font-family:'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--muted); text-align: right; }
+  .tx-row2{ padding: 8px 0; border-bottom: 1px solid var(--rule); min-width: 0; }
+  .tx-row2:last-child{ border-bottom: none; }
+  .tx-row2-meta{ display:flex; align-items:center; gap:8px; font-size:10.5px; color: var(--muted); font-family:'IBM Plex Mono', monospace; margin-bottom: 4px; min-width: 0; }
+  .tx-row2-meta select{
+    appearance:none; -webkit-appearance:none; border: none; color: var(--ink); font-weight: 600;
+    border-radius: 4px; padding: 1px 16px 1px 6px; font-size: 10.5px; font-family:'IBM Plex Mono', monospace; max-width: 110px; min-width: 0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'><path d='M1 2 L4 6 L7 2' stroke='%2312151b' stroke-width='1.4' fill='none'/></svg>");
+    background-repeat: no-repeat; background-position: right 5px center;
+  }
+  .tx-row2-content{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:12.5px; min-width: 0; }
+  .tx-row2-vendor{ flex: 1 1 auto; min-width: 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color: var(--paper-dim); }
+  .tx-row2-amt{ flex: 0 0 auto; font-family:'IBM Plex Mono', monospace; font-weight:600; font-size: 13px; }
 
   .legend{ list-style:none; margin:0; padding:0; flex:1; min-width:0; }
   .legend li{ display:flex; align-items:center; gap: 9px; font-size: 12.5px; padding: 4px 0; }
@@ -304,6 +325,7 @@ const ING_TX = [{"date": "2026-05-22", "vendor": "R. Bezemer eo L. van Wanum", "
 /* ================= Salarismaand: AMEX subset (22 mei - 25 jun) ================= */
 const AMEX_PERIOD = [{"date": "2026-05-22", "vendor": "EASYPARK B.V.", "amount": 1.89, "category": "Vervoer"}, {"date": "2026-05-23", "vendor": "ANTHROPIC", "amount": 46.28, "category": "Abonnementen"}, {"date": "2026-05-27", "vendor": "MAANDELIJKSE KAARTLIDMAATSCHAPSBIJDRAGE", "amount": 20.0, "category": "Bankkosten"}, {"date": "2026-05-28", "vendor": "APPLE.COM/BILL", "amount": 1.99, "category": "Abonnementen"}, {"date": "2026-05-30", "vendor": "EASYPARK B.V.", "amount": 1.93, "category": "Vervoer"}, {"date": "2026-05-30", "vendor": "SP MRMARVIS.COM", "amount": 258.0, "category": "Kleding"}, {"date": "2026-05-30", "vendor": "SP MRMARVIS.COM", "amount": 604.3, "category": "Kleding"}, {"date": "2026-05-31", "vendor": "CLAUDE.AI SUBSCRIPTION", "amount": 21.78, "category": "Abonnementen"}, {"date": "2026-06-01", "vendor": "HARTELIJK BEDANKT VOOR UW BETALING", "amount": -426.56, "category": "__PAYMENT__"}, {"date": "2026-06-02", "vendor": "PAYPAL *ADOBESYSTEM ADO 1800946197", "amount": 24.19, "category": "Abonnementen"}, {"date": "2026-06-02", "vendor": "PAYPAL *HIVESPETER", "amount": 18.0, "category": "Overig"}, {"date": "2026-06-03", "vendor": "VIVATICKET SPA", "amount": 50.0, "category": "Entertainment"}, {"date": "2026-06-04", "vendor": "BOEKESTIJN & DE WIJK", "amount": 25.0, "category": "Overig"}, {"date": "2026-06-04", "vendor": "HP INSTANT INK NL", "amount": 3.49, "category": "Abonnementen"}, {"date": "2026-06-05", "vendor": "EASYPARK B.V.", "amount": 1.31, "category": "Vervoer"}, {"date": "2026-06-05", "vendor": "SP MRMARVIS.COM", "amount": -604.3, "category": "Kleding"}, {"date": "2026-06-05", "vendor": "SP MRMARVIS.COM", "amount": -258.0, "category": "Kleding"}, {"date": "2026-06-07", "vendor": "ANTHROPIC", "amount": 12.18, "category": "Abonnementen"}, {"date": "2026-06-07", "vendor": "ANTHROPIC", "amount": 12.25, "category": "Abonnementen"}, {"date": "2026-06-07", "vendor": "APPLE.COM/BILL", "amount": 9.99, "category": "Abonnementen"}, {"date": "2026-06-10", "vendor": "PAYPAL *BRANDZAAKKO BRA 4029357733", "amount": 39.7, "category": "Zakelijk"}, {"date": "2026-06-15", "vendor": "PAYPAL *GITHUB INC", "amount": 3.53, "category": "Abonnementen"}, {"date": "2026-06-16", "vendor": "EASYPARK B.V.", "amount": 0.78, "category": "Vervoer"}, {"date": "2026-06-17", "vendor": "CAR RENTAL ON BOOKING.C LONDON", "amount": 108.67, "category": "Reizen"}, {"date": "2026-06-18", "vendor": "ANTHROPIC", "amount": 12.4, "category": "Abonnementen"}, {"date": "2026-06-18", "vendor": "ANTHROPIC", "amount": 12.85, "category": "Abonnementen"}, {"date": "2026-06-18", "vendor": "ANTHROPIC", "amount": 46.28, "category": "Abonnementen"}, {"date": "2026-06-18", "vendor": "EASYPARK B.V.", "amount": 0.39, "category": "Vervoer"}, {"date": "2026-06-19", "vendor": "EASYPARK B.V.", "amount": 1.31, "category": "Vervoer"}, {"date": "2026-06-21", "vendor": "APPLE.COM/BILL", "amount": 17.99, "category": "Abonnementen"}, {"date": "2026-06-21", "vendor": "APPLE.COM/BILL", "amount": 25.95, "category": "Abonnementen"}, {"date": "2026-06-21", "vendor": "RYANAIR", "amount": 2.47, "category": "Reizen"}, {"date": "2026-06-23", "vendor": "EASYPARK B.V.", "amount": 0.39, "category": "Vervoer"}, {"date": "2026-06-25", "vendor": "EASYPARK B.V.", "amount": 1.31, "category": "Vervoer"}];
 
+const SRC_COLOR_ALL = {RABO:'var(--brass)', ING:'var(--teal)', AMEX:'var(--rose)', 'ING CC':'var(--ingcc)'};
 const CATEGORY_COLORS = {
   "Abonnementen": "var(--c-abonnementen)", "Reizen": "var(--c-reizen)", "Vervoer": "var(--c-vervoer)",
   "Shopping": "var(--c-shopping)", "Kleding": "var(--c-kleding)", "Wonen": "var(--c-wonen)",
@@ -312,7 +334,7 @@ const CATEGORY_COLORS = {
   "Overig": "var(--c-overig)", "Hypotheek": "var(--c-hypotheek)", "Verzekeringen": "var(--c-verzekeringen)",
   "Nutsvoorzieningen": "var(--c-nuts)", "Telecom": "var(--c-telecom)", "Auto": "var(--c-auto)",
   "Casa 3S": "var(--c-italie)", "Vakbond": "var(--c-vakbond)", "Educatie": "var(--c-educatie)", "Parkeren": "var(--c-vervoer)", "Autokosten": "var(--c-auto)",
-  "Verzorging": "var(--c-verzorging)", "Hobby": "var(--c-kids)", "Boodschappen": "var(--c-boodschappen)", "Medisch": "var(--c-onbekend)", "Paardrijden": "#a8763e",
+  "Verzorging": "var(--c-verzorging)", "Hobby": "var(--c-kids)", "Boodschappen": "var(--c-boodschappen)", "Medisch": "var(--c-onbekend)", "Paardrijden": "#ab8659",
   "Familie": "var(--c-familie)", "Cadeaus": "var(--c-cadeaus)", "Sparen": "var(--c-sparen)",
   "Salaris": "var(--c-abonnementen)", "Belastingteruggave": "var(--c-reizen)", "Overig inkomen": "var(--c-verzorging)",
   "Rob — salaris (LVNL)": "var(--c-abonnementen)", "Lindy — salaris (SARO)": "var(--teal)",
@@ -466,26 +488,19 @@ function renderBarList(sorted, total, opts={}){
   const rowAttrs = opts.rowAttrs || (()=>'');
   const indicator = opts.indicator || (()=>'');
   const budgetFor = opts.budgetFor || (()=>null); // (name) => begroot bedrag, of null als er geen budget is
+  const showDot = opts.showDot || false; // toon een grijs/groen/rood bolletje vóór de naam
+  const detailFor = opts.detailFor || (()=>''); // (name) => HTML, direct onder deze rij getoond (bv. uitgeklapte details)
   const limit = opts.limit || sorted.length;
   const rows = sorted.slice(0, limit).map(([name,val],i)=>{
-    const budget = budgetFor(name);
-    let fillPct, markerPct, barColor;
-    if(budget!=null && budget>0){
-      const schaal = Math.max(val/budget, 1.15); // altijd wat ruimte na de 100%-streep, ook bij overschrijding
-      fillPct = Math.min(val/budget/schaal*100, 100);
-      markerPct = Math.min(1/schaal*100, 100);
-      barColor = val>budget ? 'var(--rose)' : '#4ade80';
-    } else {
-      fillPct = total>0 ? Math.max(val/total*100, val>0.0009?2.5:0) : 0;
-      markerPct = null;
-      barColor = 'var(--muted)';
+    let dot = '';
+    if(showDot){
+      const budget = budgetFor(name);
+      const dotColor = budget!=null && budget>0 ? (val>budget?"var(--dot-over)":"var(--dot-ok)") : 'var(--rule)';
+      dot = `<span class="cat-dot" style="background:${dotColor};"></span>`;
     }
     return `<li class="bar-row"${rowAttrs(name,i)}>
-      <div class="bar-row-top"><span class="bar-name">${name}${indicator(name)}</span><span class="bar-amt">${formatAmt(val,name)}</span></div>
-      <div class="bar-track">
-        <div class="bar-fill" style="width:${fillPct.toFixed(1)}%;background:${barColor};"></div>
-        ${markerPct!=null?`<div class="bar-marker" style="left:${markerPct.toFixed(1)}%;"></div>`:''}
-      </div>
+      <div class="bar-row-top"><span class="bar-name">${dot}${name}${indicator(name)}</span><span class="bar-amt">${formatAmt(val,name)}</span></div>
+      ${detailFor(name)}
     </li>`;
   }).join('');
   return `<ul class="bar-list">${rows}</ul>`;
@@ -825,7 +840,7 @@ function renderBudgetView(){
 }
 
 /* ---------- Lopende maand: 25 juni - 24 juli, deels werkelijk deels nog te komen ---------- */
-const RABO_TX_JUL = [{"date": "2026-06-24", "vendor": "Casa Tre Sorelle (Rob, maandelijks sparen)", "amount": -4700.0, "category": "Sparen"}, {"date": "2026-06-24", "vendor": "Luchtverkeersleiding Nederland (salaris)", "amount": 11154.92, "category": "Salaris"}, {"date": "2026-06-24", "vendor": "SARO (salaris Lindy)", "amount": 2398.03, "category": "Salaris"}, {"date": "2026-06-24", "vendor": "SARO (extra)", "amount": 344.52, "category": "Salaris"}, {"date": "2026-06-25", "vendor": "St. Het Wereld Natuur Fonds-Ned.", "amount": -2.0, "category": "Goede doelen"}, {"date": "2026-06-25", "vendor": "Tibber Netherlands B.V.", "amount": -115.32, "category": "Nutsvoorzieningen"}, {"date": "2026-06-25", "vendor": "Barletta Rocco", "amount": -1830.0, "category": "Casa 3S (project)"}, {"date": "2026-06-25", "vendor": "Vanuit Casa-spaarrekening (C3S project)", "amount": 1830.0, "category": "__SPAREN_NAAR_C3S__"}, {"date": "2026-06-26", "vendor": "Kado", "amount": -100.0, "category": "Sparen"}, {"date": "2026-06-26", "vendor": "M. Bezemer", "amount": -75.0, "category": "Sparen"}, {"date": "2026-06-26", "vendor": "Enel Energia", "amount": -60.69, "category": "Casa 3S"}, {"date": "2026-07-01", "vendor": "Maud Bezemer", "amount": -15.0, "category": "Familie"}, {"date": "2026-07-01", "vendor": "M. Bezemer", "amount": -358.3, "category": "Sparen"}, {"date": "2026-07-01", "vendor": "Schadeverzekeringen", "amount": -77.26, "category": "Verzekeringen"}, {"date": "2026-07-01", "vendor": "TLFS (autolease)", "amount": -346.85, "category": "Auto"}, {"date": "2026-07-01", "vendor": "VWPFS B.V.", "amount": -549.68, "category": "Auto"}, {"date": "2026-07-01", "vendor": "Rabobank", "amount": -3.6, "category": "Bankkosten"}, {"date": "2026-07-01", "vendor": "Rabobank", "amount": -1.2, "category": "Bankkosten"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -316.89, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -336.86, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -503.71, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -320.17, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -320.17, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -234.21, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -415.28, "category": "Casa 3S"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -226.61, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -336.86, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "R. Bezemer eo L. van Wanum", "amount": 1903.0, "category": "__INTERN_ING__"}, {"date": "2026-07-05", "vendor": "Vanuit Casa-spaarrekening (Reizen)", "amount": 6700.0, "category": "__SPAREN_NAAR_REIZEN__"}, {"date": "2026-07-06", "vendor": "K. Ros (vakantie Italie)", "amount": -6700.0, "category": "Reizen"}, {"date": "2026-07-07", "vendor": "Interpolis", "amount": -12.13, "category": "Verzekeringen"}, {"date": "2026-07-07", "vendor": "Interpolis", "amount": -74.02, "category": "Verzekeringen"}, {"date": "2026-07-07", "vendor": "VIDEOLAND DOOR BUCKAROO", "amount": -10.99, "category": "Abonnementen"}, {"date": "2026-07-08", "vendor": "EVIDES WATERBEDRIJF", "amount": -26.0, "category": "Nutsvoorzieningen"}, {"date": "2026-07-09", "vendor": "DPG Media BV", "amount": -12.15, "category": "Abonnementen"}, {"date": "2026-07-09", "vendor": "Lindy vergoeding (SARO)", "amount": 17.69, "category": "Overig inkomen"}, {"date": "2026-07-14", "vendor": "help.hbomax.com", "amount": -5.99, "category": "Abonnementen"}, {"date": "2026-07-15", "vendor": "Belastingdienst", "amount": 313.0, "category": "Belastingteruggave"}, {"date": "2026-07-15", "vendor": "R. Bezemer eo L. van Wanum", "amount": 368.0, "category": "__INTERN_ING__"}, {"date": "2026-07-16", "vendor": "R. Bezemer", "amount": -368.0, "category": "__INTERN_ING__"}, {"date": "2026-07-16", "vendor": "R. Bezemer", "amount": -110.0, "category": "__INTERN_ING__"}];
+const RABO_TX_JUL = [{"date": "2026-06-24", "vendor": "Casa Tre Sorelle (Rob, maandelijks sparen)", "amount": -4700.0, "category": "Sparen"}, {"date": "2026-06-24", "vendor": "Luchtverkeersleiding Nederland (salaris)", "amount": 11154.92, "category": "Salaris"}, {"date": "2026-06-24", "vendor": "SARO (salaris Lindy)", "amount": 2398.03, "category": "Salaris"}, {"date": "2026-06-24", "vendor": "SARO (extra)", "amount": 344.52, "category": "Salaris"}, {"date": "2026-06-25", "vendor": "St. Het Wereld Natuur Fonds-Ned.", "amount": -2.0, "category": "Goede doelen"}, {"date": "2026-06-25", "vendor": "Tibber Netherlands B.V.", "amount": -115.32, "category": "Nutsvoorzieningen"}, {"date": "2026-06-25", "vendor": "Barletta Rocco", "amount": -1830.0, "category": "Casa 3S (project)"}, {"date": "2026-06-25", "vendor": "Vanuit Casa-spaarrekening (C3S project)", "amount": 1830.0, "category": "__SPAREN_NAAR_C3S__"}, {"date": "2026-06-26", "vendor": "Kado", "amount": -100.0, "category": "Sparen"}, {"date": "2026-06-26", "vendor": "M. Bezemer", "amount": -75.0, "category": "Sparen"}, {"date": "2026-06-26", "vendor": "Enel Energia", "amount": -60.69, "category": "Casa 3S"}, {"date": "2026-07-01", "vendor": "Maud Bezemer", "amount": -15.0, "category": "Familie"}, {"date": "2026-07-01", "vendor": "M. Bezemer", "amount": -358.3, "category": "Sparen"}, {"date": "2026-07-01", "vendor": "Sociale Verzekeringsbank (kinderbijslag)", "amount": 358.3, "category": "Overig inkomen"}, {"date": "2026-07-01", "vendor": "Schadeverzekeringen", "amount": -77.26, "category": "Verzekeringen"}, {"date": "2026-07-01", "vendor": "TLFS (autolease)", "amount": -346.85, "category": "Auto"}, {"date": "2026-07-01", "vendor": "VWPFS B.V.", "amount": -549.68, "category": "Auto"}, {"date": "2026-07-01", "vendor": "Rabobank", "amount": -3.6, "category": "Bankkosten"}, {"date": "2026-07-01", "vendor": "Rabobank", "amount": -1.2, "category": "Bankkosten"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -316.89, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -336.86, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -503.71, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -320.17, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -320.17, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -234.21, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -415.28, "category": "Casa 3S"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -226.61, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "Rabobank IJsselmonde-Drechtsteden", "amount": -336.86, "category": "Hypotheek"}, {"date": "2026-07-02", "vendor": "R. Bezemer eo L. van Wanum", "amount": 1903.0, "category": "__INTERN_ING__"}, {"date": "2026-07-05", "vendor": "Vanuit Casa-spaarrekening (Reizen)", "amount": 6700.0, "category": "__SPAREN_NAAR_REIZEN__"}, {"date": "2026-07-06", "vendor": "K. Ros (vakantie Italie)", "amount": -6700.0, "category": "Reizen"}, {"date": "2026-07-07", "vendor": "Interpolis", "amount": -12.13, "category": "Verzekeringen"}, {"date": "2026-07-07", "vendor": "Interpolis", "amount": -74.02, "category": "Verzekeringen"}, {"date": "2026-07-07", "vendor": "VIDEOLAND DOOR BUCKAROO", "amount": -10.99, "category": "Abonnementen"}, {"date": "2026-07-08", "vendor": "EVIDES WATERBEDRIJF", "amount": -26.0, "category": "Nutsvoorzieningen"}, {"date": "2026-07-09", "vendor": "DPG Media BV", "amount": -12.15, "category": "Abonnementen"}, {"date": "2026-07-09", "vendor": "Lindy vergoeding (SARO)", "amount": 17.69, "category": "Overig inkomen"}, {"date": "2026-07-14", "vendor": "help.hbomax.com", "amount": -5.99, "category": "Abonnementen"}, {"date": "2026-07-15", "vendor": "Belastingdienst", "amount": 313.0, "category": "Belastingteruggave"}, {"date": "2026-07-15", "vendor": "R. Bezemer eo L. van Wanum", "amount": 368.0, "category": "__INTERN_ING__"}, {"date": "2026-07-16", "vendor": "R. Bezemer", "amount": -368.0, "category": "__INTERN_ING__"}, {"date": "2026-07-16", "vendor": "R. Bezemer", "amount": -110.0, "category": "__INTERN_ING__"}];
 const ING_TX_JUL = [{"date": "2026-07-18", "vendor": "ALBERT HEIJN 1860 RHOON NLD", "amount": -5.14, "category": "Boodschappen"}, {"date": "2026-07-18", "vendor": "ALBERT HEIJN 1860 RHOON NLD", "amount": -13.67, "category": "Boodschappen"}, {"date": "2026-07-18", "vendor": "CCV*M A VOLLERING RHOON NLD", "amount": -25.0, "category": "Boodschappen"}, {"date": "2026-07-18", "vendor": "CCV*M A VOLLERING RHOON NLD", "amount": -3.25, "category": "Boodschappen"}, {"date": "2026-07-18", "vendor": "Verhage Rhoon nieuw Rhoon NLD", "amount": -2.85, "category": "Eten & drinken"}, {"date": "2026-07-17", "vendor": "Cvve Keizerswaard ROTTERDAM NLD", "amount": -1.0, "category": "Wonen"}, {"date": "2026-07-17", "vendor": "AH Rhoon 8541 RHOON NLD", "amount": -18.39, "category": "Boodschappen"}, {"date": "2026-07-17", "vendor": "Boons Markt Rhoon RHOON NLD", "amount": -24.05, "category": "Boodschappen"}, {"date": "2026-07-17", "vendor": "Albert Heijn (terugbetaling)", "amount": 12.3, "category": "Boodschappen"}, {"date": "2026-07-16", "vendor": "ALBERT HEIJN 1860 RHOON NLD", "amount": -22.8, "category": "Boodschappen"}, {"date": "2026-07-16", "vendor": "R. Bezemer eo L. van Wanum", "amount": 110.0, "category": "__INTERN_RABO__"}, {"date": "2026-07-16", "vendor": "R. Bezemer eo L. van Wanum", "amount": 368.0, "category": "__INTERN_RABO__"}, {"date": "2026-07-16", "vendor": "SumUp  *Hoeksch Lekker NLD", "amount": -16.95, "category": "Overig"}, {"date": "2026-07-16", "vendor": "J.C.A. Poot via Tikkie", "amount": -44.0, "category": "Overig"}, {"date": "2026-07-15", "vendor": "ALBERT HEIJN 1860 RHOON NLD", "amount": -20.86, "category": "Boodschappen"}, {"date": "2026-07-14", "vendor": "Albert Heijn", "amount": -19.46, "category": "Boodschappen"}, {"date": "2026-07-14", "vendor": "Cakemusthaves", "amount": -20.15, "category": "Overig"}, {"date": "2026-07-14", "vendor": "ALBERT HEIJN 1860 RHOON NLD", "amount": -24.98, "category": "Boodschappen"}, {"date": "2026-07-14", "vendor": "Albert Heijn", "amount": -15.71, "category": "Boodschappen"}, {"date": "2026-07-14", "vendor": "Kosten tweede rekeninghouder", "amount": -1.2, "category": "Bankkosten"}, {"date": "2026-07-14", "vendor": "Kosten ING Go (OranjePakket)", "amount": -4.0, "category": "Bankkosten"}, {"date": "2026-07-14", "vendor": "De Flemming B.V.", "amount": -60.0, "category": "Paardrijden"}, {"date": "2026-07-13", "vendor": "Rc facilitair via Tikkie Zakelijk", "amount": -40.0, "category": "Overig"}, {"date": "2026-07-13", "vendor": "Albert Heijn", "amount": -111.88, "category": "Boodschappen"}, {"date": "2026-07-13", "vendor": "ALBERT HEIJN 1345 BARENDRECHT", "amount": -10.15, "category": "Boodschappen"}, {"date": "2026-07-13", "vendor": "Etos R&W Carnisse BARENDRECHT", "amount": -48.7, "category": "Boodschappen"}, {"date": "2026-07-13", "vendor": "MIR Carnisse Veste ROT ROTTERDAM", "amount": -5.95, "category": "Overig"}, {"date": "2026-07-13", "vendor": "OutdoorXL BARENDRECHT NLD", "amount": -75.89, "category": "Overig"}, {"date": "2026-07-13", "vendor": "Action 1339 Barendrecht NLD", "amount": -5.74, "category": "Shopping"}, {"date": "2026-07-13", "vendor": "umisushi B.V. RHOON NLD", "amount": -17.4, "category": "Boodschappen"}, {"date": "2026-07-13", "vendor": "KRUIDVAT 6306 BARENDRECHT NLD", "amount": -5.99, "category": "Verzorging"}, {"date": "2026-07-13", "vendor": "KRUIDVAT 6306 BARENDRECHT NLD", "amount": -43.36, "category": "Verzorging"}, {"date": "2026-07-13", "vendor": "Q-Park Operations Holding BV via Mollie", "amount": -2.5, "category": "Parkeren"}, {"date": "2026-07-12", "vendor": "Boons Markt Barendr. BARENDRECHT", "amount": -45.29, "category": "Boodschappen"}, {"date": "2026-07-12", "vendor": "T Waaltje Bar Kitchen NLD", "amount": -47.75, "category": "Eten & drinken"}, {"date": "2026-07-11", "vendor": "Bestseller AS", "amount": -268.43, "category": "Kleding"}, {"date": "2026-07-11", "vendor": "ZETTLE*DE PATATBAKKER NLD", "amount": -6.4, "category": "Boodschappen"}, {"date": "2026-07-10", "vendor": "ZETTLE*DE FLEMMING B NLD", "amount": -2.8, "category": "Eten & drinken"}, {"date": "2026-07-10", "vendor": "KIPPIE BARENDRECHT BARENDRECHT", "amount": -21.29, "category": "Eten & drinken"}, {"date": "2026-07-10", "vendor": "Under Armour", "amount": -13.97, "category": "Kleding"}, {"date": "2026-07-10", "vendor": "Under Armour", "amount": -13.97, "category": "Kleding"}, {"date": "2026-07-10", "vendor": "ALBERT HEIJN 1345 BARENDRECHT", "amount": -1.79, "category": "Boodschappen"}, {"date": "2026-07-10", "vendor": "MIR Carnisse Veste ROT ROTTERDAM", "amount": -4.95, "category": "Overig"}, {"date": "2026-07-09", "vendor": "Boons Markt Rhoon RHOON NLD", "amount": -5.26, "category": "Boodschappen"}, {"date": "2026-07-09", "vendor": "AH Rhoon 8541 RHOON NLD", "amount": -48.87, "category": "Boodschappen"}, {"date": "2026-07-09", "vendor": "Albert Heijn", "amount": 17.06, "category": "Boodschappen"}, {"date": "2026-07-09", "vendor": "HEMA EV0319 Rhoon RHOON NLD", "amount": -4.99, "category": "Wonen"}, {"date": "2026-07-09", "vendor": "WithLove", "amount": -79.0, "category": "Overig"}, {"date": "2026-07-08", "vendor": "Total Nn001918 Barendrech NLD", "amount": -66.05, "category": "Overig"}, {"date": "2026-07-08", "vendor": "Verhage Rhoon nieuw Rhoon NLD", "amount": -16.7, "category": "Eten & drinken"}, {"date": "2026-07-08", "vendor": "Zettle*De Flemming B NLD", "amount": -104.8, "category": "Eten & drinken"}, {"date": "2026-07-08", "vendor": "Albert Heijn", "amount": -2.99, "category": "Boodschappen"}, {"date": "2026-07-08", "vendor": "Albert Heijn", "amount": -92.93, "category": "Boodschappen"}, {"date": "2026-07-08", "vendor": "Q-Park Operations Holding BV via Mollie", "amount": -7.2, "category": "Parkeren"}, {"date": "2026-07-07", "vendor": "bol.com", "amount": -46.38, "category": "Shopping"}, {"date": "2026-07-07", "vendor": "ALBERT HEIJN 1860 RHOON NLD", "amount": -12.04, "category": "Boodschappen"}, {"date": "2026-07-07", "vendor": "BCK*Albert Heijn ZBL NLD", "amount": -4.29, "category": "Boodschappen"}, {"date": "2026-07-07", "vendor": "Q-Park Operations Holding BV via Mollie", "amount": -3.4, "category": "Parkeren"}, {"date": "2026-07-06", "vendor": "Joke Smit via Tikkie", "amount": -3.0, "category": "Overig"}, {"date": "2026-07-05", "vendor": "Zettle*De Flemming B.V. NLD", "amount": -2.5, "category": "Eten & drinken"}, {"date": "2026-07-05", "vendor": "ALBERT HEIJN 1860 RHOON NLD", "amount": -6.18, "category": "Boodschappen"}, {"date": "2026-07-05", "vendor": "BCK*DE IJSSALON BARENDREC NLD", "amount": -5.4, "category": "Eten & drinken"}, {"date": "2026-07-05", "vendor": "ALBERT HEIJN 1526 BARENDRECHT", "amount": -3.98, "category": "Boodschappen"}, {"date": "2026-07-05", "vendor": "BCK*ETOS OUDBEIJERLAND NLD", "amount": -20.39, "category": "Boodschappen"}, {"date": "2026-07-05", "vendor": "Maud Bezemer", "amount": 8.0, "category": "Overig"}, {"date": "2026-07-05", "vendor": "Delicious Traiteur Cat NLD", "amount": -3.55, "category": "Eten & drinken"}, {"date": "2026-07-05", "vendor": "Action 1406 OudBeijerlan NLD", "amount": -41.6, "category": "Shopping"}, {"date": "2026-07-05", "vendor": "ABOUT YOU", "amount": -229.51, "category": "Kleding"}, {"date": "2026-07-05", "vendor": "CCV*Taart en decoratie NLD", "amount": -28.16, "category": "Overig"}, {"date": "2026-07-05", "vendor": "CCV*Chocolaterie Seip RHOON NLD", "amount": -6.3, "category": "Eten & drinken"}, {"date": "2026-07-05", "vendor": "Zettle*De Flemming B NLD", "amount": -4.4, "category": "Eten & drinken"}, {"date": "2026-07-05", "vendor": "bol.com", "amount": -94.4, "category": "Shopping"}, {"date": "2026-07-05", "vendor": "Intertoys OUDBEIJERLAN NLD", "amount": -7.99, "category": "Hobby"}, {"date": "2026-07-04", "vendor": "Sol Food RHOON NLD", "amount": -10.0, "category": "Eten & drinken"}, {"date": "2026-07-04", "vendor": "ALBERT HEIJN 1860 RHOON NLD", "amount": -11.19, "category": "Boodschappen"}, {"date": "2026-07-04", "vendor": "De Boulanger BARENDRECHT NLD", "amount": -31.15, "category": "Boodschappen"}, {"date": "2026-07-03", "vendor": "BCK*APOTHEEK PORTLAND RHOON NLD", "amount": -253.83, "category": "Medisch"}, {"date": "2026-07-03", "vendor": "ALBERT HEIJN 1860 RHOON NLD", "amount": -14.1, "category": "Boodschappen"}, {"date": "2026-07-03", "vendor": "Albert Heijn", "amount": 19.32, "category": "Boodschappen"}, {"date": "2026-07-03", "vendor": "AMERICAN EXPRESS EUROPE S.A.", "amount": -477.08, "category": "__AMEX_BETALING__"}, {"date": "2026-07-03", "vendor": "Professioneel PlatformHippische Ondernemers", "amount": -2.5, "category": "Hobby"}, {"date": "2026-07-03", "vendor": "De Flemming B.V.", "amount": -226.5, "category": "Paardrijden"}, {"date": "2026-07-02", "vendor": "bol.com", "amount": -5.49, "category": "Shopping"}, {"date": "2026-07-02", "vendor": "B.V. Bondis via Worldline NV/SA", "amount": -9.95, "category": "Overig"}, {"date": "2026-07-02", "vendor": "Zettle*Bakker Kees Rhoon NLD", "amount": -199.0, "category": "Boodschappen"}, {"date": "2026-07-02", "vendor": "ALBERT HEIJN 1860 RHOON NLD", "amount": -27.04, "category": "Boodschappen"}, {"date": "2026-07-02", "vendor": "Q-Park Operations Holding BV via Mollie", "amount": -8.0, "category": "Parkeren"}, {"date": "2026-07-02", "vendor": "Q-Park Operations Holding BV via Mollie", "amount": -0.56, "category": "Parkeren"}, {"date": "2026-07-02", "vendor": "De Flemming B.V.", "amount": -60.0, "category": "Paardrijden"}, {"date": "2026-07-01", "vendor": "Albert Heijn", "amount": -48.13, "category": "Boodschappen"}, {"date": "2026-07-01", "vendor": "Boons Markt Barendr. BARENDRECHT", "amount": -32.42, "category": "Boodschappen"}, {"date": "2026-07-01", "vendor": "Albert Heijn 1345 Barendrecht", "amount": -10.65, "category": "Boodschappen"}, {"date": "2026-07-01", "vendor": "HEMA EV0294 Barendrecht NLD", "amount": -11.28, "category": "Wonen"}, {"date": "2026-07-01", "vendor": "Action 1339 Barendrecht NLD", "amount": -7.93, "category": "Shopping"}, {"date": "2026-07-01", "vendor": "HET NEDERLANDSELUCHTVERKEERSLEIDERS GILDE", "amount": -29.48, "category": "Vakbond"}, {"date": "2026-07-01", "vendor": "Q-Park Operations Holding BV via Mollie", "amount": -6.4, "category": "Parkeren"}, {"date": "2026-06-30", "vendor": "Albert Heijn", "amount": -179.54, "category": "Boodschappen"}, {"date": "2026-06-30", "vendor": "ALBERT HEIJN 1860 RHOON NLD", "amount": -18.14, "category": "Boodschappen"}, {"date": "2026-06-30", "vendor": "Zettle*De Flemming B NLD", "amount": -5.3, "category": "Eten & drinken"}, {"date": "2026-06-30", "vendor": "Stichting CultuurLocaal", "amount": -182.7, "category": "Muziek"}, {"date": "2026-06-29", "vendor": "IKEA BARENDRECHT BARENDRECHT NLD", "amount": -3.87, "category": "Wonen"}, {"date": "2026-06-29", "vendor": "ALBERT HEIJN 1860 RHOON NLD", "amount": -19.51, "category": "Boodschappen"}, {"date": "2026-06-29", "vendor": "SApixella.aicontact Nicosia CYP", "amount": -39.93, "category": "Overig"}, {"date": "2026-06-29", "vendor": "Postcode Loterij", "amount": -16.0, "category": "Abonnementen"}, {"date": "2026-06-29", "vendor": "VGZ Zorgverzekeraar N.V.", "amount": -182.75, "category": "Verzekeringen"}, {"date": "2026-06-29", "vendor": "VGZ Zorgverzekeraar N.V.", "amount": -164.45, "category": "Verzekeringen"}, {"date": "2026-06-28", "vendor": "AAB INZ TIKKIE", "amount": 19.85, "category": "Overig"}, {"date": "2026-06-28", "vendor": "Temu.com", "amount": -42.88, "category": "Overig"}, {"date": "2026-06-27", "vendor": "Haaitsma VOF RHOON NLD", "amount": -24.99, "category": "Overig"}, {"date": "2026-06-27", "vendor": "Afas Circus  6303 SGRAVENHAGE", "amount": -20.9, "category": "Overig"}, {"date": "2026-06-27", "vendor": "Afas Circus  6303 SGRAVENHAGE", "amount": -4.75, "category": "Overig"}, {"date": "2026-06-27", "vendor": "Verhage Rhoon nieuw Rhoon NLD", "amount": -22.15, "category": "Eten & drinken"}, {"date": "2026-06-27", "vendor": "Oranje Spaarrekening", "amount": -500.0, "category": "__INTERN_SPAREN__"}, {"date": "2026-06-27", "vendor": "Hr RJJM Spijkers,Mw D Heijboer", "amount": 500.0, "category": "Overig"}, {"date": "2026-06-27", "vendor": "Afas Circus  6303 SGRAVENHAGE", "amount": -19.95, "category": "Overig"}, {"date": "2026-06-27", "vendor": "Afas Circus  6303 SGRAVENHAGE", "amount": -15.3, "category": "Overig"}, {"date": "2026-06-26", "vendor": "Boons Markt Barendr. BARENDRECHT", "amount": -17.61, "category": "Boodschappen"}, {"date": "2026-06-26", "vendor": "ALBERT HEIJN 1860 RHOON NLD", "amount": -4.21, "category": "Boodschappen"}, {"date": "2026-06-26", "vendor": "UMISUSHI B.V. RHOON NLD", "amount": -16.5, "category": "Boodschappen"}, {"date": "2026-06-26", "vendor": "Albert Heijn", "amount": 30.66, "category": "Boodschappen"}, {"date": "2026-06-26", "vendor": "APCOA Nederland BV", "amount": -10.0, "category": "Overig"}, {"date": "2026-06-26", "vendor": "Q-Park Operations Holding BV via Mollie", "amount": -1.25, "category": "Parkeren"}, {"date": "2026-06-26", "vendor": "Q-Park Operations Holding BV via Mollie", "amount": -2.5, "category": "Parkeren"}, {"date": "2026-06-25", "vendor": "AH Rhoon 8541 RHOON NLD", "amount": -12.28, "category": "Boodschappen"}, {"date": "2026-06-25", "vendor": "Boons Markt Rhoon RHOON NLD", "amount": -5.69, "category": "Boodschappen"}, {"date": "2026-06-25", "vendor": "De Boulanger BARENDRECHT NLD", "amount": -13.1, "category": "Boodschappen"}];
 const AMEX_TX_JUL = [{"date": "2026-06-30", "vendor": "Anthropic* Claude Sub", "amount": 21.78, "category": "Zakelijk"}, {"date": "2026-07-02", "vendor": "WeFashion.nl Utrecht", "amount": 117.0, "category": "Kleding"}, {"date": "2026-07-02", "vendor": "PayPal *AdobeSystem", "amount": 24.19, "category": "Abonnementen"}, {"date": "2026-07-02", "vendor": "Hartelijk bedankt voor uw betaling", "amount": -477.08, "category": "__AMEX_BETALING__"}, {"date": "2026-07-03", "vendor": "WeFashion.nl Utrecht", "amount": -39.0, "category": "Kleding"}, {"date": "2026-07-03", "vendor": "Easypark B.V. Doesburg", "amount": 4.51, "category": "Autokosten"}, {"date": "2026-07-04", "vendor": "HP Instant Ink NL", "amount": 10.99, "category": "Zakelijk"}, {"date": "2026-07-04", "vendor": "Easypark B.V. Doesburg", "amount": 3.15, "category": "Autokosten"}, {"date": "2026-07-05", "vendor": "www.hotel2torri.com Maiori", "amount": 1740.6, "category": "Reizen"}, {"date": "2026-07-06", "vendor": "Car Rental on Booking.C London", "amount": -102.34, "category": "Reizen"}, {"date": "2026-07-07", "vendor": "Easypark B.V. Doesburg", "amount": 0.39, "category": "Autokosten"}, {"date": "2026-07-07", "vendor": "Apple.com/bill Hollyhill", "amount": 9.99, "category": "Abonnementen"}, {"date": "2026-07-09", "vendor": "Easypark B.V. Doesburg", "amount": 0.75, "category": "Autokosten"}, {"date": "2026-07-10", "vendor": "SP Sports Nutrition AD Kortenaken", "amount": 30.98, "category": "Hobby"}, {"date": "2026-07-10", "vendor": "Easypark B.V. Doesburg", "amount": 0.39, "category": "Autokosten"}, {"date": "2026-07-11", "vendor": "MPIphoto* Payhip Silkeborg", "amount": 17.96, "category": "Overig"}, {"date": "2026-07-11", "vendor": "Hotel on Booking.com Amsterdam", "amount": 530.0, "category": "Reizen"}, {"date": "2026-07-11", "vendor": "Easypark B.V. Doesburg", "amount": 1.31, "category": "Autokosten"}, {"date": "2026-07-12", "vendor": "SP Khaizen Underwear Purmerend", "amount": 50.95, "category": "Kleding"}, {"date": "2026-07-12", "vendor": "Link Pagamento Ravello", "amount": 270.0, "category": "Reizen"}, {"date": "2026-07-12", "vendor": "Hotel on Booking.com Amsterdam", "amount": 1952.05, "category": "Reizen"}, {"date": "2026-07-15", "vendor": "PayPal *GitHub Inc", "amount": 3.59, "category": "Zakelijk"}];
 
@@ -968,6 +983,8 @@ const SUPABASE_HEADERS = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer '+SU
 let categoryOverrides = {};
 let vendorOverrides = {}; // vendorKey -> categorie, leert per leverancier i.p.v. per losse transactie
 let reisOverrides = {}; // txKey -> reis-id ('' = expliciet losgekoppeld van een reis)
+let bucketOverrides = {}; // txKey -> 'vast'|'dagelijks', handmatige verplaatsing tussen de twee groepen
+let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 1 van "selecteren, dan verplaatsen"
 let overridesLoaded = false;
 function txKey(t){ return t.date+'|'+t.vendor+'|'+t.amount; }
 /* Normaliseert een leveranciersnaam tot een stabiele sleutel, zodat "ALBERT HEIJN 1860 RHOON NLD" en
@@ -980,6 +997,35 @@ function vendorKey(vendor){
   v = v.replace(/[^a-z\s]/g, ' ');
   v = v.replace(/\s+/g, ' ').trim();
   return v.split(' ').filter(Boolean).slice(0, 2).join(' ');
+}
+function txRow2Html(t, opts={}){
+  const d=new Date(t.date); const dd=String(d.getUTCDate()).padStart(2,'0'); const mm=String(d.getUTCMonth()+1).padStart(2,'0');
+  const isIncome = JUL_INCOME_CATS.includes(t.category);
+  const overridden = categoryOverrides[txKey(t)] ? ' title="handmatig aangepast"' : '';
+  const txKeyAttr = txKey(t).replace(/"/g,'&quot;');
+  let bucketToggle = '';
+  if(opts.showBucketToggle){
+    const bucket = effectiveBucket(t);
+    const target = bucket==='vast' ? 'dagelijks' : 'vast';
+    const checked = bucketSelection.has(txKey(t)) ? ' checked' : '';
+    bucketToggle = `<label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:var(--muted);white-space:nowrap;">
+      <input type="checkbox" data-select-bucket="${txKeyAttr}"${checked} style="margin:0;">→ ${target}
+    </label>`;
+  }
+  return `<li class="tx-row2">
+    <div class="tx-row2-meta">
+      <span>${dd}-${mm}</span>
+      <select data-edit-cat="${txKeyAttr}" style="background:${CATEGORY_COLORS[t.category]||'var(--c-overig)'};"${overridden}>
+        ${ALLE_CATEGORIEEN.map(c=>`<option value="${c}" ${c===t.category?'selected':''}>${c}</option>`).join('')}
+      </select>
+      <span style="color:${SRC_COLOR_ALL[t.source]||'var(--muted)'};">${t.source}</span>
+      ${bucketToggle}
+    </div>
+    <div class="tx-row2-content">
+      <span class="tx-row2-vendor">${t.vendor}</span>
+      <span class="tx-row2-amt" style="color:${isIncome?'var(--teal)':(t.amount<0?'var(--paper)':'var(--teal)')};">${fmt(t.amount)}</span>
+    </div>
+  </li>`;
 }
 function effectiveCategory(t){
   const key = txKey(t);
@@ -1004,6 +1050,11 @@ function effectiveReis(t){
   if(key in reisOverrides) return reisOverrides[key] || null; // '' betekent: handmatig losgekoppeld
   return autoDetectReis(t);
 }
+function effectiveBucket(t){
+  const key = txKey(t);
+  if(bucketOverrides[key]) return bucketOverrides[key];
+  return JUL_VASTE_LASTEN_CATS.includes(t.category) ? 'vast' : 'dagelijks';
+}
 async function loadOverrides(){
   try{
     const res = await fetch(SUPABASE_URL+'/rest/v1/overrides?select=key,kind,value', {headers: SUPABASE_HEADERS});
@@ -1013,6 +1064,7 @@ async function loadOverrides(){
         if(r.kind==='category') categoryOverrides[r.key] = r.value;
         else if(r.kind==='reis') reisOverrides[r.key] = r.value;
         else if(r.kind==='vendor') vendorOverrides[r.key] = r.value;
+        else if(r.kind==='bucket') bucketOverrides[r.key] = r.value;
       });
     }
   }catch(e){ /* geen verbinding met Supabase — start leeg, blijft lokaal werken */ }
@@ -1036,7 +1088,7 @@ async function deleteOverrideRow(kind, key){
   }catch(e){}
 }
 function exportOverrides(){
-  const payload = {categorieën: categoryOverrides, reizen: reisOverrides, leveranciers: vendorOverrides};
+  const payload = {categorieën: categoryOverrides, reizen: reisOverrides, leveranciers: vendorOverrides, buckets: bucketOverrides};
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1053,21 +1105,24 @@ function importOverrides(file){
     try{
       const imported = JSON.parse(e.target.result);
       let n = 0;
-      let cat = {}, reis = {}, vend = {};
-      if(imported.categorieën || imported.reizen || imported.leveranciers){
+      let cat = {}, reis = {}, vend = {}, buck = {};
+      if(imported.categorieën || imported.reizen || imported.leveranciers || imported.buckets){
         cat = imported.categorieën||{};
         reis = imported.reizen||{};
         vend = imported.leveranciers||{};
+        buck = imported.buckets||{};
       } else {
         cat = imported; // oud exportformaat: platte categorie-aanpassingen
       }
       categoryOverrides = {...categoryOverrides, ...cat};
       reisOverrides = {...reisOverrides, ...reis};
       vendorOverrides = {...vendorOverrides, ...vend};
-      n = Object.keys(cat).length + Object.keys(reis).length + Object.keys(vend).length;
+      bucketOverrides = {...bucketOverrides, ...buck};
+      n = Object.keys(cat).length + Object.keys(reis).length + Object.keys(vend).length + Object.keys(buck).length;
       Object.entries(cat).forEach(([k,v])=>saveOverrideRow('category', k, v));
       Object.entries(reis).forEach(([k,v])=>saveOverrideRow('reis', k, v));
       Object.entries(vend).forEach(([k,v])=>saveOverrideRow('vendor', k, v));
+      Object.entries(buck).forEach(([k,v])=>saveOverrideRow('bucket', k, v));
       render();
       alert('Aanpassingen geïmporteerd en gesynchroniseerd: ' + n + ' regels.');
     }catch(err){
@@ -1100,6 +1155,16 @@ async function setReisOverrideByKey(key, newReis){
   } else {
     reisOverrides[key] = newReis; // '' = expliciet "geen reis"
     saveOverrideRow('reis', key, newReis);
+  }
+  render();
+}
+async function setBucketOverrideByKey(key, newBucket){
+  if(newBucket === '__AUTO__'){
+    delete bucketOverrides[key]; // terug naar automatisch (op basis van categorie)
+    deleteOverrideRow('bucket', key);
+  } else {
+    bucketOverrides[key] = newBucket;
+    saveOverrideRow('bucket', key, newBucket);
   }
   render();
 }
@@ -1142,10 +1207,22 @@ function renderLopendeMaandView(){
 
   const incomeTotal = income.reduce((s,r)=>s+r.amount,0);
   const vasteLastenSet = new Set(JUL_VASTE_LASTEN_CATS);
-  const vast = spend.filter(r=>vasteLastenSet.has(r.category));
-  const dagelijks = spend.filter(r=>!vasteLastenSet.has(r.category));
+  const vast = spend.filter(r=>effectiveBucket(r)==='vast');
+  const dagelijks = spend.filter(r=>effectiveBucket(r)==='dagelijks');
   const vastTotaal = vast.reduce((s,r)=>s+r.amount,0);
   const dagelijksTotaal = dagelijks.reduce((s,r)=>s+r.amount,0);
+  function budgetTotaalVoor(rowsGroep){
+    const perCat = {};
+    rowsGroep.forEach(r=>{ perCat[r.category] = (perCat[r.category]||0) + Math.abs(r.amount); });
+    let totaal = 0, volledig = true;
+    Object.entries(perCat).forEach(([cat,actual])=>{
+      const b = budgetMap[cat];
+      if(b!=null) totaal += b; else { totaal += actual; volledig = false; }
+    });
+    return {totaal, volledig};
+  }
+  const vastBudget = budgetTotaalVoor(vast);
+  const dagelijksBudget = budgetTotaalVoor(dagelijks);
   const reizenTotaal = reizenRegels.reduce((s,r)=>s+r.amount,0);
   const casaProjectTotaal = casaProjectRegels.reduce((s,r)=>s+r.amount,0);
 
@@ -1170,8 +1247,8 @@ function renderLopendeMaandView(){
     if(!selectedFilter) return true;
     if(selectedFilter.type==='category') return r.category===selectedFilter.value;
     if(selectedFilter.value==='INKOMEN') return JUL_INCOME_CATS.includes(r.category);
-    if(selectedFilter.value==='VAST') return vasteLastenSet.has(r.category) && !JUL_INCOME_CATS.includes(r.category) && r.category!=='Sparen';
-    if(selectedFilter.value==='DAGELIJKS') return !vasteLastenSet.has(r.category) && !JUL_INCOME_CATS.includes(r.category) && !JUL_INTERN_CATS.includes(r.category) && r.category!=='Sparen' && r.category!=='Reizen' && r.category!=='Casa 3S (project)';
+    if(selectedFilter.value==='VAST') return effectiveBucket(r)==='vast' && !JUL_INCOME_CATS.includes(r.category) && r.category!=='Sparen';
+    if(selectedFilter.value==='DAGELIJKS') return effectiveBucket(r)==='dagelijks' && !JUL_INCOME_CATS.includes(r.category) && !JUL_INTERN_CATS.includes(r.category) && r.category!=='Sparen' && r.category!=='Reizen' && r.category!=='Casa 3S (project)';
     if(selectedFilter.value==='CASA_PROJECT') return r.category==='Casa 3S (project)';
     if(selectedFilter.value==='SPAREN') return r.category==='Sparen' && r.vendor.includes('Casa Tre Sorelle');
     if(selectedFilter.value==='REIZEN') return r.category==='Reizen';
@@ -1210,43 +1287,60 @@ function renderLopendeMaandView(){
       <span class="lr-amt ${isIncome?'pos-income':(t.amount<0?'':'neg')}">${fmt(t.amount)}</span></li>`;
   }
 
-  function accordionTile(label, bedrag, sub, expandKey, cls, donut, rows){
+
+  function accordionTile(label, bedrag, sub, expandKey, cls, donut, rows, budgetInfo){
     const isOpen = volgendeExpand===expandKey;
-    let catDetail = '';
-    if(isOpen && categoryExpand && categoryExpand.startsWith(expandKey+'|')){
-      const catName = categoryExpand.slice(expandKey.length+1);
-      const matching = (expandKey==='sparen') ? rows.slice() : rows.filter(r=>r.category===catName);
-      matching.sort((a,b)=>b.date.localeCompare(a.date));
-      catDetail = `<div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--rule);">
-        <div class="card-label">${catName} — ${matching.length} transactie${matching.length===1?'':'s'}</div>
-        <ul class="ledger-list">${matching.map(txRowHtml).join('')}</ul>
-      </div>`;
-    }
     const isIncomeLike = (expandKey==='inkomen'||expandKey==='sparen');
+    const toonBolletjes = (expandKey==='vast'||expandKey==='dagelijks');
     const barHtml = renderBarList(donut.sorted, donut.total, {
-      budgetFor: (name)=> (expandKey==='vast'||expandKey==='dagelijks') ? budgetMap[name] : null,
-      formatAmt: (val,name)=>{
-        const spendAmt = isIncomeLike ? val : -val;
-        const budget = (expandKey==='vast'||expandKey==='dagelijks') ? budgetMap[name] : null;
-        if(budget!=null){
-          const over = val > budget;
-          return `${fmt(spendAmt)} <span style="color:${over?'var(--rose)':'#4ade80'};font-size:11px;font-family:'IBM Plex Mono',monospace;">/ begroot ${fmt(budget).replace('€','€ ')}</span>`;
-        }
-        return fmt(spendAmt);
-      },
+      showDot: toonBolletjes,
+      budgetFor: (name)=> toonBolletjes ? budgetMap[name] : null,
+      formatAmt: (val)=> fmt(isIncomeLike?val:-val),
       rowAttrs: (name)=>{ const catKey=expandKey+'|'+name; return ` data-cat-toggle="${catKey}" style="cursor:pointer;${categoryExpand===catKey?'font-weight:600;':''}"`; },
       indicator: (name)=>{ const catKey=expandKey+'|'+name; return categoryExpand===catKey?' ▾':''; },
+      detailFor: (name)=>{
+        const catKey = expandKey+'|'+name;
+        if(categoryExpand!==catKey) return '';
+        const matching = (expandKey==='sparen') ? rows.slice() : rows.filter(r=>r.category===name);
+        matching.sort((a,b)=>b.date.localeCompare(a.date));
+        const catTotal = matching.reduce((s,r)=>s+r.amount,0);
+        const displayTotal = isIncomeLike ? Math.abs(catTotal) : -Math.abs(catTotal);
+        const budget = toonBolletjes ? budgetMap[name] : null;
+        const overBudget = budget!=null && Math.abs(catTotal) > budget;
+        const budgetKleur = budget!=null ? (overBudget?'var(--dot-over)':'var(--dot-ok)') : 'var(--muted)';
+        const geselecteerdInDezeTegel = toonBolletjes ? matching.filter(r=>bucketSelection.has(txKey(r))).length : 0;
+        const targetBucket = (expandKey==='vast') ? 'dagelijks' : 'vast';
+        const verplaatsKnop = geselecteerdInDezeTegel>0 ? `
+          <div class="cdt-divider"></div>
+          <button data-move-bucket="${targetBucket}" style="width:100%;background:var(--rule);border:none;color:var(--paper);border-radius:6px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;">
+            Verplaats ${geselecteerdInDezeTegel} geselecteerde${geselecteerdInDezeTegel===1?'':'n'} naar ${targetBucket}
+          </button>` : '';
+        return `<div class="cat-detail-tile">
+          <div class="cdt-total">${fmt(displayTotal)}</div>
+          <div class="cdt-budget" style="color:${budgetKleur};">${budget!=null ? 'begroot '+fmt(budget).replace('€','€ ') : 'geen budget bekend'}</div>
+          <div class="cdt-divider"></div>
+          <ul class="ledger-list" style="list-style:none;margin:0;padding:0;">${matching.map(t=>txRow2Html(t, {showBucketToggle: toonBolletjes})).join('')}</ul>
+          ${verplaatsKnop}
+        </div>`;
+      },
     });
     const detail = isOpen ? `<div class="card" style="grid-column: 1 / -1;">
       <div class="card-label">${label} — samenstelling</div>
       <div class="bar-total"><span>Totaal</span><b>${fmt(isIncomeLike?donut.total:-donut.total).replace('€','€ ')}</b></div>
       ${barHtml}
-      ${catDetail}
     </div>` : '';
+    const actueelVoorBudget = rows.reduce((s,r)=>s+Math.abs(r.amount),0);
+    const budgetRegel = budgetInfo ? (()=>{
+      const over = actueelVoorBudget > budgetInfo.totaal;
+      const kleur = over ? 'var(--dot-over)' : 'var(--dot-ok)';
+      const label2 = budgetInfo.volledig ? 'begroot' : 'begroot/voorspeld';
+      return `<div style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:${kleur};margin-top:2px;">${label2} ${fmt(budgetInfo.totaal).replace('€','€ ')}</div>`;
+    })() : '';
     return `<div class="card" data-expand="${expandKey}" style="cursor:pointer;">
         <div class="card-label">${label}${isOpen?' ▾':' ▸'}</div>
         <div class="stat-figure ${cls}">${bedrag}</div>
         <div class="stat-sub">${sub}</div>
+        ${budgetRegel}
       </div>${detail}`;
   }
 
@@ -1259,8 +1353,8 @@ function renderLopendeMaandView(){
     </div>
     <div class="hero4">
       ${accordionTile('Inkomen', fmt(incomeTotal), 'Salaris (24 juni) + belastingteruggave + vergoeding', 'inkomen', 'pos', incomeDonut, income)}
-      ${accordionTile('Vaste lasten', fmt(vastTotaal), 'incl. Casa 3S (structureel)', 'vast', 'neg', vastDonut, vast)}
-      ${accordionTile('Dagelijks', fmt(dagelijksTotaal), 'excl. reizen &amp; Casa 3S-project', 'dagelijks', 'neg', dagDonut, dagelijks)}
+      ${accordionTile('Vaste lasten', fmt(vastTotaal), 'incl. Casa 3S (structureel)', 'vast', 'neg', vastDonut, vast, vastBudget)}
+      ${accordionTile('Dagelijks', fmt(dagelijksTotaal), 'excl. reizen &amp; Casa 3S-project', 'dagelijks', 'neg', dagDonut, dagelijks, dagelijksBudget)}
       ${accordionTile('Sparen', fmt(sparenStructureel), 'overboeking naar Casa Tre Sorelle', 'sparen', 'pos', sparenDonut, sparenRegels)}
       <div class="card">
         <div class="card-label">Bestedingsruimte</div>
@@ -1268,43 +1362,17 @@ function renderLopendeMaandView(){
         <div class="stat-sub">inkomen − sparen − vast − dagelijks</div>
       </div>
     </div>
-    <div class="hero" style="margin-bottom:20px;">
-      <div class="card" data-goto-view="reizen" style="cursor:pointer;">
-        <div class="card-label">Reizen</div>
-        <div class="stat-figure neg">${fmt(reizenTotaal)}</div>
-        <div class="stat-sub">eigen tab — gefinancierd uit sparen</div>
-      </div>
-      <div class="card" data-goto-view="casaproject" style="cursor:pointer;">
-        <div class="card-label">Casa 3S (project)</div>
-        <div class="stat-figure neg">${fmt(casaProjectTotaal)}</div>
-        <div class="stat-sub">eigen tab — gefinancierd uit sparen</div>
-      </div>
-    </div>
     <div class="note-card card">
-      <b>Bestedingsruimte</b> = inkomen min sparen min vaste lasten min dagelijkse uitgaven — wat je overhoudt binnen de gewone cashflow. Reizen en Casa 3S-project staan er los van, met een eigen tab.
+      <b>Bestedingsruimte</b> = inkomen min sparen min vaste lasten min dagelijkse uitgaven — wat je overhoudt binnen de gewone cashflow. Reizen en Casa 3S-project staan er los van, met een eigen tab (zie de tabbladen bovenin).
     </div>
     <div class="card ledger-card">
       <div class="card-label"><span>Alle transacties — 25 juni t/m 16 juli</span><span class="ledger-count">${ledgerRows.length} regels</span></div>
       ${filterChip}
-      <ul class="ledger-list">
-        ${ledgerRows.map(t=>{
-          const d=new Date(t.date); const dd=String(d.getUTCDate()).padStart(2,'0'); const mm=String(d.getUTCMonth()+1).padStart(2,'0');
-          const btw = isUSVendor(t.vendor) ? '<span class="lr-btw">BTW verlegd</span>' : '';
-          const isIncome = JUL_INCOME_CATS.includes(t.category);
-          const overridden = categoryOverrides[txKey(t._orig)] ? ' title="handmatig aangepast"' : '';
-          const txKeyAttr = txKey(t._orig).replace(/"/g,'&quot;');
-          return `<li class="ledger-row">
-            <span class="lr-date">${dd}-${mm}</span>
-            <span class="lr-src" style="color:${srcColor[t.source]};border-color:${srcColor[t.source]}">${t.source}</span>
-            <select class="lr-tag-select" data-edit-cat="${txKeyAttr}" style="background:${CATEGORY_COLORS[t.category]||'var(--c-overig)'};"${overridden}>
-              ${ALLE_CATEGORIEEN.map(c=>`<option value="${c}" ${c===t.category?'selected':''}>${c}</option>`).join('')}
-            </select>
-            <span class="lr-vendor">${t.vendor}</span><span class="lr-leader"></span>${btw}
-            <span class="lr-amt ${isIncome?'pos-income':(t.amount<0?'':'neg')}">${fmt(t.amount)}</span></li>`;
-        }).join('')}
+      <ul class="ledger-list" style="list-style:none;margin:0;padding:0;">
+        ${ledgerRows.map(t=>txRow2Html(t)).join('')}
       </ul>
     </div>
-    <footer>Categorieën zijn aanpasbaar — tik op het label (met ✎) bij een transactie. Wijzigingen blijven bewaard voor volgend bezoek.</footer>
+    <footer>Categorieën zijn aanpasbaar — tik op het dropdown-vakje bij een transactie. Wijzigingen blijven bewaard voor volgend bezoek.</footer>
   `;
 }
 
@@ -1334,12 +1402,17 @@ function reisSelectHtml(t, currentRid){
 
 function reisLedgerRow(t, currentRid){
   const d=new Date(t.date); const dd=String(d.getUTCDate()).padStart(2,'0'); const mm=String(d.getUTCMonth()+1).padStart(2,'0');
-  return `<li class="ledger-row">
-    <span class="lr-date">${dd}-${mm}</span>
-    <span class="lr-src" style="color:${srcColorReis[t.source]};border-color:${srcColorReis[t.source]}">${t.source}</span>
-    ${reisSelectHtml(t, currentRid)}
-    <span class="lr-vendor">${t.vendor}</span><span class="lr-leader"></span>
-    <span class="lr-amt">${fmt(t.amount)}</span></li>`;
+  return `<li class="tx-row2">
+    <div class="tx-row2-meta">
+      <span>${dd}-${mm}</span>
+      ${reisSelectHtml(t, currentRid)}
+      <span style="color:${srcColorReis[t.source]};">${t.source}</span>
+    </div>
+    <div class="tx-row2-content">
+      <span class="tx-row2-vendor">${t.vendor}</span>
+      <span class="tx-row2-amt" style="color:var(--paper);">${fmt(t.amount)}</span>
+    </div>
+  </li>`;
 }
 
 function renderReisDetailCard(p, data){
@@ -1507,20 +1580,8 @@ function renderCasaProjectView(){
     </div>
     <div class="card ledger-card">
       <div class="card-label"><span>Alle projecttransacties</span><span class="ledger-count">${project.length} regels</span></div>
-      <ul class="ledger-list">
-        ${project.map(t=>{
-          const d=new Date(t.date); const dd=String(d.getUTCDate()).padStart(2,'0'); const mm=String(d.getUTCMonth()+1).padStart(2,'0');
-          const txKeyAttr = txKey(t._orig).replace(/"/g,'&quot;');
-          const overridden = categoryOverrides[txKey(t._orig)] ? ' title="handmatig aangepast"' : '';
-          return `<li class="ledger-row">
-            <span class="lr-date">${dd}-${mm}</span>
-            <span class="lr-src" style="color:${srcColor[t.source]};border-color:${srcColor[t.source]}">${t.source}</span>
-            <select class="lr-tag-select" data-edit-cat="${txKeyAttr}" style="background:${CATEGORY_COLORS['Casa 3S (project)']||'var(--c-italie)'};"${overridden}>
-              ${ALLE_CATEGORIEEN.map(c=>`<option value="${c}" ${c==='Casa 3S (project)'?'selected':''}>${c}</option>`).join('')}
-            </select>
-            <span class="lr-vendor">${t.vendor}</span><span class="lr-leader"></span>
-            <span class="lr-amt">${fmt(t.amount)}</span></li>`;
-        }).join('')}
+      <ul class="ledger-list" style="list-style:none;margin:0;padding:0;">
+        ${project.map(t=>txRow2Html(t)).join('')}
       </ul>
     </div>
     <footer>Structurele Casa 3S-lasten (lening, Enel, IMU) staan bij Vaste Lasten. Alleen eenmalige verbouwings-/aannemerskosten staan hier.</footer>
@@ -1764,10 +1825,23 @@ function render(){
   document.querySelectorAll('[data-filter-src]').forEach(el=>el.addEventListener('click',()=>{ selectedFilter={type:'source', value:el.dataset.filterSrc}; render(); scrollToLedger(); }));
   document.querySelectorAll('[data-filter-reis]').forEach(el=>el.addEventListener('click',()=>{ selectedFilter={type:'reis', value:el.dataset.filterReis}; render(); scrollToReisLedger(); }));
   document.querySelectorAll('[data-clear-filter]').forEach(el=>el.addEventListener('click',()=>{ selectedFilter=null; render(); }));
+  document.querySelectorAll('[data-select-bucket]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); }));
+  document.querySelectorAll('[data-select-bucket]').forEach(el=>el.addEventListener('change',(e)=>{
+    e.stopPropagation();
+    const key = el.dataset.selectBucket;
+    if(el.checked) bucketSelection.add(key); else bucketSelection.delete(key);
+    render();
+  }));
+  document.querySelectorAll('[data-move-bucket]').forEach(el=>el.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const target = el.dataset.moveBucket;
+    [...bucketSelection].forEach(key=>setBucketOverrideByKey(key, target));
+    bucketSelection.clear();
+  }));
   document.querySelectorAll('[data-goto-view]').forEach(el=>el.addEventListener('click',()=>{ view=el.dataset.gotoView; selectedFilter=null; render(); }));
   document.querySelectorAll('[data-scroll-to]').forEach(el=>el.addEventListener('click',()=>{ scrollToSelector('#'+el.dataset.scrollTo); }));
   document.querySelectorAll('[data-expand]').forEach(el=>el.addEventListener('click',()=>{ volgendeExpand = (volgendeExpand===el.dataset.expand) ? null : el.dataset.expand; categoryExpand=null; render(); }));
-  document.querySelectorAll('[data-cat-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); categoryExpand = (categoryExpand===el.dataset.catToggle) ? null : el.dataset.catToggle; render(); }));
+  document.querySelectorAll('[data-cat-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); categoryExpand = (categoryExpand===el.dataset.catToggle) ? null : el.dataset.catToggle; bucketSelection.clear(); render(); }));
   const exportBtn = document.querySelector('[data-export-overrides]');
   if(exportBtn) exportBtn.addEventListener('click', exportOverrides);
   const importInput = document.querySelector('[data-import-overrides]');
