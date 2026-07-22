@@ -1446,10 +1446,15 @@ function reisSelectHtml(t, currentRid){
 
 function reisLedgerRow(t, currentRid){
   const d=new Date(t.date); const dd=String(d.getUTCDate()).padStart(2,'0'); const mm=String(d.getUTCMonth()+1).padStart(2,'0');
+  const txKeyAttr = txKey(t).replace(/"/g,'&quot;');
+  const overridden = categoryOverrides[txKey(t)] ? ' title="handmatig aangepast"' : '';
   return `<li class="tx-row2">
     <div class="tx-row2-meta">
       <span>${dd}-${mm}</span>
       ${reisSelectHtml(t, currentRid)}
+      <select data-edit-cat="${txKeyAttr}" style="background:${CATEGORY_COLORS[t.category]||'var(--c-overig)'};"${overridden}>
+        ${ALLE_CATEGORIEEN.map(c=>`<option value="${c}" ${c===t.category?'selected':''}>${c}</option>`).join('')}
+      </select>
       <span style="color:${srcColorReis[t.source]};">${t.source}</span>
     </div>
     <div class="tx-row2-content">
