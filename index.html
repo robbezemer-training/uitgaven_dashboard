@@ -951,7 +951,7 @@ const REIZEN_STATUS_LABEL = {lopend:'Lopend', planning:'Wordt gepland', idee:'Id
 const REIZEN_STATUS_COLOR = {lopend:'var(--teal)', planning:'var(--brass)', idee:'var(--muted)'};
 /* Trefwoorden voor automatische koppeling van transacties aan een reis. Alleen ingevuld voor reizen waar al transacties over binnenkomen. */
 const REIZEN_KEYWORDS = {
-  'italie-2026': ['ravello','maiori','hotel2torri','italia','italië','k. ros','amalfi','positano','napoli','unicoop','conad','palazzo dipinto','transavia inflight','tower parking','elegelati','avolta','bruna 2303','sud srl','hms host','lalbero','heikos'],
+  'italie-2026': ['ravello','maiori','hotel2torri','italia','italië','k. ros','amalfi','positano','napoli','unicoop','conad','palazzo dipinto','transavia inflight','tower parking','elegelati','avolta','bruna 2303','sud srl','hms host','lalbero','heikos','vatica'],
   'thailand-2026': ['thailand','bangkok','phuket','krabi','chiang mai','koh samui','thai airways','airasia'],
   'japan-2027': ['japan','tokyo','osaka','kyoto','ana ','jal ','japan airlines'],
 };
@@ -1184,7 +1184,7 @@ function promptEditCategoryByKey(key, huidigeCat){
 function buildCombinedJul(){
   const rabo = RABO_TX_JUL.map(r=>({...r, category: effectiveCategory(r), _orig: r, source:'RABO'}));
   const ing = ING_TX_JUL.map(r=>({...r, category: effectiveCategory(r), _orig: r, source:'ING'}));
-  const amex = AMEX_TX_JUL.map(r=>({...r, amount:-r.amount, category: effectiveCategory(r), _orig: r, source:'AMEX'}));
+  const amex = AMEX_TX_JUL.map(r=>{ const neg = {...r, amount:-r.amount}; return {...neg, category: effectiveCategory(neg), _orig: neg, source:'AMEX'}; });
   const ingcc = INGCC_TX_JUL.map(r=>({...r, category: effectiveCategory(r), _orig: r, source:'ING CC'}));
   return [...rabo, ...ing, ...amex, ...ingcc];
 }
@@ -1417,6 +1417,7 @@ let selectedFilter = null; // {type:'category'|'source'|'reis', value:string} | 
 let volgendeExpand = null; // 'inkomen' | 'vast' | 'dagelijks' | null
 let categoryExpand = null; // 'tileKey|CategoryName' | null
 let reisTileExpand = null; // 'tripId|budget'|'tripId|gespaard'|'tripId|uitgegeven' | 'nietToegewezen' | null
+let reisTripExpand = null; // welke reis (trip id) volledig is uitgeklapt in de Reizen-tab, null = geen
 
 /* ---------- Reizen: meerjarenplanning + lopende reizen, gefinancierd uit sparen ---------- */
 const srcColorReis = {RABO:'var(--brass)', ING:'var(--teal)', AMEX:'var(--rose)', 'ING CC':'var(--ingcc)'};
@@ -1424,9 +1425,15 @@ const srcColorReis = {RABO:'var(--brass)', ING:'var(--teal)', AMEX:'var(--rose)'
 function reisSelectHtml(t, currentRid){
   const key = txKey(t._orig);
   const txKeyAttr = key.replace(/"/g,'&quot;');
-  const hasOverride = key in reisOverrides;
-  const selectedValue = currentRid!==null ? currentRid : (hasOverride ? '' : '__AUTO__');
-  const bg = currentRid ? 'var(--brass)' : 'var(--rose)';
+  let selectedValue;
+  if(currentRid !== null){
+    selectedValue = currentRid; // al resolved doorgegeven (toegewezen aan een reis)
+  } else if(key in reisOverrides){
+    selectedValue = reisOverrides[key] || ''; // echte opgeslagen waarde tonen; '' = expliciet geen reis
+  } else {
+    selectedValue = '__AUTO__';
+  }
+  const bg = (selectedValue && selectedValue!=='__AUTO__') ? 'var(--brass)' : 'var(--rose)';
   const options = [
     `<option value="__AUTO__" ${selectedValue==='__AUTO__'?'selected':''}>— automatisch —</option>`,
     `<option value="" ${selectedValue===''?'selected':''}>— geen reis —</option>`
@@ -1464,27 +1471,18 @@ function renderReisDetailCard(p, data, sparenActies){
   const uitgegevenOpen = reisTileExpand===(p.id+'|uitgegeven');
 
   const budgetDetail = budgetOpen ? `<div class="cat-detail-tile" style="grid-column:1/-1;">
-    ${p.handmatig ? `<div class="cdt-total">${fmt(p.handmatig.begroot)}</div><div class="cdt-budget" style="color:var(--muted);">eigen begroting (${p.handmatig.bron}): betaald ${fmt(p.handmatig.betaald)} · nog te betalen ${fmt(p.handmatig.saldo)}</div>` : `<div class="cdt-total">${p.budget!=null?fmt(p.budget):'n.t.b.'}</div><div class="cdt-budget" style="color:var(--muted);">vastgesteld richtbedrag, geen verdere onderverdeling bekend</div>`}
+    ${p.handmatig ? `<div class="cdt-budget" style="color:var(--muted);">eigen begroting (${p.handmatig.bron}): betaald ${fmt(p.handmatig.betaald)} · nog te betalen ${fmt(p.handmatig.saldo)}</div>` : `<div class="cdt-budget" style="color:var(--muted);">vastgesteld richtbedrag, geen verdere onderverdeling bekend</div>`}
   </div>` : '';
 
   const gespaardDetail = gespaardOpen ? `<div class="cat-detail-tile" style="grid-column:1/-1;">
-    <div class="cdt-total">${fmt(gespaard)}</div>
-    <div class="cdt-budget" style="color:var(--muted);">huidig saldo in ${p.potje||'potje'}${gespaard===0 && sparenTotaal>0 ? ' — leeg, volledig verplaatst naar rekening' : ''}</div>
-    ${sparenActies.length ? `<div class="cdt-divider"></div><ul class="ledger-list" style="list-style:none;margin:0;padding:0;">${sparenActies.map(t=>txRow2Html(t)).join('')}</ul>` : `<div class="cdt-divider"></div><div style="color:var(--muted);font-size:12px;">Geen aparte spaaracties gevonden voor deze reis (mogelijk gefinancierd uit een al bestaand potje).</div>`}
+    ${sparenActies.length ? `<ul class="ledger-list" style="list-style:none;margin:0;padding:0;">${sparenActies.map(t=>txRow2Html(t)).join('')}</ul>` : `<div style="color:var(--muted);font-size:12px;">Geen aparte spaaracties gevonden voor deze reis (mogelijk gefinancierd uit een al bestaand potje).</div>`}
   </div>` : '';
 
   const uitgegevenDetail = uitgegevenOpen ? `<div class="cat-detail-tile" style="grid-column:1/-1;">
-    <div class="cdt-total">${fmt(uitgegeven)}</div>
-    <div class="cdt-budget" style="color:var(--muted);">${data.tx.length} transactie${data.tx.length===1?'':'s'}, via rekening (excl. nog te verwerken AMEX/creditcard)</div>
-    <div class="cdt-divider"></div>
     <ul class="ledger-list" style="list-style:none;margin:0;padding:0;">${data.tx.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(t=>txRow2Html(t)).join('')}</ul>
   </div>` : '';
 
   return `
-    <div class="note-card card" style="margin-bottom:12px;">
-      <b>${p.naam} — ${p.timing} ${p.jaar}</b> <span class="reis-status-pill" style="color:${REIZEN_STATUS_COLOR[p.status]};border-color:${REIZEN_STATUS_COLOR[p.status]}">${REIZEN_STATUS_LABEL[p.status]}</span>
-      <span style="color:var(--muted);font-size:11.5px;"> — tik op een tegel voor de bijbehorende transacties</span>
-    </div>
     <div class="hero4">
       <div class="card" data-reis-tile-toggle="${p.id}|budget" style="cursor:pointer;">
         <div class="card-label">Budget${budgetOpen?' ▾':' ▸'}</div>
@@ -1524,7 +1522,7 @@ function renderReizenView(){
   reizenSpend.forEach(t=>{
     const rid = effectiveReis(t);
     if(rid && perReis[rid]){ perReis[rid].uitgegeven += t.amount; perReis[rid].tx.push(t); }
-    else { nietToegewezen.push(t); }
+    else if(t.date >= '2026-06-01'){ nietToegewezen.push(t); } // ouder, ongematcht = geschiedenis zonder functie, niet tonen
   });
   nietToegewezen.sort((a,b)=>b.date.localeCompare(a.date));
 
@@ -1557,17 +1555,15 @@ function renderReizenView(){
   return `
     <div class="note-card card">
       <b>Model:</b> een reis staat eerst in <b>planning</b> (budget kan nog wijzigen) → zodra het budget vastligt wordt er gespaard tot dat bedrag → betalingen vóór en tijdens de reis lopen via een rekening (Rabo/ING/AMEX), maar tellen tegen het budget/potje → bij afsluiting: overschot gaat terug naar sparen, een tekort komt op de balans van het gewone huishoudbudget.
-      <br><br><i>Transacties worden automatisch aan een reis gekoppeld op trefwoord in de omschrijving (bv. "Ravello" → Italië). Klopt dat niet — zoals koffie op Schiphol — wijs de reis dan hieronder handmatig toe via de dropdown. Tik op een tegel of reis-rij om alleen de transacties van die reis te zien.</i>
+      <br><br><i>Transacties worden automatisch aan een reis gekoppeld op trefwoord in de omschrijving (bv. "Ravello" → Italië). Klopt dat niet — zoals koffie op Schiphol — wijs de reis dan hieronder handmatig toe via de dropdown. Tik op een reis-tegel om 'm open te klappen; tik nog een keer om 'm weer dicht te klappen.</i>
     </div>
-
-    ${lopendeReizen.map(p=>renderReisDetailCard(p, perReis[p.id], perReisSparen[p.id])).join('')}
 
     ${(() => {
       const open = reisTileExpand==='nietToegewezen';
       const totaalNT = nietToegewezen.reduce((s,r)=>s+r.amount,0);
       return `
       <div class="card" data-reis-tile-toggle="nietToegewezen" style="cursor:pointer;margin-bottom:12px;">
-        <div class="card-label">Nog te plaatsen (geschiedenis, geen match)${open?' ▾':' ▸'}</div>
+        <div class="card-label">Verwerken — nog te plaatsen${open?' ▾':' ▸'}</div>
         <div class="stat-figure neg">${fmt(totaalNT)}</div>
         <div class="stat-sub">${nietToegewezen.length} transactie${nietToegewezen.length===1?'':'s'} — geen geplande reis herkend, tik om toe te wijzen</div>
         ${open ? `<div class="cat-detail-tile" style="margin-top:14px;">
@@ -1577,6 +1573,16 @@ function renderReizenView(){
         </div>` : ''}
       </div>`;
     })()}
+
+    ${lopendeReizen.map(p=>{
+      const isOpen = reisTripExpand===p.id;
+      const tile = `<div class="card" data-reis-trip-toggle="${p.id}" style="cursor:pointer;margin-bottom:${isOpen?'12px':'12px'};">
+        <div class="card-label">${p.jaar}</div>
+        <div class="stat-figure pos">${p.naam}${isOpen?' ▾':' ▸'}</div>
+      </div>`;
+      const detail = isOpen ? renderReisDetailCard(p, perReis[p.id], perReisSparen[p.id]) : '';
+      return tile + detail;
+    }).join('')}
 
     <div class="card">
       <div class="card-label">Meerjarenplanning (2026–2036)</div>
@@ -1912,6 +1918,7 @@ function render(){
   document.querySelectorAll('[data-filter-reis]').forEach(el=>el.addEventListener('click',()=>{ selectedFilter={type:'reis', value:el.dataset.filterReis}; render(); scrollToReisLedger(); }));
   document.querySelectorAll('[data-clear-filter]').forEach(el=>el.addEventListener('click',()=>{ selectedFilter=null; render(); }));
   document.querySelectorAll('[data-reis-tile-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); reisTileExpand = (reisTileExpand===el.dataset.reisTileToggle) ? null : el.dataset.reisTileToggle; render(); }));
+  document.querySelectorAll('[data-reis-trip-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); reisTripExpand = (reisTripExpand===el.dataset.reisTripToggle) ? null : el.dataset.reisTripToggle; reisTileExpand=null; render(); }));
   document.querySelectorAll('[data-select-bucket]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); }));
   document.querySelectorAll('[data-select-bucket]').forEach(el=>el.addEventListener('change',(e)=>{
     e.stopPropagation();
