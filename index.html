@@ -116,6 +116,9 @@
   .app-tile-label{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:16px; line-height:1.25; }
 
   .detail-header{ display:flex; align-items:center; gap:10px; margin-bottom:22px; position:sticky; top:0; z-index:25; background: var(--ink); padding: 14px 0 12px; }
+  .vermogen-opties-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; position:sticky; top:66px; z-index:24; background:var(--ink); padding:10px 0; margin-bottom:2px; }
+  .vermogen-optie-tegel{ background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 10px; min-height:60px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:13px; text-align:center; cursor:pointer; transition:border-color .15s,color .15s; }
+  .vermogen-optie-tegel.active{ border-color:var(--brass); color:var(--paper); font-weight:600; }
   .back-btn{ background:none;border:1px solid var(--rule); color:var(--paper); border-radius:9px; width:40px;height:40px; display:flex;align-items:center;justify-content:center; cursor:pointer; flex-shrink:0; }
   .back-btn:active{ background: rgba(255,255,255,0.07); }
   .back-btn svg{ width:20px; height:20px; }
@@ -969,136 +972,137 @@ const VERMOGEN_MAANDEN = [
 {m:'december 2026',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:114929,aflos:null,basis2:114929},
 {m:'januari 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:120229,aflos:null,basis2:120229},
 {m:'13e maand',rob:8215,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:130494,aflos:null,basis2:130494},
-{m:'februari 2027',rob:2000,lindy:2300,heks:1000,extra:31432,bedrag:16000,wat:'Japan',basis:-39662,aflos:190888,basis2:-39662},
-{m:'maart 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:4000,wat:'Italie',basis:-38362,aflos:null,basis2:-38362},
-{m:'april 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-33062,aflos:null,basis2:-33062},
-{m:'mei 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-27762,aflos:null,basis2:-27762},
-{m:'juni 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-22462,aflos:null,basis2:-22462},
-{m:'Vakantiegeld',rob:8103,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:-13610,aflos:null,basis2:-13610},
-{m:'juli 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-8310,aflos:null,basis2:-8310},
-{m:'augustus 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-3010,aflos:null,basis2:-3010},
-{m:'september 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:12000,wat:'China',basis:-9710,aflos:null,basis2:-9710},
-{m:'oktober 2027',rob:2000,lindy:2800,heks:1000,extra:null,bedrag:null,wat:'',basis:-3910,aflos:null,basis2:-3910},
-{m:'november 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:15000,wat:'Botswana',basis:-13610,aflos:null,basis2:-13610},
-{m:'december 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-8310,aflos:null,basis2:-8310},
-{m:'januari 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-3010,aflos:null,basis2:-3010},
-{m:'13e maand',rob:8437,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:7477,aflos:null,basis2:7477},
-{m:'februari 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:1500,wat:'Italië',basis:11277,aflos:null,basis2:11277},
-{m:'maart 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:16577,aflos:null,basis2:16577},
-{m:'april 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:21877,aflos:null,basis2:21877},
-{m:'mei 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:27177,aflos:null,basis2:27177},
-{m:'juni 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:32477,aflos:null,basis2:32477},
-{m:'Vakantiegeld',rob:8265,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:41492,aflos:null,basis2:41492},
-{m:'juli 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:46792,aflos:null,basis2:46792},
-{m:'augustus 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:52092,aflos:null,basis2:52092},
-{m:'september 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:6000,wat:'Qatar',basis:51392,aflos:null,basis2:51392},
-{m:'oktober 2028',rob:2000,lindy:2800,heks:1000,extra:null,bedrag:null,wat:'',basis:57192,aflos:null,basis2:57192},
-{m:'november 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:62492,aflos:null,basis2:62492},
-{m:'december 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:67792,aflos:null,basis2:67792},
-{m:'januari 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:73092,aflos:null,basis2:73092},
-{m:'13e maand',rob:8606,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:83748,aflos:null,basis2:83748},
-{m:'februari 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:89048,aflos:null,basis2:89048},
-{m:'maart 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:6000,wat:'Marokko',basis:88348,aflos:null,basis2:88348},
-{m:'april 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:93648,aflos:null,basis2:93648},
-{m:'mei 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:4000,wat:'Italië',basis:94948,aflos:null,basis2:94948},
-{m:'juni 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:100248,aflos:null,basis2:100248},
-{m:'Vakantiegeld',rob:8430,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:109428,aflos:null,basis2:109428},
-{m:'juli 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:114728,aflos:null,basis2:114728},
-{m:'augustus 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:120028,aflos:null,basis2:120028},
-{m:'september 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:125328,aflos:null,basis2:125328},
-{m:'oktober 2029',rob:2000,lindy:2800,heks:1000,extra:null,bedrag:30000,wat:'USA',basis:101128,aflos:null,basis2:101128},
-{m:'november 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:106428,aflos:null,basis2:106428},
-{m:'december 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:111728,aflos:null,basis2:111728},
-{m:'januari 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:117028,aflos:null,basis2:117028},
-{m:'13e maand',rob:8778,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:127855,aflos:null,basis2:127855},
-{m:'februari 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:8000,wat:'Faroer',basis:125155,aflos:null,basis2:125155},
-{m:'maart 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:130455,aflos:null,basis2:130455},
-{m:'april 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:135755,aflos:null,basis2:135755},
-{m:'mei 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:141055,aflos:null,basis2:141055},
-{m:'juni 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:146355,aflos:null,basis2:146355},
-{m:'Vakantiegeld',rob:8599,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:155704,aflos:null,basis2:155704},
-{m:'juli 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:161004,aflos:100000,basis2:61004},
-{m:'augustus 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:166304,aflos:null,basis2:66304},
-{m:'september 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:171604,aflos:null,basis2:71604},
-{m:'oktober 2030',rob:2000,lindy:2800,heks:1000,extra:null,bedrag:15000,wat:'Alaska',basis:162404,aflos:null,basis2:62404},
-{m:'november 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:167704,aflos:null,basis2:67704},
-{m:'december 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:173004,aflos:null,basis2:73004},
-{m:'januari 2031',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:178304,aflos:null,basis2:78304},
-{m:'13e maand',rob:8953,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:189307,aflos:null,basis2:89307},
-{m:'februari 2031',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:10000,wat:'India',basis:184607,aflos:null,basis2:84607},
-{m:'maart 2031',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:189907,aflos:null,basis2:89907},
-{m:'april 2031',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:195207,aflos:null,basis2:95207},
-{m:'mei 2031',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:200507,aflos:null,basis2:100507},
-{m:'juni 2031',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:205807,aflos:null,basis2:105807},
-{m:'Vakantiegeld',rob:8771,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:215328,aflos:null,basis2:115328},
-{m:'juli 2031',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:219478,aflos:null,basis2:119478},
-{m:'augustus 2031',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:223628,aflos:236317,basis2:-112689},
-{m:'september 2031',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:227778,aflos:-540,basis2:-107999},
-{m:'oktober 2031',rob:850,lindy:2800,heks:1000,extra:null,bedrag:8000,wat:'Florida',basis:224428,aflos:-540,basis2:-110809},
-{m:'november 2031',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:228578,aflos:-540,basis2:-106119},
-{m:'december 2031',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:232728,aflos:-540,basis2:-101429},
-{m:'januari 2032',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:236878,aflos:-540,basis2:-96739},
-{m:'13e maand',rob:9132,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:248060,aflos:null,basis2:-85557},
-{m:'februari 2032',rob:850,lindy:2300,heks:1000,extra:null,bedrag:25000,wat:'Svalbard',basis:227210,aflos:-540,basis2:-105867},
-{m:'maart 2032',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:231360,aflos:-540,basis2:-101177},
-{m:'april 2032',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:235510,aflos:-540,basis2:-96487},
-{m:'mei 2032',rob:850,lindy:2300,heks:1000,extra:null,bedrag:1500,wat:'Italië',basis:238160,aflos:-540,basis2:-93297},
-{m:'juni 2032',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:242310,aflos:-540,basis2:-88607},
-{m:'Vakantiegeld',rob:7554,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:250614,aflos:null,basis2:-80303},
-{m:'juli 2032',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:254914,aflos:-540,basis2:-75463},
-{m:'augustus 2032',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:259214,aflos:-540,basis2:-70623},
-{m:'september 2032',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:263514,aflos:-540,basis2:-65783},
-{m:'oktober 2032',rob:1000,lindy:2800,heks:1000,extra:null,bedrag:8000,wat:'New York',basis:260314,aflos:-540,basis2:-68443},
-{m:'november 2032',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:15000,wat:'Kenia',basis:249614,aflos:-540,basis2:-78603},
-{m:'december 2032',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:253914,aflos:-540,basis2:-73763},
-{m:'januari 2033',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:258214,aflos:-540,basis2:-68923},
-{m:'13e maand',rob:7865,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:268129,aflos:null,basis2:-59008},
-{m:'februari 2033',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:1500,wat:'Italië',basis:270929,aflos:-540,basis2:-55668},
-{m:'maart 2033',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:275229,aflos:-540,basis2:-50828},
-{m:'april 2033',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:279529,aflos:-540,basis2:-45988},
-{m:'mei 2033',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:283829,aflos:-540,basis2:-41148},
-{m:'juni 2033',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:288129,aflos:-540,basis2:-36308},
-{m:'Vakantiegeld',rob:7705,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:296584,aflos:null,basis2:-27853},
-{m:'juli 2033',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:300969,aflos:-540,basis2:-22928},
-{m:'augustus 2033',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:305354,aflos:-540,basis2:-18003},
-{m:'september 2033',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:309739,aflos:-540,basis2:-13078},
-{m:'oktober 2033',rob:1085,lindy:2800,heks:1000,extra:null,bedrag:10000,wat:'Schotland',basis:304624,aflos:-540,basis2:-17653},
-{m:'november 2033',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:309009,aflos:-540,basis2:-12728},
-{m:'december 2033',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:313394,aflos:-540,basis2:-7803},
-{m:'januari 2034',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:317779,aflos:-540,basis2:-2878},
-{m:'13e maand',rob:8023,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:327852,aflos:null,basis2:7195},
-{m:'februari 2034',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:1500,wat:'Italië',basis:330737,aflos:-540,basis2:10620},
-{m:'maart 2034',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:335122,aflos:-540,basis2:15545},
-{m:'april 2034',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:339507,aflos:-540,basis2:20470},
-{m:'mei 2034',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:25000,wat:'Chili',basis:318892,aflos:-540,basis2:395},
-{m:'juni 2034',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:323277,aflos:-540,basis2:5320},
-{m:'Vakantiegeld',rob:7859,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:331886,aflos:null,basis2:13929},
-{m:'juli 2034',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:336381,aflos:-530,basis2:18954},
-{m:'augustus 2034',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:340876,aflos:-530,basis2:23979},
-{m:'september 2034',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:345371,aflos:-530,basis2:29004},
-{m:'oktober 2034',rob:1195,lindy:2800,heks:1000,extra:null,bedrag:null,wat:'',basis:350366,aflos:-530,basis2:34529},
-{m:'november 2034',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:354861,aflos:-530,basis2:39554},
-{m:'december 2034',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:359356,aflos:-530,basis2:44579},
-{m:'januari 2035',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:363851,aflos:-530,basis2:49604},
-{m:'13e maand',rob:8183,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:374084,aflos:null,basis2:59837},
-{m:'februari 2035',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:378579,aflos:-530,basis2:64862},
-{m:'maart 2035',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:383074,aflos:-530,basis2:69887},
-{m:'Pensioen Rob',rob:null,lindy:2300,heks:2400,extra:null,bedrag:null,wat:'',basis:387774,aflos:-530,basis2:75117}
+{m:'februari 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:16000,wat:'Japan',basis:-71094,aflos:190888,basis2:-71094},
+{m:'maart 2027',rob:2000,lindy:2300,heks:1000,extra:32700.75,bedrag:4000,wat:'Italie',basis:-37093.25,aflos:null,basis2:-37093.25},
+{m:'april 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-31793.25,aflos:null,basis2:-31793.25},
+{m:'mei 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-26493.25,aflos:null,basis2:-26493.25},
+{m:'juni 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-21193.25,aflos:null,basis2:-21193.25},
+{m:'Vakantiegeld',rob:8103,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:-12341.25,aflos:null,basis2:-12341.25},
+{m:'juli 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-7041.25,aflos:null,basis2:-7041.25},
+{m:'augustus 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-1741.25,aflos:null,basis2:-1741.25},
+{m:'september 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:12000,wat:'China',basis:-8441.25,aflos:null,basis2:-8441.25},
+{m:'oktober 2027',rob:2000,lindy:2800,heks:1000,extra:null,bedrag:null,wat:'',basis:-2641.25,aflos:null,basis2:-2641.25},
+{m:'november 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:15000,wat:'Botswana',basis:-12341.25,aflos:null,basis2:-12341.25},
+{m:'december 2027',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-7041.25,aflos:null,basis2:-7041.25},
+{m:'januari 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:-1741.25,aflos:null,basis2:-1741.25},
+{m:'13e maand',rob:8437,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:8745.75,aflos:null,basis2:8745.75},
+{m:'februari 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:1500,wat:'Italië',basis:12545.75,aflos:null,basis2:12545.75},
+{m:'maart 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:17845.75,aflos:null,basis2:17845.75},
+{m:'april 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:23145.75,aflos:null,basis2:23145.75},
+{m:'mei 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:28445.75,aflos:null,basis2:28445.75},
+{m:'juni 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:33745.75,aflos:null,basis2:33745.75},
+{m:'Vakantiegeld',rob:8265,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:42760.75,aflos:null,basis2:42760.75},
+{m:'juli 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:48060.75,aflos:null,basis2:48060.75},
+{m:'augustus 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:53360.75,aflos:null,basis2:53360.75},
+{m:'september 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:6000,wat:'Qatar',basis:52660.75,aflos:null,basis2:52660.75},
+{m:'oktober 2028',rob:2000,lindy:2800,heks:1000,extra:null,bedrag:null,wat:'',basis:58460.75,aflos:null,basis2:58460.75},
+{m:'november 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:63760.75,aflos:null,basis2:63760.75},
+{m:'december 2028',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:69060.75,aflos:null,basis2:69060.75},
+{m:'januari 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:74360.75,aflos:null,basis2:74360.75},
+{m:'13e maand',rob:8606,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:85016.75,aflos:null,basis2:85016.75},
+{m:'februari 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:90316.75,aflos:null,basis2:90316.75},
+{m:'maart 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:6000,wat:'Marokko',basis:89616.75,aflos:null,basis2:89616.75},
+{m:'april 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:94916.75,aflos:null,basis2:94916.75},
+{m:'mei 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:4000,wat:'Italië',basis:96216.75,aflos:null,basis2:96216.75},
+{m:'juni 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:101516.75,aflos:null,basis2:101516.75},
+{m:'Vakantiegeld',rob:8430,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:110696.75,aflos:null,basis2:110696.75},
+{m:'juli 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:115996.75,aflos:null,basis2:115996.75},
+{m:'augustus 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:121296.75,aflos:null,basis2:121296.75},
+{m:'september 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:126596.75,aflos:null,basis2:126596.75},
+{m:'oktober 2029',rob:2000,lindy:2800,heks:1000,extra:null,bedrag:30000,wat:'USA',basis:102396.75,aflos:null,basis2:102396.75},
+{m:'november 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:107696.75,aflos:null,basis2:107696.75},
+{m:'december 2029',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:112996.75,aflos:null,basis2:112996.75},
+{m:'januari 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:118296.75,aflos:null,basis2:118296.75},
+{m:'13e maand',rob:8778,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:129123.75,aflos:null,basis2:129123.75},
+{m:'februari 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:8000,wat:'Faroer',basis:126423.75,aflos:null,basis2:126423.75},
+{m:'maart 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:131723.75,aflos:null,basis2:131723.75},
+{m:'april 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:137023.75,aflos:null,basis2:137023.75},
+{m:'mei 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:142323.75,aflos:null,basis2:142323.75},
+{m:'juni 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:147623.75,aflos:null,basis2:147623.75},
+{m:'Vakantiegeld',rob:8599,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:156972.75,aflos:null,basis2:156972.75},
+{m:'juli 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:162272.75,aflos:100000,basis2:62272.75},
+{m:'augustus 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:167572.75,aflos:null,basis2:67572.75},
+{m:'september 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:172872.75,aflos:null,basis2:72872.75},
+{m:'oktober 2030',rob:2000,lindy:2800,heks:1000,extra:null,bedrag:15000,wat:'Alaska',basis:163672.75,aflos:null,basis2:63672.75},
+{m:'november 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:168972.75,aflos:null,basis2:68972.75},
+{m:'december 2030',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:174272.75,aflos:null,basis2:74272.75},
+{m:'januari 2031',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:179572.75,aflos:null,basis2:79572.75},
+{m:'13e maand',rob:8953,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:190575.75,aflos:null,basis2:90575.75},
+{m:'februari 2031',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:10000,wat:'India',basis:185875.75,aflos:null,basis2:85875.75},
+{m:'maart 2031',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:191175.75,aflos:null,basis2:91175.75},
+{m:'april 2031',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:196475.75,aflos:null,basis2:96475.75},
+{m:'mei 2031',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:201775.75,aflos:null,basis2:101775.75},
+{m:'juni 2031',rob:2000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:207075.75,aflos:null,basis2:107075.75},
+{m:'Vakantiegeld',rob:8771,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:216596.75,aflos:null,basis2:116596.75},
+{m:'juli 2031',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:220746.75,aflos:null,basis2:120746.75},
+{m:'augustus 2031',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:224896.75,aflos:236317,basis2:-111420.25},
+{m:'september 2031',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:229046.75,aflos:-540,basis2:-106730.25},
+{m:'oktober 2031',rob:850,lindy:2800,heks:1000,extra:null,bedrag:8000,wat:'Florida',basis:225696.75,aflos:-540,basis2:-109540.25},
+{m:'november 2031',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:229846.75,aflos:-540,basis2:-104850.25},
+{m:'december 2031',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:233996.75,aflos:-540,basis2:-100160.25},
+{m:'januari 2032',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:238146.75,aflos:-540,basis2:-95470.25},
+{m:'13e maand',rob:9132,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:249328.75,aflos:null,basis2:-84288.25},
+{m:'februari 2032',rob:850,lindy:2300,heks:1000,extra:null,bedrag:25000,wat:'Svalbard',basis:228478.75,aflos:-540,basis2:-104598.25},
+{m:'maart 2032',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:232628.75,aflos:-540,basis2:-99908.25},
+{m:'april 2032',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:236778.75,aflos:-540,basis2:-95218.25},
+{m:'mei 2032',rob:850,lindy:2300,heks:1000,extra:null,bedrag:1500,wat:'Italië',basis:239428.75,aflos:-540,basis2:-92028.25},
+{m:'juni 2032',rob:850,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:243578.75,aflos:-540,basis2:-87338.25},
+{m:'Vakantiegeld',rob:7554,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:251882.75,aflos:null,basis2:-79034.25},
+{m:'juli 2032',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:256182.75,aflos:-540,basis2:-74194.25},
+{m:'augustus 2032',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:260482.75,aflos:-540,basis2:-69354.25},
+{m:'september 2032',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:264782.75,aflos:-540,basis2:-64514.25},
+{m:'oktober 2032',rob:1000,lindy:2800,heks:1000,extra:null,bedrag:8000,wat:'New York',basis:261582.75,aflos:-540,basis2:-67174.25},
+{m:'november 2032',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:15000,wat:'Kenia',basis:250882.75,aflos:-540,basis2:-77334.25},
+{m:'december 2032',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:255182.75,aflos:-540,basis2:-72494.25},
+{m:'januari 2033',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:259482.75,aflos:-540,basis2:-67654.25},
+{m:'13e maand',rob:7865,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:269397.75,aflos:null,basis2:-57739.25},
+{m:'februari 2033',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:1500,wat:'Italië',basis:272197.75,aflos:-540,basis2:-54399.25},
+{m:'maart 2033',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:276497.75,aflos:-540,basis2:-49559.25},
+{m:'april 2033',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:280797.75,aflos:-540,basis2:-44719.25},
+{m:'mei 2033',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:285097.75,aflos:-540,basis2:-39879.25},
+{m:'juni 2033',rob:1000,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:289397.75,aflos:-540,basis2:-35039.25},
+{m:'Vakantiegeld',rob:7705,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:297852.75,aflos:null,basis2:-26584.25},
+{m:'juli 2033',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:302237.75,aflos:-540,basis2:-21659.25},
+{m:'augustus 2033',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:306622.75,aflos:-540,basis2:-16734.25},
+{m:'september 2033',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:311007.75,aflos:-540,basis2:-11809.25},
+{m:'oktober 2033',rob:1085,lindy:2800,heks:1000,extra:null,bedrag:10000,wat:'Schotland',basis:305892.75,aflos:-540,basis2:-16384.25},
+{m:'november 2033',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:310277.75,aflos:-540,basis2:-11459.25},
+{m:'december 2033',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:314662.75,aflos:-540,basis2:-6534.25},
+{m:'januari 2034',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:319047.75,aflos:-540,basis2:-1609.25},
+{m:'13e maand',rob:8023,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:329120.75,aflos:null,basis2:8463.75},
+{m:'februari 2034',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:1500,wat:'Italië',basis:332005.75,aflos:-540,basis2:11888.75},
+{m:'maart 2034',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:336390.75,aflos:-540,basis2:16813.75},
+{m:'april 2034',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:340775.75,aflos:-540,basis2:21738.75},
+{m:'mei 2034',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:25000,wat:'Chili',basis:320160.75,aflos:-540,basis2:1663.75},
+{m:'juni 2034',rob:1085,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:324545.75,aflos:-540,basis2:6588.75},
+{m:'Vakantiegeld',rob:7859,lindy:2200,heks:850,extra:-2300,bedrag:null,wat:'',basis:333154.75,aflos:null,basis2:15197.75},
+{m:'juli 2034',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:337649.75,aflos:-530,basis2:20222.75},
+{m:'augustus 2034',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:342144.75,aflos:-530,basis2:25247.75},
+{m:'september 2034',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:346639.75,aflos:-530,basis2:30272.75},
+{m:'oktober 2034',rob:1195,lindy:2800,heks:1000,extra:null,bedrag:null,wat:'',basis:351634.75,aflos:-530,basis2:35797.75},
+{m:'november 2034',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:356129.75,aflos:-530,basis2:40822.75},
+{m:'december 2034',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:360624.75,aflos:-530,basis2:45847.75},
+{m:'januari 2035',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:365119.75,aflos:-530,basis2:50872.75},
+{m:'13e maand',rob:8183,lindy:1200,heks:850,extra:null,bedrag:null,wat:'',basis:375352.75,aflos:null,basis2:61105.75},
+{m:'februari 2035',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:379847.75,aflos:-530,basis2:66130.75},
+{m:'maart 2035',rob:1195,lindy:2300,heks:1000,extra:null,bedrag:null,wat:'',basis:384342.75,aflos:-530,basis2:71155.75},
+{m:'Pensioen Rob',rob:null,lindy:2300,heks:2400,extra:null,bedrag:null,wat:'',basis:389042.75,aflos:-530,basis2:76385.75}
 ];
 const VERMOGEN_REIS_NAMEN = ["italië","italie","turkey","thailand","japan","china","botswana","qatar","marokko","usa","faroer","alaska","india","florida","svalbard","new york","kenia","schotland","chili"];
 const IKV_START_BALANCE = 89910;
 const IKV_JAREN = [
 {jaar:'juli 2025',inkLVNL:10631.0,rob:0,lindy:445.0,heks:1366.0,uitgaven:-8167.0,totaal:4275.0,totaalAflos:null,restJaarSaldo:-175928.0,extraBijzInk:6000.0,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-35000.0,aflosHyp:null,italieEenmalig:-200000.0,saldoEindJaar:-86018.0,reisnamen:["Thailand", "Italië", "(PNW)"]},
-{jaar:'juli 2026',inkLVNL:11315.0,rob:0,lindy:2400.0,heks:1393.0,uitgaven:-8113.0,totaal:6995.0,totaalAflos:null,restJaarSaldo:82152.0,extraBijzInk:31432.0,extraLindy:3700.0,extraUitgBasis:-12000.0,reisSpaardoel:-39000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:-3867.0,reisnamen:["Japan", "Italië"]},
-{jaar:'juli 2027',inkLVNL:11181.0,rob:0,lindy:2448.0,heks:1421.0,uitgaven:-8145.0,totaal:6905.0,totaalAflos:null,restJaarSaldo:60218.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-25000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:56352.0,reisnamen:["China", "Italië", "Turkije"]},
-{jaar:'juli 2028',inkLVNL:11353.0,rob:0,lindy:2497.0,heks:1450.0,uitgaven:-8224.0,totaal:7075.0,totaalAflos:null,restJaarSaldo:57554.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-30000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:113906.0,reisnamen:["Botswana", "Marokko"]},
-{jaar:'juli 2029',inkLVNL:11529.0,rob:0,lindy:2547.0,heks:1479.0,uitgaven:-8355.0,totaal:7199.0,totaalAflos:null,restJaarSaldo:79333.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-10000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:193239.0,reisnamen:["Faroer", "Italië"]},
-{jaar:'juli 2030',inkLVNL:11241.0,rob:0,lindy:2598.0,heks:1508.0,uitgaven:-8456.0,totaal:6891.0,totaalAflos:null,restJaarSaldo:60936.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-25000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:254175.0,reisnamen:["Alaska", "Qatar"]},
-{jaar:'juli 2031',inkLVNL:9842.0,rob:0,lindy:2650.0,heks:1538.0,uitgaven:-8559.0,totaal:5471.0,totaalAflos:6134.0,restJaarSaldo:-189958.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-20000.0,aflosHyp:-236317.0,italieEenmalig:null,saldoEindJaar:64217.0,reisnamen:["Scandinavië", "India"]},
-{jaar:'juli 2032',inkLVNL:9999.0,rob:0,lindy:2703.0,heks:1569.0,uitgaven:-8664.0,totaal:5607.0,totaalAflos:6266.0,restJaarSaldo:38239.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-30000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:102456.0,reisnamen:["Kenya", "NE USA", "Italië"]},
-{jaar:'juli 2033',inkLVNL:10160.0,rob:0,lindy:2757.0,heks:1600.0,uitgaven:-8772.0,totaal:5745.0,totaalAflos:6401.0,restJaarSaldo:25158.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-45000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:127613.0,reisnamen:["Florida", "Spitsbergen", "Italië"]},
-{jaar:'juli 2034',inkLVNL:10323.0,rob:0,lindy:2812.0,heks:1632.0,uitgaven:-8882.0,totaal:5886.0,totaalAflos:6538.0,restJaarSaldo:47112.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-25000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:174725.0,reisnamen:["Chili & Falkand", "Schotland"]},
-{jaar:'juli 2035',inkLVNL:4750.0,rob:1084.13,lindy:2868.0,heks:500.0,uitgaven:-8994.0,totaal:208.13,totaalAflos:856.13,restJaarSaldo:-12650.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:null,aflosHyp:null,italieEenmalig:null,saldoEindJaar:162075.0,reisnamen:[]}
+// extraBijzInk juli 2027 = gratificatie 40 jaar dienstverband (feb 2027): 200% van (salaris+TOD+vakantiegeld), 100% belast + 100% onbelast, belaste helft tegen 49,5% — bevestigd door Rob 25-7-2026, €32.700,75 netto totaal
+{jaar:'juli 2026',inkLVNL:11315.0,rob:0,lindy:2400.0,heks:1393.0,uitgaven:-8113.0,totaal:6995.0,totaalAflos:null,restJaarSaldo:82152.0,extraBijzInk:null,extraLindy:3700.0,extraUitgBasis:-12000.0,reisSpaardoel:-39000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:-3867.0,reisnamen:["Japan", "Italië"]},
+{jaar:'juli 2027',inkLVNL:11181.0,rob:0,lindy:2448.0,heks:1421.0,uitgaven:-8145.0,totaal:6905.0,totaalAflos:null,restJaarSaldo:92918.75,extraBijzInk:32700.75,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-25000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:89052.75,reisnamen:["China", "Italië", "Turkije"]},
+{jaar:'juli 2028',inkLVNL:11353.0,rob:0,lindy:2497.0,heks:1450.0,uitgaven:-8224.0,totaal:7075.0,totaalAflos:null,restJaarSaldo:57554.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-30000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:146606.75,reisnamen:["Botswana", "Marokko"]},
+{jaar:'juli 2029',inkLVNL:11529.0,rob:0,lindy:2547.0,heks:1479.0,uitgaven:-8355.0,totaal:7199.0,totaalAflos:null,restJaarSaldo:79333.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-10000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:225939.75,reisnamen:["Faroer", "Italië"]},
+{jaar:'juli 2030',inkLVNL:11241.0,rob:0,lindy:2598.0,heks:1508.0,uitgaven:-8456.0,totaal:6891.0,totaalAflos:null,restJaarSaldo:60936.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-25000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:286875.75,reisnamen:["Alaska", "Qatar"]},
+{jaar:'juli 2031',inkLVNL:9842.0,rob:0,lindy:2650.0,heks:1538.0,uitgaven:-8559.0,totaal:5471.0,totaalAflos:6134.0,restJaarSaldo:-189958.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-20000.0,aflosHyp:-236317.0,italieEenmalig:null,saldoEindJaar:96917.75,reisnamen:["Scandinavië", "India"]},
+{jaar:'juli 2032',inkLVNL:9999.0,rob:0,lindy:2703.0,heks:1569.0,uitgaven:-8664.0,totaal:5607.0,totaalAflos:6266.0,restJaarSaldo:38239.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-30000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:135156.75,reisnamen:["Kenya", "NE USA", "Italië"]},
+{jaar:'juli 2033',inkLVNL:10160.0,rob:0,lindy:2757.0,heks:1600.0,uitgaven:-8772.0,totaal:5745.0,totaalAflos:6401.0,restJaarSaldo:25158.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-45000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:160313.75,reisnamen:["Florida", "Spitsbergen", "Italië"]},
+{jaar:'juli 2034',inkLVNL:10323.0,rob:0,lindy:2812.0,heks:1632.0,uitgaven:-8882.0,totaal:5886.0,totaalAflos:6538.0,restJaarSaldo:47112.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:-25000.0,aflosHyp:null,italieEenmalig:null,saldoEindJaar:207425.75,reisnamen:["Chili & Falkand", "Schotland"]},
+{jaar:'juli 2035',inkLVNL:4750.0,rob:1084.13,lindy:2868.0,heks:500.0,uitgaven:-8994.0,totaal:208.13,totaalAflos:856.13,restJaarSaldo:-12650.0,extraBijzInk:null,extraLindy:null,extraUitgBasis:-12000.0,reisSpaardoel:null,aflosHyp:null,italieEenmalig:null,saldoEindJaar:194775.75,reisnamen:[]}
 ];
 const SPAAR_POTJES = {"Casa 3S":98930, "Italië (vakantie)":0, "Thailand (vakantie)":7095, "Kado":700, "Japan (nieuw doel)":0};
 const VERMOGEN_NU_LABEL = 'juli 2026';
@@ -1190,7 +1194,7 @@ let bucketOverrides = {}; // txKey -> 'vast'|'dagelijks', handmatige verplaatsin
 let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 1 van "selecteren, dan verplaatsen"
 let overridesLoaded = false;
 let overridesSource = 'fallback'; // wordt 'live' zodra de Supabase-fetch is gelukt
-const DASHBOARD_VERSION = '2026-07-25 — ECHTE fix sticky header: overflow-x:hidden op html/body/.app dwong overflow-y naar auto (CSS-spec), waardoor .app de scroll-container werd i.p.v. de pagina. Vervangen door overflow-x:clip, geverifieerd met headless-browsertest op alle views.';
+const DASHBOARD_VERSION = '2026-07-27 — Vermogen: 4 opties nu als gelijke, sticky tegels (2x2); bug fix aflossing-hypotheek toonde bedrag niet in de betreffende maand (augustus 2031), aflos-veld ontbrak helemaal in Nominaal-breakdown';
 function txKey(t){ return t.date+'|'+t.vendor+'|'+t.amount; }
 /* Normaliseert een leveranciersnaam tot een stabiele sleutel, zodat "ALBERT HEIJN 1860 RHOON NLD" en
    "ALBERT HEIJN 1345 BARENDRECHT" allebei op "albert heijn" uitkomen — ongeacht filiaal/stad/land/store-nummer. */
@@ -1538,7 +1542,7 @@ function renderLopendeMaandView(){
         const matching = (expandKey==='sparen') ? rows.slice() : rows.filter(r=>r.category===name);
         matching.sort((a,b)=>b.date.localeCompare(a.date));
         const catTotal = matching.reduce((s,r)=>s+r.amount,0);
-        const displayTotal = isIncomeLike ? Math.abs(catTotal) : -Math.abs(catTotal);
+        const displayTotal = isIncomeLike ? Math.abs(catTotal) : catTotal;
         const budget = toonBolletjes ? budgetMap[name] : null;
         const overBudget = budget!=null && Math.abs(catTotal) > budget;
         const budgetKleur = budget!=null ? (overBudget?'var(--dot-over)':'var(--dot-ok)') : 'var(--muted)';
@@ -1579,12 +1583,6 @@ function renderLopendeMaandView(){
   }
 
   return `
-    <div class="note-card card">
-      <b>25 juni – 24 juli 2026</b> — dag 22 van 30. Werkelijke cijfers Rabo, ING én AMEX t/m 21 juli.
-      Het salaris dat deze periode financiert, viel al op <b>24 juni</b>.
-      <br><br><b>Let op — boekhouding vs. echt saldo:</b> AMEX-uitgaven staan hier al toegerekend, maar worden pas rond <b>5 augustus</b> van ING afgeschreven. Je actuele ING-saldo ligt tot die tijd dus hoger dan dit overzicht suggereert. Zodra jij de AMEX-maandafrekening deelt (die wordt al enkele dagen vóór de afschrijfdatum opgemaakt), weten we het exacte bedrag en dus meteen het restant — daar hoeft niet voor gewacht te worden tot de afschrijving zelf plaatsvindt.
-      <br><br><i>Tik op een tegel voor de samenstelling — nog een keer tikken klapt 'm weer dicht.</i>
-    </div>
     <div class="card" style="${restNaarIng>=0?'border-color:var(--dot-ok);':'border-color:var(--dot-over);'}">
       <div class="card-label">Na salaris: Rabo → ING</div>
       <div class="stat-figure" style="color:${restNaarIng>=0?'var(--dot-ok)':'var(--dot-over)'};">${fmt(restNaarIng)}</div>
@@ -1613,9 +1611,6 @@ function renderLopendeMaandView(){
         <div class="stat-figure neg">${fmt(belastingafrekeningTotaal)}</div>
         <div class="stat-sub">IB-afrekening 2025 — telt niet mee in vast/dagelijks/netto</div>
       </div>
-    </div>
-    <div class="note-card card">
-      <b>Blijft over</b> = inkomen min het vaste spaardoel (Rob €2.000 + Lindy €2.398,03 + deurwaarder €0) min vaste lasten min dagelijkse uitgaven — dus ná de vaste sparen-afdracht. Positief: dat kan er nog eens extra bij naar sparen. Negatief: dat tekort moet vanuit spaargeld naar ING bijgevuld worden. Reizen, Casa 3S-project en de belastingafrekening 2025 staan er los van — allemaal gefinancierd uit spaargeld, niet uit het lopende budget.
     </div>
     <div class="card ledger-card">
       <div class="card-label"><span>Alle transacties — 25 juni t/m 21 juli</span><span class="ledger-count">${ledgerRows.length} regels</span></div>
@@ -1911,10 +1906,30 @@ function renderCasaProjectView(){
 }
 
 /* ---------- Volgende maand: bijstelbare voorspelling (25 juli - 24 augustus) ---------- */
+/* Rabo-aandeel per vaste-lastencategorie, afgeleid uit de echte juli-transacties (welke array een post in staat = bronrekening).
+   Gebruikt om te VOORSPELLEN hoeveel er deze maand nog van Rabo af zal gaan (i.p.v. te wachten tot het al gebeurd is) —
+   met een buffer omdat "vast" ook een beetje kan variëren (bijv. jaarlijkse indexatie, seizoensgebonden posten). */
+const VAST_LASTEN_BUFFER_PCT = 5; // marge bovenop het verwachte Rabo-bedrag, zodat we niet te veel naar ING overmaken
+function categorieRaboAandeel(categorieNaam){
+  const som = (arr)=> (arr||[]).filter(t=>t.category===categorieNaam).reduce((s,t)=>s+Math.abs(t.amount),0);
+  const rabo = som(RABO_TX_JUL), ing = som(ING_TX_JUL), amex = som(AMEX_TX_JUL);
+  const totaal = rabo+ing+amex;
+  return totaal>0 ? rabo/totaal : 1; // onbekende/nieuwe categorie: aanname 100% Rabo (veiligste kant — reserveert liever te veel dan te weinig)
+}
+/* Uitgegeven-zover-deze-maand per categorie, uit de echte Lopende-maand-transacties (RABO_TX_AUG + ING/AMEX zodra die er zijn) */
+function categorieUitgegeven(categorieNaam){
+  const som = (arr)=> (arr||[]).filter(t=>t.category===categorieNaam).reduce((s,t)=>s+Math.abs(t.amount),0);
+  return som(RABO_TX_AUG) + som(typeof ING_TX_AUG!=='undefined'?ING_TX_AUG:[]) + som(typeof AMEX_TX_AUG!=='undefined'?AMEX_TX_AUG:[]);
+}
 function renderVolgendeMaandView(){
-  const ROB_BASIS=11154.92, LINDY=2489.66, BELASTING=313.00, ROB_SPAREN=2000.00;
-  const INKOMEN_COMPONENTEN = {"Salaris": ROB_BASIS+LINDY, "Belastingteruggave": BELASTING, "Overig inkomen": 0};
-  const SALARIS_SUBCOMPONENTEN = {"Rob — LVNL (basis)": ROB_BASIS, "Lindy — SARO": LINDY};
+  // Salaris is al binnen (24 juli) — dus geen voorspelling meer nodig, gewoon de echte bedragen gebruiken.
+  const ROB_ACTUEEL = (RABO_TX_AUG.find(t=>t.vendor.includes('Luchtverkeersleiding'))||{}).amount || 0;
+  const LINDY = (RABO_TX_AUG.find(t=>t.vendor.includes('SARO (salaris'))||{}).amount || 0;
+  const LINDY_VERGOEDING = (RABO_TX_AUG.find(t=>t.vendor.includes('SARO (vergoedingen'))||{}).amount || 0;
+  const BELASTING = (RABO_TX_AUG.find(t=>t.category==='Belastingteruggave')||{}).amount || 0;
+  const ROB_SPAREN=2000.00;
+  const INKOMEN_COMPONENTEN = {"Salaris": ROB_ACTUEEL+LINDY, "Belastingteruggave": BELASTING, "Overig inkomen": LINDY_VERGOEDING};
+  const SALARIS_SUBCOMPONENTEN = {"Rob — LVNL (basis)": ROB_ACTUEEL, "Lindy — SARO": LINDY};
   const SPAREN_COMPONENTEN = {"Rob — vast": ROB_SPAREN, "Lindy — volledig salaris": LINDY, "Deurwaarder (Velthoven)": 0};
   const VAST_COMPONENTEN = {
     "Hypotheek": 2597.40, "Auto": 896.53, "Verzekeringen": 163.33+347.20,
@@ -1934,6 +1949,22 @@ function renderVolgendeMaandView(){
   const inkomenTotaal = Object.values(INKOMEN_COMPONENTEN).reduce((a,b)=>a+b,0);
   const sparenBasis = ROB_SPAREN+LINDY;
   const netto = inkomenTotaal - sparenBasis - vastTotaal - variabel;
+
+  // Uitgegeven-tot-nu-toe vs. Verwacht (volledige maand), per categorie — voor Vaste lasten en Dagelijks
+  const vastUitgegevenPerCat = Object.fromEntries(Object.keys(VAST_COMPONENTEN).map(c=>[c, categorieUitgegeven(c)]));
+  const dagelijksUitgegevenPerCat = Object.fromEntries(Object.keys(DAGELIJKS_COMPONENTEN).map(c=>[c, categorieUitgegeven(c)]));
+  const vastUitgegevenTotaal = Object.values(vastUitgegevenPerCat).reduce((a,b)=>a+b,0);
+  const dagelijksUitgegevenTotaal = Object.values(dagelijksUitgegevenPerCat).reduce((a,b)=>a+b,0);
+  const lopendeBestedingsruimte = inkomenTotaal - sparenBasis - vastUitgegevenTotaal - dagelijksUitgegevenTotaal;
+
+  // Na salaris: Rabo → ING — inkomen is al bekend (salaris viel al op 24 juli), maar vaste lasten die nog van Rabo
+  // moeten afgaan zijn deels nog niet gebeurd — dus voorspellen we het Rabo-aandeel per categorie (uit juli-data),
+  // met een buffer omdat ook "vaste" lasten iets kunnen variëren.
+  const AUG_INCOME_CATS = ["Salaris","Belastingteruggave","Overig inkomen"];
+  const inkomenRabo = RABO_TX_AUG.filter(t=>AUG_INCOME_CATS.includes(t.category)).reduce((s,t)=>s+t.amount,0);
+  const vastRaboVerwacht = Object.entries(VAST_COMPONENTEN).reduce((som,[cat,bedrag])=>som+bedrag*categorieRaboAandeel(cat), 0);
+  const vastRaboVerwachtMetBuffer = vastRaboVerwacht * (1+VAST_LASTEN_BUFFER_PCT/100);
+  const restNaarIng = inkomenRabo - vastRaboVerwachtMetBuffer - sparenBasis;
 
   // Budget (jouw Excel) vs Voorspelling (patroonherkenning) — voor de categorieën waar we allebei hebben
   const BUDGET_VS_VOORSPELLING = [
@@ -1982,73 +2013,60 @@ function renderVolgendeMaandView(){
     </div>`;
   }
 
-  function tile(label, bedrag, sub, expandKey, cls){
+  function tile(label, bedrag, sub, expandKey, cls, voortgang){
     const isOpen = volgendeExpand===expandKey;
     const map = {inkomen:INKOMEN_COMPONENTEN, vast:VAST_COMPONENTEN, dagelijks:DAGELIJKS_COMPONENTEN, sparen:SPAREN_COMPONENTEN};
     const detail = isOpen ? expandCard(label, map[expandKey], expandKey) : '';
+    const pct = voortgang ? Math.min(100, Math.round(voortgang.uitgegeven/voortgang.verwacht*100)) : null;
+    const figuur = voortgang
+      ? `<div class="stat-figure ${cls}">${fmt(-voortgang.uitgegeven)}</div><div class="stat-sub">van verwacht ${fmt(-voortgang.verwacht)} (${pct}%)</div>`
+      : `<div class="stat-figure ${cls}">${bedrag}</div><div class="stat-sub">${sub}</div>`;
     return `<div class="card" data-expand="${expandKey}" style="cursor:pointer;">
         <div class="card-label">${label}${isOpen?' ▾':' ▸'}</div>
-        <div class="stat-figure ${cls}">${bedrag}</div>
-        <div class="stat-sub">${sub}</div>
+        ${figuur}
       </div>${detail}`;
   }
 
   return `
-    <div class="note-card card">
-      <b>25 juli – 24 augustus 2026</b> — de lopende maand. Grotendeels nog een voorspelling op basis van vastgestelde patronen; hieronder staan wel al de eerste echte transacties (RABO). Zodra AMEX/ING ook binnen zijn, vervangen we de voorspelling stap voor stap door echte cijfers.
-      Sparen is een vaste eerste afspraak (niet het restant): <b>Rob €2.000 + Lindy's volledige salaris</b>, plus wat er aan het einde van de maand op ING overblijft (open, geen vaste schatting).
-      <br><br><i>Tik op een tegel voor de samenstelling — nog een keer tikken klapt 'm weer dicht.</i>
-    </div>
-    <div class="card ledger-card">
-      <div class="card-label"><span>Al binnen deze maand (echt, RABO)</span><span class="ledger-count">${RABO_TX_AUG.length}</span></div>
-      <ul class="ledger-list">
-        ${RABO_TX_AUG.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(t=>{
-          const d=new Date(t.date); const dd=String(d.getUTCDate()).padStart(2,'0'); const mm=String(d.getUTCMonth()+1).padStart(2,'0');
-          return `<li class="ledger-row"><span class="lr-date" style="min-width:auto;">${dd}-${mm}</span><span class="lr-vendor">${t.vendor}</span><span class="lr-leader"></span><span class="lr-amt ${t.amount<0?'neg':''}">${fmt(t.amount)}</span></li>`;
-        }).join('')}
-      </ul>
+    <div class="card" style="${restNaarIng>=0?'border-color:var(--dot-ok);':'border-color:var(--dot-over);'}">
+      <div class="card-label">Na salaris: Rabo → ING</div>
+      <div class="stat-figure" style="color:${restNaarIng>=0?'var(--dot-ok)':'var(--dot-over)'};">${fmt(restNaarIng)}</div>
+      <div class="stat-sub">over te maken naar ING</div>
+      <div class="cdt-divider"></div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;justify-content:space-between;"><span>Salaris (Rabo)</span><span style="color:var(--paper);">${fmt(inkomenRabo)}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Vaste lasten (verwacht +${VAST_LASTEN_BUFFER_PCT}%)</span><span style="color:var(--paper);">${fmt(-vastRaboVerwachtMetBuffer)}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Sparen (vast doel)</span><span style="color:var(--paper);">${fmt(-sparenBasis)}</span></div>
+        <div style="display:flex;justify-content:space-between;border-top:1px dashed var(--rule);padding-top:4px;margin-top:2px;"><span>Rest → ING</span><span style="color:${restNaarIng>=0?'var(--dot-ok)':'var(--dot-over)'};font-weight:600;">${fmt(restNaarIng)}</span></div>
+      </div>
     </div>
     <div class="hero4">
       ${tile('Inkomen', fmt(inkomenTotaal), 'Rob + Lindy + belastingteruggave + deurwaarder (€0)', 'inkomen', 'pos')}
-      ${tile('Vaste lasten', fmt(-vastTotaal), 'Bakkersparkweg + Casa 3S + ING + AMEX', 'vast', 'neg')}
-      ${tile('Dagelijks', fmt(-variabel), 'gem. 7-8 mnd echte data', 'dagelijks', 'neg')}
+      ${tile('Vaste lasten', null, null, 'vast', 'neg', {uitgegeven:vastUitgegevenTotaal, verwacht:vastTotaal})}
+      ${tile('Dagelijks', null, null, 'dagelijks', 'neg', {uitgegeven:dagelijksUitgegevenTotaal, verwacht:variabel})}
       ${tile('Sparen', fmt(sparenBasis), 'Rob €2.000 + Lindy volledig — vaste eerste afspraak', 'sparen', 'pos')}
       <div class="card">
         <div class="card-label">Bestedingsruimte (voorspelling)</div>
         <div class="stat-figure ${netto>=0?'pos':'neg'}">${fmt(netto)}</div>
-        <div class="stat-sub">o.b.v. patroonherkenning uit 7-8 mnd data</div>
+        <div class="stat-sub">systeem</div>
+        <div class="stat-figure ${lopendeBestedingsruimte>=0?'pos':'neg'}" style="margin-top:8px;font-size:0.75em;">${fmt(lopendeBestedingsruimte)}</div>
+        <div class="stat-sub">Lopend</div>
       </div>
       <div class="card">
         <div class="card-label">Bestedingsruimte (budget)</div>
         <div class="stat-figure ${nettoBudget>=0?'pos':'neg'}">${fmt(nettoBudget)}</div>
-        <div class="stat-sub">o.b.v. jouw Excel-budgetten</div>
+        <div class="stat-sub">excel</div>
+        <div class="stat-figure ${lopendeBestedingsruimte>=0?'pos':'neg'}" style="margin-top:8px;font-size:0.75em;">${fmt(lopendeBestedingsruimte)}</div>
+        <div class="stat-sub">Lopend</div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-label">Budget vs. voorspelling — per categorie</div>
-      <div class="budget-compare-header">
-        <span></span><span>Budget</span><span>Voorspelling</span><span>Verschil</span>
-      </div>
-      ${BUDGET_VS_VOORSPELLING.map(([naam,b,v])=>{
-        const verschil = v-b;
-        const kleur = verschil>5?'var(--rose)':(verschil<-5?'var(--teal)':'var(--muted)');
-        return `<div class="budget-compare-row">
-          <span class="bc-naam">${naam}</span>
-          <span class="bc-val bc-budget">${fmt(b)}</span>
-          <span class="bc-val bc-voorspelling">${fmt(v)}</span>
-          <span class="bc-val bc-verschil" style="color:${kleur}">${verschil>0?'+':''}${fmt(verschil)}</span>
-        </div>`;
-      }).join('')}
-      <div class="budget-compare-row" style="font-weight:600;border-top:1px solid var(--rule);margin-top:6px;padding-top:10px;">
-        <span class="bc-naam">Totaal</span>
-        <span class="bc-val bc-budget">${fmt(budgetSubtotaal)}</span>
-        <span class="bc-val bc-voorspelling">${fmt(voorspellingSubtotaal)}</span>
-        <span class="bc-val bc-verschil">${fmt(voorspellingSubtotaal-budgetSubtotaal)}</span>
-      </div>
+    <div class="card ledger-card">
+      <div class="card-label"><span>Alle transacties tot nu toe</span><span class="ledger-count">${RABO_TX_AUG.length}</span></div>
+      <ul class="ledger-list" style="list-style:none;margin:0;padding:0;">
+        ${RABO_TX_AUG.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(t=>txRow2Html({...t, source:'RABO'})).join('')}
+      </ul>
     </div>
-    <div class="note-card card">
-      <b>Budget vs. voorspelling:</b> het budget is wat je zelf hebt vastgelegd in je Excel; de voorspelling leert van alle data die we tot nu toe hebben en wordt scherper naarmate er meer maanden bijkomen — totdat er een keer een uitschieter is (bijv. veel kopen in één maand). Goed moment om 1x per jaar te checken of het budget zelf nog klopt met de realisatie.
-    </div>
+
     <footer>Dagelijks is gebaseerd op het gemiddelde van 7-8 maanden echte ING/AMEX-data (na categorie-correcties), niet meer op een losse schatting. Enel valt in augustus (even maand); IMU niet (mei/november). Lindy's salaris is bijgewerkt naar €2.489,66 (vergoedingen zijn variabel, dus niet in deze voorspelling meegenomen).</footer>
   `;
 }
@@ -2136,11 +2154,6 @@ function renderVolgendeMaandSepView(){
   }
 
   return `
-    <div class="note-card card">
-      <b>25 augustus – 24 september 2026</b> — voorspelling op basis van de patronen die we hebben vastgesteld. Let op: Lindy's salaris zakt vanaf september naar circa €2.350 (was €2.489,66) — vergoedingen zijn variabel en niet meegenomen. Bij de eerste echte cijfers stellen we 'm bij.
-      Sparen is een vaste eerste afspraak (niet het restant): <b>Rob €2.000 + Lindy's volledige salaris</b>, plus wat er aan het einde van de maand op ING overblijft (open, geen vaste schatting).
-      <br><br><i>Tik op een tegel voor de samenstelling — nog een keer tikken klapt 'm weer dicht.</i>
-    </div>
     <div class="hero4">
       ${tile('Inkomen', fmt(inkomenTotaal), 'Rob + Lindy + belastingteruggave + deurwaarder (€0)', 'inkomen', 'pos')}
       ${tile('Vaste lasten', fmt(-vastTotaal), 'Bakkersparkweg + Casa 3S + ING + AMEX', 'vast', 'neg')}
@@ -2178,9 +2191,6 @@ function renderVolgendeMaandSepView(){
         <span class="bc-val bc-voorspelling">${fmt(voorspellingSubtotaal)}</span>
         <span class="bc-val bc-verschil">${fmt(voorspellingSubtotaal-budgetSubtotaal)}</span>
       </div>
-    </div>
-    <div class="note-card card">
-      <b>Budget vs. voorspelling:</b> het budget is wat je zelf hebt vastgelegd in je Excel; de voorspelling leert van alle data die we tot nu toe hebben en wordt scherper naarmate er meer maanden bijkomen — totdat er een keer een uitschieter is (bijv. veel kopen in één maand). Goed moment om 1x per jaar te checken of het budget zelf nog klopt met de realisatie.
     </div>
     <footer>Dagelijks is gebaseerd op het gemiddelde van 7-8 maanden echte ING/AMEX-data (na categorie-correcties), niet meer op een losse schatting. Enel valt niet in september (alleen feb/apr/jun/aug/okt/dec); IMU ook niet (mei/november). Lindy's nieuwe salaris (~€2.350) is een inschatting — bijstellen zodra de eerste septemberstrook binnen is.</footer>
   `;
@@ -2292,7 +2302,10 @@ function renderVermogenNominaal(){
     const breakdown = [{naam:'Rob', bedrag:r.rob||0}, {naam:'Lindy', bedrag:r.lindy||0}, {naam:'Deurwaarder', bedrag:r.heks||0}];
     if(r.extra) breakdown.push({naam: r.extra<0 ? 'Gemeentelijke heffingen' : 'Bijzondere inkomst', bedrag:r.extra});
     if(r.bedrag) breakdown.push({naam:r.wat||'Uitgave', bedrag:-r.bedrag});
-    (VERMOGEN_EENMALIGE_POSTEN[r.m]||[]).forEach(p=>breakdown.push(p));
+    const eenmaligPosten = VERMOGEN_EENMALIGE_POSTEN[r.m]||[];
+    const alRegeltedDoorEenmalig = eenmaligPosten.some(p=>Math.abs(p.bedrag + r.aflos) < 1); // zelfde bedrag al apart benoemd (bv. Casa 3S-huisbetaling)
+    if(r.aflos && !alRegeltedDoorEenmalig) breakdown.push({naam: Math.abs(r.aflos)>1000 ? 'Aflossing hypotheek' : 'Rentevoordeel na aflossing', bedrag:-r.aflos});
+    eenmaligPosten.forEach(p=>breakdown.push(p));
     periodesMap.get(lastYear).push({label:r.m, waarde:actief[i], breakdown});
   });
   const periodes = [...periodesMap.entries()].map(([jaar,maanden])=>({jaarLabel:String(jaar), saldoEind:maanden[maanden.length-1].waarde, maanden}));
@@ -2351,6 +2364,11 @@ function renderVermogenIkv(){
   const robJarenNieuw = salarisJaarOverzicht(2035);
   const robNettoOp = (datum)=>{ const p = robPeriodesNieuw.filter(x=>x.vanaf<=datum).slice(-1)[0]; return p ? p.netto : null; };
   const robJaarNieuw = (jaar)=> robJarenNieuw.find(y=>y.jaar===jaar);
+  // Lindy's precieze salarismotor — zelfde principe, in dienst per 11-5-2026 (dus pas vanaf 'juli 2026' relevant).
+  const lindyPeriodesNieuw = berekenLindyPeriodes(2035);
+  const lindyJarenNieuw = lindySalarisJaarOverzicht(2035);
+  const lindyNettoOp = (datum)=>{ const p = lindyPeriodesNieuw.filter(x=>x.vanaf<=datum).slice(-1)[0]; return p ? p.uitTeBetalen : null; };
+  const lindyJaarNieuw = (jaar)=> lindyJarenNieuw.find(y=>y.jaar===jaar);
   let saldo = VERMOGEN_NU_BEDRAG;
   const alleMaanden = [];
   periodesData.forEach((j,idx)=>{
@@ -2366,13 +2384,22 @@ function renderVermogenIkv(){
     const named = [];
     if(j.italieEenmalig) named.push({naam:'Casa 3S — eenmalig', bedrag:j.italieEenmalig});
     if(vermogenAflos==='ja' && j.aflosHyp) named.push({naam:'Aflossing hypotheek', bedrag:j.aflosHyp});
-    if(j.extraBijzInk) named.push({naam:'Bijzondere inkomst', bedrag:j.extraBijzInk});
+    // Bijzondere inkomst: standaard landt dit in juli (jaareinde-lump), tenzij een specifieke maand bekend is
+    // (bv. gratificatie 40 jaar komt met het salaris van feb 2027, dus het geld komt in maart) — dan verplaatsen
+    // we 'm naar die maand, maar hij blijft wel meetellen in namedSum zodat Overig/afronding niet dubbel telt.
+    const BIJZ_INK_MAAND = {'juli 2027':'maart 2027'};
+    const bijzInkMaandOverride = BIJZ_INK_MAAND[j.jaar];
+    if(j.extraBijzInk){
+      named.push({naam:'Bijzondere inkomst', bedrag:j.extraBijzInk, verplaatstNaar: bijzInkMaandOverride||null});
+    }
     if(j.extraLindy) named.push({naam:'Extra Lindy', bedrag:j.extraLindy});
     const namedSum = named.reduce((a,b)=>a+b.bedrag,0);
     // som van 12 maandbaselines: aug-dec (5 mnd) op oud tarief, jan-jul (7 mnd) op nieuw tarief — cao gaat in per januari
     const somBaselines = baselineOud*5 + baselineNieuw*7 + maandBuffer*12;
     const overig = delta - somBaselines - namedSum;
     if(Math.abs(overig)>1) named.push({naam:'Overig/afronding', bedrag:overig});
+    const namedJuli = named.filter(n=>!n.verplaatstNaar); // deze landen zoals altijd in juli
+    const namedJuliSum = namedJuli.reduce((a,b)=>a+b.bedrag,0);
     const eindJaarNum = parseInt(j.jaar.match(/\d{4}/)[0],10);
     const labels = maandenVoorPeriode(eindJaarNum);
     // Rob-salaris-correctie: verschil tussen het precieze model (Salaris-tegel) en de oudere inkLVNL-aanname in IKV_JAREN,
@@ -2384,11 +2411,19 @@ function renderVermogenIkv(){
     const robNettoNieuw = (eindJaarNum < ROB_PENSIOEN_JAAR) ? robNettoOp(eindJaarNum+'-01-01') : null;
     const robDeltaOud = (robNettoOud!=null) ? robNettoOud - (prev.inkLVNL||0) : 0;
     const robDeltaNieuw = (robNettoNieuw!=null) ? robNettoNieuw - (j.inkLVNL||0) : 0;
+    // Lindy-salaris-correctie — zelfde principe, in dienst per 11-5-2026. Vakantietoeslag (mei)/eindejaarsuitkering
+    // (december) zaten nooit in het oude model (geen IKV_SALARIS_BONUSSEN-post voor Lindy) — dus dat is hier pure
+    // extra opbouw via dezelfde additieve laag, niet iets dat uit Overig/afronding gehaald wordt.
+    const lindyNettoOud = lindyNettoOp((eindJaarNum-1)+'-08-01');
+    const lindyNettoNieuw = lindyNettoOp(eindJaarNum+'-01-01');
+    const lindyDeltaOud = (lindyNettoOud!=null) ? lindyNettoOud - (prev.lindy||0) : 0;
+    const lindyDeltaNieuw = (lindyNettoNieuw!=null) ? lindyNettoNieuw - (j.lindy||0) : 0;
     for(let m=0;m<12;m++){
       const nieuwTarief = m>=5; // index 0-4 = aug-dec (oud tarief), 5-11 = jan-jul (nieuw tarief per cao-datum)
       const bron = nieuwTarief ? j : prev;
       const baseline = nieuwTarief ? baselineNieuw : baselineOud;
       const robDelta = nieuwTarief ? robDeltaNieuw : robDeltaOud;
+      const lindyDelta = nieuwTarief ? lindyDeltaNieuw : lindyDeltaOud;
       const label = labels[m];
       const reisPosten = reisBetalingen.get(label) || [];
       const reisTotaal = reisPosten.reduce((a,b)=>a+b.bedrag,0);
@@ -2407,12 +2442,22 @@ function renderVermogenIkv(){
         const rj = robJaarNieuw(eindJaarNum-1); // mijn model kent 13e maand toe aan december vorig jaar, oude tabel aan januari dit jaar
         const oud13e = (bonusPosten.find(p=>p.naam==='13e maand')||{}).bedrag || 0;
         if(rj){ bonusCorrectie = rj.dertiende - oud13e; bonusCorrectiePosten.push({naam:'13e maand — herrekend (nieuw model)', bedrag:bonusCorrectie}); }
+      } else if(maandNaam==='mei'){
+        const lj = lindyJaarNieuw(eindJaarNum);
+        if(lj && lj.vakantietoeslag) bonusCorrectiePosten.push({naam:'Vakantietoeslag Lindy (nieuw)', bedrag:lj.vakantietoeslag});
+      } else if(maandNaam==='december'){
+        const lj = lindyJaarNieuw(eindJaarNum-1);
+        if(lj && lj.dertiende) bonusCorrectiePosten.push({naam:'Eindejaarsuitkering Lindy (nieuw)', bedrag:lj.dertiende});
       }
-      saldo += baseline + maandBuffer + reisTotaal + eenmaligTotaal + bonusTotaal + robDelta + bonusCorrectie + (m===11 ? namedSum+overig : 0);
-      const breakdown = [{naam:'Inkomsten (Rob)', bedrag:bron.inkLVNL||0}, {naam:'Rob (extra)', bedrag:bron.rob||0}, {naam:'Lindy', bedrag:bron.lindy||0}, {naam:'Deurwaarder', bedrag:bron.heks||0}, {naam:'Lasten', bedrag:bron.uitgaven||0}, {naam:'Buffer extra uitgaven (max €1.000/mnd)', bedrag:maandBuffer}, ...reisPosten, ...eenmaligPosten, ...bonusPosten];
+      const lindyBonusSom = bonusCorrectiePosten.filter(p=>p.naam.includes('Lindy')).reduce((a,b)=>a+b.bedrag,0);
+      const verplaatstDezeMaand = named.filter(n=>n.verplaatstNaar===label);
+      const verplaatstSom = verplaatstDezeMaand.reduce((a,b)=>a+b.bedrag,0);
+      saldo += baseline + maandBuffer + reisTotaal + eenmaligTotaal + bonusTotaal + robDelta + lindyDelta + bonusCorrectie + lindyBonusSom + verplaatstSom + (m===11 ? namedJuliSum+overig : 0);
+      const breakdown = [{naam:'Inkomsten (Rob)', bedrag:bron.inkLVNL||0}, {naam:'Rob (extra)', bedrag:bron.rob||0}, {naam:'Lindy', bedrag:bron.lindy||0}, {naam:'Deurwaarder', bedrag:bron.heks||0}, {naam:'Lasten', bedrag:bron.uitgaven||0}, {naam:'Buffer extra uitgaven (max €1.000/mnd)', bedrag:maandBuffer}, ...reisPosten, ...eenmaligPosten, ...bonusPosten, ...verplaatstDezeMaand];
       if(robDelta) breakdown.push({naam:'Rob salaris — herrekend (nieuw model)', bedrag:robDelta});
+      if(lindyDelta) breakdown.push({naam:'Lindy salaris — herrekend (nieuw model)', bedrag:lindyDelta});
       breakdown.push(...bonusCorrectiePosten);
-      if(m===11) breakdown.push(...named);
+      if(m===11) breakdown.push(...namedJuli);
       const jaarVanMaand = parseInt(label.match(/\d{4}/)[0],10);
       alleMaanden.push({label, jaar:jaarVanMaand, waarde:saldo, breakdown});
     }
@@ -2457,18 +2502,13 @@ function renderVermogenView(){
   const aflosLabel = vermogenAflos==='ja' ? 'Met vervroegde aflossing hypotheek (2031)' : 'Zonder vervroegde aflossing';
   const body = vermogenInflatie==='ikv' ? renderVermogenIkv() : renderVermogenNominaal();
   return `
-    <div class="note-card card">
-      <b>Startpunt is nu:</b> ${VERMOGEN_NU_LABEL}, echt Casa Tre Sorelle-saldo ${fmt(VERMOGEN_NU_BEDRAG)} — alles van daarvoor laten we los. "Nominaal" loopt vanaf hier verder op je maandplanning; "Inflatie (IKV)" op je CAO/lasten-jaartabel. De reizenlijst komt in beide gevallen uit de Reizen-tab van dit dashboard, niet meer uit de losse IKV-jaarcijfers.
+    <div class="vermogen-opties-grid">
+      <button class="vermogen-optie-tegel ${vermogenInflatie==='nominaal'?'active':''}" data-vermogen-inflatie="nominaal">Nominaal</button>
+      <button class="vermogen-optie-tegel ${vermogenInflatie==='ikv'?'active':''}" data-vermogen-inflatie="ikv">Inflatie (IKV)</button>
+      <button class="vermogen-optie-tegel ${vermogenAflos==='nee'?'active':''}" data-vermogen-aflos="nee">Geen aflossing</button>
+      <button class="vermogen-optie-tegel ${vermogenAflos==='ja'?'active':''}" data-vermogen-aflos="ja">Aflossen hypotheek 2031</button>
     </div>
-    <div class="view-toggle" style="margin-bottom:14px;">
-      <button class="view-btn ${vermogenInflatie==='nominaal'?'active':''}" data-vermogen-inflatie="nominaal">Nominaal</button>
-      <button class="view-btn ${vermogenInflatie==='ikv'?'active':''}" data-vermogen-inflatie="ikv">Inflatie (IKV)</button>
-    </div>
-    <div class="view-toggle" style="margin-bottom:20px;">
-      <button class="view-btn ${vermogenAflos==='nee'?'active':''}" data-vermogen-aflos="nee">Geen aflossing</button>
-      <button class="view-btn ${vermogenAflos==='ja'?'active':''}" data-vermogen-aflos="ja">Aflossen hypotheek 2031</button>
-    </div>
-    <div class="stat-sub" style="margin:-12px 0 16px;">${inflatieLabel} · ${aflosLabel}</div>
+    <div class="stat-sub" style="margin:0 0 16px;">${inflatieLabel} · ${aflosLabel}</div>
     ${body}
   `;
 }
@@ -2476,7 +2516,7 @@ function renderVermogenView(){
 const SECTIONS = [
   {id:'vorige', label:'Vorige maand', icon:'calendar', accent:'var(--muted)'},
   {id:'afgelopen', label:'Lopende maand', icon:'calendar', accent:'var(--teal)'},
-  {id:'volgende', label:'Voorspelling', icon:'trend', accent:'var(--brass)'},
+  {id:'volgende', label:'Volgende maand', icon:'trend', accent:'var(--brass)'},
   {id:'vermogen', label:'Vermogen', icon:'bars', accent:'var(--rose)'},
   {id:'salaris', label:'Salaris', icon:'euro', accent:'var(--brass)'},
   {id:'reizen', label:'Reizen', icon:'send', accent:'var(--c-reizen)'},
@@ -2607,6 +2647,7 @@ function salarisJaarOverzicht(totJaar){
   const periodes = berekenSalarisPeriodes(totJaar);
   const jaren = [];
   const VAKANTIEGELD_ANCHOR = 8163.43, DERTIENDE_ANCHOR = 8500.17; // sheet-anker 2026, kolom J
+  const deeltijdRatio = (datum)=> salarisStapWaarde(SALARIS_DEELTIJD_STAPPEN, datum).val / salarisStapWaarde(SALARIS_DEELTIJD_STAPPEN, SALARIS_ANCHOR_DATUM).val;
   for(let j=2026; j<=totJaar; j++){
     const janDatum = j+'-01-01', julDatum = j+'-07-01';
     const actief = (d)=> periodes.filter(p=>p.vanaf<=d).slice(-1)[0] || periodes[0];
@@ -2618,14 +2659,17 @@ function salarisJaarOverzicht(totJaar){
       vakantiegeld = VAKANTIEGELD_ANCHOR; dertiende = DERTIENDE_ANCHOR; bonusAanname = false; // sheet-anker, exacte kolom-J-bedragen
     } else {
       // geen apart cijfer bekend voor vakantiegeld/13e maand in latere jaren — schaal mee met dezelfde salarisgroei
-      // die we ook voor de rest van dit model gebruiken (dus zelfde cao/inflatie-aannames), i.p.v. een losstaande tabel
-      vakantiegeld = VAKANTIEGELD_ANCHOR * (eersteHelft.salaris / SALARIS_ANCHOR_BEDRAG);
-      dertiende = DERTIENDE_ANCHOR * (tweedeHelft.salaris / SALARIS_ANCHOR_BEDRAG);
+      // die we ook voor de rest van dit model gebruiken (dus zelfde cao/inflatie-aannames), i.p.v. een losstaande tabel.
+      // Salaris zelf is deeltijd-onafhankelijk (die correctie zit in Korting IKV) — vakantiegeld/13e maand zijn een
+      // percentage van je WERKELIJKE (dus deeltijd-afhankelijke) loon, dus die corrigeren we hier apart terug.
+      vakantiegeld = VAKANTIEGELD_ANCHOR * (eersteHelft.salaris / SALARIS_ANCHOR_BEDRAG) * deeltijdRatio(janDatum);
+      dertiende = DERTIENDE_ANCHOR * (tweedeHelft.salaris / SALARIS_ANCHOR_BEDRAG) * deeltijdRatio(julDatum);
       bonusAanname = true;
     }
-    const nettoJaar = nettoMaanden + vakantiegeld + dertiende;
+    const nettoJaar = nettoMaanden + vakantiegeld + dertiende + (j===2027 ? 32700.75 : 0);
     const caoStapDitJaar = SALARIS_CAO_STAPPEN.find(s=>s.vanaf===julDatum); // groeistap die dit jaar (juli) is toegepast
-    jaren.push({jaar:j, eersteHelft, tweedeHelft, nettoJaar, vakantiegeld, dertiende, bonusAanname, caoStapDitJaar});
+    const gratificatie40jr = j===2027 ? 32700.75 : null; // februari 2027: 40 jaar dienstverband, 200% (salaris+TOD+vakantiegeld), 100% belast (49,5%) + 100% onbelast — bevestigd door Rob 25-7-2026
+    jaren.push({jaar:j, eersteHelft, tweedeHelft, nettoJaar, vakantiegeld, dertiende, bonusAanname, caoStapDitJaar, gratificatie40jr});
   }
   return jaren;
 }
@@ -2643,10 +2687,128 @@ function renderSalarisView(){
     </div>
   `;
 }
+/* ================= Salaris (Lindy — Stichting Samen Ambitieus Rotterdam, schaal 09 trede 10) =================
+   Bron: loonstrook juli 2026 (AFAS). Anker: Brutoloon €3.015,00 bij 60% parttime.
+   Vanaf 1-9-2026 gaat Lindy 50% werken (bevestigd door Rob 26-7-2026) — Salaris/Bruto schalen daarmee mee. */
+const LINDY_ANCHOR_DATUM = '2026-07-01';
+const LINDY_BASIS_VOLTIJD = 5025.00; // 100%-schaalbedrag (schaal 09, trede 10) — Brutoloon = dit × parttime%
+const LINDY_PARTTIME_STAPPEN = [
+  {vanaf:'2026-07-01', pct:60},
+  {vanaf:'2026-09-01', pct:50}, // bevestigd
+];
+// Effectieve percentages t.o.v. Brutoloon, afgeleid uit de juli-strook (geen exacte franchise-formule, want die ken ik niet)
+const LINDY_AOP_PCT = 7.58/3015.00*100;
+const LINDY_PENSIOEN_PCT = 213.77/3015.00*100;
+const LINDY_LOONHEFFING_PCT = 303.67/3015.00*100; // benadering — geen volledige belastingschijven-doorrekening
+const LINDY_TOESLAGEN_ANCHOR = 15.85+32.19+90.16-42.01; // reiskosten + parkeerkosten + km-vergoeding − voorschot, netto per periode
+const LINDY_VAKANTIETOESLAG_PCT = 8; // cao onderwijs (PO/VO): vakantietoeslag = 8% van brutoloon, uitgekeerd in mei
+const LINDY_EINDEJAARSUITKERING_PCT = 8.33; // cao onderwijs: eindejaarsuitkering (13e maand) = 8,33% van brutoloon, uitgekeerd in december
+// Cao onderwijs (PO/VO) loopt 1-11-2025 t/m 1-3-2027: +4,6% per 1-11-2025 (zit al in het julianker, want de strook is van na die datum)
+// en +1,2% per 1-11-2026 (nog toekomstig t.o.v. het anker). Na 1-3-2027 (einde cao, net als bij Rob: cao loopt tot 1-1-27 daar,
+// hier tot 1-3-27) geen nieuwe cao bekend — dan Rob's eigen inflatie-plug van 2%/jr, jaarlijks herhaald tot een nieuwe cao bekend is.
+const LINDY_CAO_STAPPEN = [
+  {vanaf:'2026-07-01', pct:0}, // anker (bevat al de +4,6% van 1-11-2025)
+  {vanaf:'2026-11-01', pct:1.2}, // bevestigd, huidige cao
+  {vanaf:'2027-11-01', pct:2.00, aanname:true}, // cao afgelopen 1-3-2027 — inflatie-plug tot nieuwe cao bekend is
+  {vanaf:'2028-11-01', pct:2.00, aanname:true},
+  {vanaf:'2029-11-01', pct:2.00, aanname:true},
+  {vanaf:'2030-11-01', pct:2.00, aanname:true},
+  {vanaf:'2031-11-01', pct:2.00, aanname:true},
+  {vanaf:'2032-11-01', pct:2.00, aanname:true},
+  {vanaf:'2033-11-01', pct:2.00, aanname:true},
+];
+function lindyBasisVoltijd(datum){
+  let bedrag = LINDY_BASIS_VOLTIJD;
+  for(const s of LINDY_CAO_STAPPEN){ if(s.vanaf<=datum && s.vanaf>LINDY_ANCHOR_DATUM) bedrag *= (1+s.pct/100); }
+  return bedrag;
+}
+function lindyParttimePct(datum){
+  let val = LINDY_PARTTIME_STAPPEN[0].pct;
+  for(const s of LINDY_PARTTIME_STAPPEN){ if(s.vanaf<=datum) val = s.pct; }
+  return val;
+}
+function berekenLindyPeriodes(totJaar){
+  const data = new Set([LINDY_ANCHOR_DATUM]);
+  LINDY_PARTTIME_STAPPEN.forEach(s=>{ if(s.vanaf>=LINDY_ANCHOR_DATUM && parseInt(s.vanaf.slice(0,4),10)<=totJaar) data.add(s.vanaf); });
+  LINDY_CAO_STAPPEN.forEach(s=>{ if(s.vanaf>LINDY_ANCHOR_DATUM && parseInt(s.vanaf.slice(0,4),10)<=totJaar) data.add(s.vanaf); });
+  return [...data].sort().map(datum=>{
+    const pct = lindyParttimePct(datum);
+    const basisVoltijd = lindyBasisVoltijd(datum);
+    const bruto = basisVoltijd * pct/100;
+    const aop = bruto*LINDY_AOP_PCT/100;
+    const pensioen = bruto*LINDY_PENSIOEN_PCT/100;
+    const loonheffing = bruto*LINDY_LOONHEFFING_PCT/100;
+    const netto = bruto - aop - pensioen - loonheffing;
+    const toeslagen = LINDY_TOESLAGEN_ANCHOR; // vast bedrag, gedeclareerd — schaalt niet mee met parttime%
+    return {vanaf:datum, parttimePct:pct, bruto, aop, pensioen, loonheffing, netto, toeslagen, uitTeBetalen: netto+toeslagen};
+  });
+}
+function lindySalarisJaarOverzicht(totJaar){
+  const periodes = berekenLindyPeriodes(totJaar);
+  const jaren = [];
+  for(let j=2026; j<=totJaar; j++){
+    const janDatum = j+'-01-01', sepDatum = j+'-09-01', meiDatum = j+'-05-01', decDatum = j+'-12-01';
+    const actief = (d)=> periodes.filter(p=>p.vanaf<=d).slice(-1)[0] || periodes[0];
+    const meiPct = lindyParttimePct(meiDatum), decPct = lindyParttimePct(decDatum);
+    const meiBruto = lindyBasisVoltijd(meiDatum)*meiPct/100, decBruto = lindyBasisVoltijd(decDatum)*decPct/100;
+    let vakantietoeslag = meiBruto*12*LINDY_VAKANTIETOESLAG_PCT/100;
+    let dertiende = decBruto*12*LINDY_EINDEJAARSUITKERING_PCT/100;
+    if(j===2026){
+      // Lindy is per 11-5-2026 in dienst — geen volledig opbouwjaar. Vakantietoeslag mei 2026 vervalt (nog niet in dienst
+      // tijdens het opbouwjaar juni'25-mei'26). Eindejaarsuitkering december 2026 prorateren over het echt-gewerkte deel.
+      vakantietoeslag = 0;
+      const dagenInDienst2026 = (Date.UTC(2026,11,31)-Date.UTC(2026,4,11))/86400000 + 1; // 11 mei t/m 31 dec
+      const dagenIn2026 = (Date.UTC(2026,11,31)-Date.UTC(2026,0,1))/86400000 + 1;
+      dertiende = decBruto*12*LINDY_EINDEJAARSUITKERING_PCT/100 * (dagenInDienst2026/dagenIn2026);
+    }
+    if(j===2026){
+      jaren.push({jaar:j, periode:actief(LINDY_ANCHOR_DATUM), tweede:actief(sepDatum), vakantietoeslag, dertiende});
+    } else {
+      jaren.push({jaar:j, periode:actief(janDatum), tweede:actief(janDatum), vakantietoeslag, dertiende});
+    }
+  }
+  return jaren;
+}
 function renderSalarisLindyView(){
-  return `<div class="note-card card">
-    <b>Binnenkort:</b> hier komt de opbouw van Lindy's salaris — nu nog een placeholder, deze tegel werkt nog niet.
-  </div>`;
+  const totJaar = 2034;
+  const jaren = lindySalarisJaarOverzicht(totJaar);
+  const rows = jaren.map(y=>{
+    const key = String(y.jaar);
+    const expanded = salarisJaarExpand==='lindy-'+key;
+    const p = y.jaar===2026 ? y.tweede : y.periode; // tonen: meest recente tarief van dat jaar
+    const nettoJaar = (y.jaar===2026
+      ? y.periode.uitTeBetalen*2 + y.tweede.uitTeBetalen*4 // juli-aug op 60% (2 mnd), sep-dec op 50% (4 mnd)
+      : p.uitTeBetalen*12) + y.vakantietoeslag + y.dertiende;
+    return `<div class="card" style="margin-bottom:10px;">
+      <div data-sal-jaar-toggle="lindy-${key}" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+        <span style="font-weight:600;font-size:15px;">${y.jaar}</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span class="stat-figure pos" style="font-size:19px;">${fmt(nettoJaar)}<span style="font-size:11px;color:var(--muted);font-weight:400;">/jr</span></span>
+          <span style="color:var(--muted);font-size:12px;">${expanded?'▲':'▼'}</span>
+        </span>
+      </div>
+      ${expanded ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span>Netto/maand (vanaf ${p.vanaf.split('-').reverse().join('-')}, ${p.parttimePct}% parttime)</span><span>${fmt(p.uitTeBetalen)}</span></div>
+        <div style="margin-top:6px;font-size:11px;color:var(--muted);">Opbouw (per maand):</div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Brutoloon (${p.parttimePct}% van €${lindyBasisVoltijd(p.vanaf).toFixed(2)})</span><span>${fmt(p.bruto)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Premie AOP</span><span>${fmt(-p.aop)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Pensioen/NP</span><span>${fmt(-p.pensioen)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Loonheffing</span><span>${fmt(-p.loonheffing)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;font-weight:600;"><span>Nettoloon</span><span>${fmt(p.netto)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Toeslagen (reiskosten/parkeren/km) *</span><span>${fmt(p.toeslagen)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;font-weight:600;"><span>Uit te betalen</span><span>${fmt(p.uitTeBetalen)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);margin-top:6px;"><span>Vakantietoeslag (mei, 8%)</span><span>${fmt(y.vakantietoeslag)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Eindejaarsuitkering (december, 8,33%${y.jaar===2026?', pro rata':''})</span><span>${fmt(y.dertiende)}</span></div>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+  return `
+    <div class="note-card card">
+      Ankerpunt is de loonstrook van juli 2026 (60% parttime, Brutoloon €3.015,00). Vanaf 1-9-2026 gaat Lindy 50% werken — daarna schaalt alles mee. Cao onderwijs: +1,2% per 1-11-2026 (bevestigd), daarna inflatie-plug van 2%/jr tot een nieuwe cao bekend is.
+    </div>
+    ${rows}
+    <footer>* Toeslagen (reiskosten/parkeerkosten/km-vergoeding) zijn een vast, gedeclareerd bedrag — schalen niet mee met parttime%. Cao onderwijs (PO/VO) loopt 1-11-2025 t/m 1-3-2027: +4,6% per 1-11-2025 (al in het julianker) + 1,2% per 1-11-2026 (bevestigd). Daarna nog geen nieuwe cao — inflatie-plug van 2%/jr, net als bij Rob. Vakantietoeslag (mei, 8%) en eindejaarsuitkering (december, 8,33%) zijn cao-percentages. Oktobertoelage staat wel op de strook (cumulatief €219,56 t/m juli) maar zit hier nog niet in — hoogte hangt af van functie/schaal en ik heb het exacte bedrag niet. Loonheffing is een effectief percentage o.b.v. juli 2026, geen volledige belastingschijven-doorrekening.</footer>
+  `;
 }
 function renderSalarisRobView(){
   const totJaar = 2034;
@@ -2680,6 +2842,7 @@ function renderSalarisRobView(){
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Netto (effectief ${SALARIS_NETTO_EFFECTIEF_PCT.toFixed(1)}%)${p.aannameCao?' *':''}</span><span>${fmt(p.netto)}</span></div>
         ${y.vakantiegeld ? `<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);margin-top:6px;"><span>Vakantiegeld (mei/juni)${y.bonusAanname?' *':''}</span><span>${fmt(y.vakantiegeld)}</span></div>` : ''}
         ${y.dertiende ? `<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>13e maand (december)${y.bonusAanname?' *':''}</span><span>${fmt(y.dertiende)}</span></div>` : ''}
+        ${y.gratificatie40jr ? `<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Gratificatie 40 jaar dienstverband (februari)</span><span>${fmt(y.gratificatie40jr)}</span></div>` : ''}
       </div>` : ''}
     </div>`;
   }).join('');
