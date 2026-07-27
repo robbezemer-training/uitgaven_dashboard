@@ -1194,7 +1194,7 @@ let bucketOverrides = {}; // txKey -> 'vast'|'dagelijks', handmatige verplaatsin
 let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 1 van "selecteren, dan verplaatsen"
 let overridesLoaded = false;
 let overridesSource = 'fallback'; // wordt 'live' zodra de Supabase-fetch is gelukt
-const DASHBOARD_VERSION = '2026-07-27 — Vermogen: 4 opties nu als gelijke, sticky tegels (2x2); bug fix aflossing-hypotheek toonde bedrag niet in de betreffende maand (augustus 2031), aflos-veld ontbrak helemaal in Nominaal-breakdown';
+const DASHBOARD_VERSION = '2026-07-27 — Nieuwe kaart in Lopende maand: detecteert automatisch (uit de data) of het julirestbedrag naar Oranje Spaarrekening is overgemaakt; zo niet, telt het bedrag zichtbaar mee als nog te sparen';
 function txKey(t){ return t.date+'|'+t.vendor+'|'+t.amount; }
 /* Normaliseert een leveranciersnaam tot een stabiele sleutel, zodat "ALBERT HEIJN 1860 RHOON NLD" en
    "ALBERT HEIJN 1345 BARENDRECHT" allebei op "albert heijn" uitkomen — ongeacht filiaal/stad/land/store-nummer. */
@@ -1407,6 +1407,31 @@ function buildCombinedJul(){
   const amex = AMEX_TX_JUL.map(r=>{ const neg = {...r, amount:-r.amount}; return {...neg, category: effectiveCategory(neg), _orig: neg, source:'AMEX'}; });
   const ingcc = INGCC_TX_JUL.map(r=>({...r, category: effectiveCategory(r), _orig: r, source:'ING CC'}));
   return [...rabo, ...ing, ...amex, ...ingcc];
+}
+// Vorige maand (juli): hoeveel bleef er over (na vast spaardoel, vaste lasten, dagelijks), en is dat bedrag
+// daadwerkelijk naar de algemene Oranje Spaarrekening overgemaakt? Automatisch afgeleid uit de echte data —
+// geen handmatige vlag nodig. Als het niet gebeurd is, moet dit bedrag meetellen bij de eerstvolgende keer sparen.
+function berekenVorigeMaandSamenvatting(){
+  const periodeBronnen = [...RABO_TX_JUL, ...ING_TX_JUL, ...AMEX_TX_JUL];
+  const periodeStart = periodeBronnen.reduce((min,r)=>r.date<min?r.date:min, periodeBronnen[0].date);
+  const all = buildCombinedJul().filter(r=>r.date>=periodeStart);
+  const ROB_SPAREN_VAST = 2000.00, LINDY_SPAREN_VAST = 2398.03, DEURWAARDER_SPAREN_VAST = 0;
+  const SPAREN_VAST_DOEL = ROB_SPAREN_VAST + LINDY_SPAREN_VAST + DEURWAARDER_SPAREN_VAST;
+  const income = all.filter(r=>JUL_INCOME_CATS.includes(r.category));
+  const spend = all.filter(r=>!JUL_INCOME_CATS.includes(r.category) && !JUL_INTERN_CATS.includes(r.category) && r.category!=='Sparen' && r.category!=='Reizen' && r.category!=='Casa 3S (project)' && r.category!=='Belastingafrekening');
+  const incomeTotal = income.reduce((s,r)=>s+r.amount,0);
+  const vast = spend.filter(r=>effectiveBucket(r)==='vast');
+  const dagelijks = spend.filter(r=>effectiveBucket(r)==='dagelijks');
+  const vastTotaal = vast.reduce((s,r)=>s+r.amount,0);
+  const dagelijksTotaal = dagelijks.reduce((s,r)=>s+r.amount,0);
+  const blijftOver = incomeTotal + vastTotaal + dagelijksTotaal - SPAREN_VAST_DOEL;
+  const sparenGedaan = all.some(r=>{
+    if(r.category!=='__INTERN_SPAREN__' || r.vendor!=='Oranje Spaarrekening' || r.amount>=0) return false;
+    const periodeEind = periodeBronnen.reduce((max,rr)=>rr.date>max?rr.date:max, periodeBronnen[0].date);
+    const dagenVoorEind = (new Date(periodeEind)-new Date(r.date))/86400000;
+    return dagenVoorEind>=0 && dagenVoorEind<=10; // alleen een overboeking dicht bij het einde van de maand telt als de systematische sweep
+  });
+  return {blijftOver, sparenGedaan};
 }
 
 function renderLopendeMaandView(){
@@ -2027,6 +2052,7 @@ function renderVolgendeMaandView(){
       </div>${detail}`;
   }
 
+  const vorigeMaandSparen = berekenVorigeMaandSamenvatting();
   return `
     <div class="card" style="${restNaarIng>=0?'border-color:var(--dot-ok);':'border-color:var(--dot-over);'}">
       <div class="card-label">Na salaris: Rabo → ING</div>
@@ -2040,6 +2066,11 @@ function renderVolgendeMaandView(){
         <div style="display:flex;justify-content:space-between;border-top:1px dashed var(--rule);padding-top:4px;margin-top:2px;"><span>Rest → ING</span><span style="color:${restNaarIng>=0?'var(--dot-ok)':'var(--dot-over)'};font-weight:600;">${fmt(restNaarIng)}</span></div>
       </div>
     </div>
+    ${!vorigeMaandSparen.sparenGedaan ? `<div class="card" style="border-color:var(--rose);margin-top:10px;">
+      <div class="card-label">Sparen — juli nog niet overgemaakt</div>
+      <div class="stat-figure neg">${fmt(vorigeMaandSparen.blijftOver)}</div>
+      <div class="stat-sub">geen overboeking naar Oranje Spaarrekening gevonden in juli — dit bedrag telt mee bij de eerstvolgende keer sparen (samen met wat deze maand overblijft)</div>
+    </div>` : ''}
     <div class="hero4">
       ${tile('Inkomen', fmt(inkomenTotaal), 'Rob + Lindy + belastingteruggave + deurwaarder (€0)', 'inkomen', 'pos')}
       ${tile('Vaste lasten', null, null, 'vast', 'neg', {uitgegeven:vastUitgegevenTotaal, verwacht:vastTotaal})}
@@ -2429,34 +2460,30 @@ function renderVermogenIkv(){
       const reisTotaal = reisPosten.reduce((a,b)=>a+b.bedrag,0);
       const eenmaligPosten = VERMOGEN_EENMALIGE_POSTEN[label] || [];
       const eenmaligTotaal = eenmaligPosten.reduce((a,b)=>a+b.bedrag,0);
-      const bonusPosten = IKV_SALARIS_BONUSSEN[label] || [];
-      const bonusTotaal = bonusPosten.reduce((a,b)=>a+b.bedrag,0);
-      // vakantiegeld/13e maand-correctie t.o.v. het precieze model, zelfde principe als robDelta hierboven — niet meer na pensionering
-      let bonusCorrectie = 0; const bonusCorrectiePosten = [];
+      // Vakantiegeld/13e maand: vervang het oude bedrag direct door het precieze model (niet meer na pensionering).
+      // Lindy's vakantietoeslag/eindejaarsuitkering bestonden nog niet in het oude model — die komen er gewoon bij.
+      const bonusPosten = (IKV_SALARIS_BONUSSEN[label] || []).map(p=>({...p}));
       const maandNaam = label.split(' ')[0];
       if(eindJaarNum < ROB_PENSIOEN_JAAR && maandNaam==='juni'){
         const rj = robJaarNieuw(eindJaarNum);
-        const oudVak = (bonusPosten.find(p=>p.naam==='Vakantiegeld')||{}).bedrag || 0;
-        if(rj){ bonusCorrectie = rj.vakantiegeld - oudVak; bonusCorrectiePosten.push({naam:'Vakantiegeld — herrekend (nieuw model)', bedrag:bonusCorrectie}); }
+        const idx = bonusPosten.findIndex(p=>p.naam==='Vakantiegeld');
+        if(rj && idx>=0) bonusPosten[idx].bedrag = rj.vakantiegeld;
       } else if(eindJaarNum < ROB_PENSIOEN_JAAR && maandNaam==='januari'){
         const rj = robJaarNieuw(eindJaarNum-1); // mijn model kent 13e maand toe aan december vorig jaar, oude tabel aan januari dit jaar
-        const oud13e = (bonusPosten.find(p=>p.naam==='13e maand')||{}).bedrag || 0;
-        if(rj){ bonusCorrectie = rj.dertiende - oud13e; bonusCorrectiePosten.push({naam:'13e maand — herrekend (nieuw model)', bedrag:bonusCorrectie}); }
+        const idx = bonusPosten.findIndex(p=>p.naam==='13e maand');
+        if(rj && idx>=0) bonusPosten[idx].bedrag = rj.dertiende;
       } else if(maandNaam==='mei'){
         const lj = lindyJaarNieuw(eindJaarNum);
-        if(lj && lj.vakantietoeslag) bonusCorrectiePosten.push({naam:'Vakantietoeslag Lindy (nieuw)', bedrag:lj.vakantietoeslag});
+        if(lj && lj.vakantietoeslag) bonusPosten.push({naam:'Vakantietoeslag Lindy', bedrag:lj.vakantietoeslag});
       } else if(maandNaam==='december'){
         const lj = lindyJaarNieuw(eindJaarNum-1);
-        if(lj && lj.dertiende) bonusCorrectiePosten.push({naam:'Eindejaarsuitkering Lindy (nieuw)', bedrag:lj.dertiende});
+        if(lj && lj.dertiende) bonusPosten.push({naam:'Eindejaarsuitkering Lindy', bedrag:lj.dertiende});
       }
-      const lindyBonusSom = bonusCorrectiePosten.filter(p=>p.naam.includes('Lindy')).reduce((a,b)=>a+b.bedrag,0);
+      const bonusTotaal = bonusPosten.reduce((a,b)=>a+b.bedrag,0);
       const verplaatstDezeMaand = named.filter(n=>n.verplaatstNaar===label);
       const verplaatstSom = verplaatstDezeMaand.reduce((a,b)=>a+b.bedrag,0);
-      saldo += baseline + maandBuffer + reisTotaal + eenmaligTotaal + bonusTotaal + robDelta + lindyDelta + bonusCorrectie + lindyBonusSom + verplaatstSom + (m===11 ? namedJuliSum+overig : 0);
-      const breakdown = [{naam:'Inkomsten (Rob)', bedrag:bron.inkLVNL||0}, {naam:'Rob (extra)', bedrag:bron.rob||0}, {naam:'Lindy', bedrag:bron.lindy||0}, {naam:'Deurwaarder', bedrag:bron.heks||0}, {naam:'Lasten', bedrag:bron.uitgaven||0}, {naam:'Buffer extra uitgaven (max €1.000/mnd)', bedrag:maandBuffer}, ...reisPosten, ...eenmaligPosten, ...bonusPosten, ...verplaatstDezeMaand];
-      if(robDelta) breakdown.push({naam:'Rob salaris — herrekend (nieuw model)', bedrag:robDelta});
-      if(lindyDelta) breakdown.push({naam:'Lindy salaris — herrekend (nieuw model)', bedrag:lindyDelta});
-      breakdown.push(...bonusCorrectiePosten);
+      saldo += baseline + maandBuffer + reisTotaal + eenmaligTotaal + bonusTotaal + robDelta + lindyDelta + verplaatstSom + (m===11 ? namedJuliSum+overig : 0);
+      const breakdown = [{naam:'Inkomsten (Rob)', bedrag:(bron.inkLVNL||0)+robDelta}, {naam:'Rob (extra)', bedrag:bron.rob||0}, {naam:'Lindy', bedrag:(bron.lindy||0)+lindyDelta}, {naam:'Deurwaarder', bedrag:bron.heks||0}, {naam:'Lasten', bedrag:bron.uitgaven||0}, {naam:'Buffer extra uitgaven (max €1.000/mnd)', bedrag:maandBuffer}, ...reisPosten, ...eenmaligPosten, ...bonusPosten, ...verplaatstDezeMaand];
       if(m===11) breakdown.push(...namedJuli);
       const jaarVanMaand = parseInt(label.match(/\d{4}/)[0],10);
       alleMaanden.push({label, jaar:jaarVanMaand, waarde:saldo, breakdown});
