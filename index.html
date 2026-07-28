@@ -530,7 +530,8 @@ function renderBarList(sorted, total, opts={}){
     let dot = '';
     if(showDot){
       const budget = budgetFor(name);
-      const dotColor = budget!=null && budget>0 ? (val>budget?"var(--dot-over)":"var(--dot-ok)") : 'var(--rule)';
+      const magnitude = Math.abs(val);
+      const dotColor = budget!=null && budget>0 ? (magnitude>budget?"var(--dot-over)":"var(--dot-ok)") : 'var(--rule)';
       dot = `<span class="cat-dot" style="background:${dotColor};"></span>`;
     }
     return `<li class="bar-row"${rowAttrs(name,i)}>
@@ -1194,7 +1195,7 @@ let bucketOverrides = {}; // txKey -> 'vast'|'dagelijks', handmatige verplaatsin
 let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 1 van "selecteren, dan verplaatsen"
 let overridesLoaded = false;
 let overridesSource = 'fallback'; // wordt 'live' zodra de Supabase-fetch is gelukt
-const DASHBOARD_VERSION = '2026-07-27 — Amex-afrekening 28/6–27/7 verwerkt: 15 nieuwe transacties gecategoriseerd (Reizen-posten Hotel2Torri/Ravello nog zonder tripkeuze, die hangt Rob zelf op), OVERRIDES_FALLBACK ververst met alle nieuwe category- en vendor-regels';
+const DASHBOARD_VERSION = '2026-07-27 — Bugfix Vorige maand: "samenstelling"-kaarten (Dagelijks/Vaste lasten/Inkomen) telden per categorie de absolute waarde op, waardoor een categorie die netto een meevaller is (zoals "Overig" deze maand, +€531,50 aan terugbetalingen) toch als extra uitgave meetelde. Totaal in de samenstelling-kaart komt nu altijd exact overeen met de koptegel; meevaller-categorieën tonen nu een plusbedrag i.p.v. een onterecht minteken.';
 function txKey(t){ return t.date+'|'+t.vendor+'|'+t.amount; }
 /* Normaliseert een leveranciersnaam tot een stabiele sleutel, zodat "ALBERT HEIJN 1860 RHOON NLD" en
    "ALBERT HEIJN 1345 BARENDRECHT" allebei op "albert heijn" uitkomen — ongeacht filiaal/stad/land/store-nummer. */
@@ -1258,6 +1259,14 @@ function effectiveReis(t){
   const key = txKey(t);
   if(key in reisOverrides) return reisOverrides[key] || null; // '' betekent: handmatig losgekoppeld
   return autoDetectReis(t);
+}
+function isReizenMetBudget(r){
+  // true als een Reizen-transactie op een reis staat die ook echt een budget/potje heeft.
+  // Reizen zonder budget (of niet-geplaatste transacties) tellen gewoon mee als normale uitgave —
+  // dat is de afspraak: alleen weglaten uit de maandcijfers als het via een echt reisbudget loopt.
+  if(r.category!=='Reizen') return false;
+  const trip = REIZEN_PLANNING.find(p=>p.id===effectiveReis(r));
+  return !!(trip && trip.budget!=null);
 }
 function effectiveBucket(t){
   const key = txKey(t);
@@ -1418,7 +1427,7 @@ function berekenVorigeMaandSamenvatting(){
   const ROB_SPAREN_VAST = 2000.00, LINDY_SPAREN_VAST = 2398.03, DEURWAARDER_SPAREN_VAST = 0;
   const SPAREN_VAST_DOEL = ROB_SPAREN_VAST + LINDY_SPAREN_VAST + DEURWAARDER_SPAREN_VAST;
   const income = all.filter(r=>JUL_INCOME_CATS.includes(r.category));
-  const spend = all.filter(r=>!JUL_INCOME_CATS.includes(r.category) && !JUL_INTERN_CATS.includes(r.category) && r.category!=='Sparen' && r.category!=='Reizen' && r.category!=='Casa 3S (project)' && r.category!=='Belastingafrekening');
+  const spend = all.filter(r=>!JUL_INCOME_CATS.includes(r.category) && !JUL_INTERN_CATS.includes(r.category) && r.category!=='Sparen' && !isReizenMetBudget(r) && r.category!=='Casa 3S (project)' && r.category!=='Belastingafrekening');
   const incomeTotal = income.reduce((s,r)=>s+r.amount,0);
   const vast = spend.filter(r=>effectiveBucket(r)==='vast');
   const dagelijks = spend.filter(r=>effectiveBucket(r)==='dagelijks');
@@ -1461,7 +1470,7 @@ function renderLopendeMaandView(){
   const ingTekort = ingFlow < 0 ? -ingFlow : 0;
   const ingOverschot = ingFlow > 0 ? ingFlow : 0;
   const income = all.filter(r=>JUL_INCOME_CATS.includes(r.category));
-  const spend = all.filter(r=>!JUL_INCOME_CATS.includes(r.category) && !JUL_INTERN_CATS.includes(r.category) && r.category!=='Sparen' && r.category!=='Reizen' && r.category!=='Casa 3S (project)' && r.category!=='Belastingafrekening');
+  const spend = all.filter(r=>!JUL_INCOME_CATS.includes(r.category) && !JUL_INTERN_CATS.includes(r.category) && r.category!=='Sparen' && !isReizenMetBudget(r) && r.category!=='Casa 3S (project)' && r.category!=='Belastingafrekening');
   const belastingafrekeningRegels = all.filter(r=>r.category==='Belastingafrekening');
   const belastingafrekeningTotaal = belastingafrekeningRegels.reduce((s,r)=>s+r.amount,0);
   const sparenRegels = all.filter(r=>r.category==='Sparen');
@@ -1497,7 +1506,10 @@ function renderLopendeMaandView(){
   function donutFor(rows){
     const map={};
     rows.forEach(r=>{ map[r.category]=(map[r.category]||0)+r.amount; });
-    const sorted = Object.entries(map).map(([k,v])=>[k,Math.abs(v)]).sort((a,b)=>b[1]-a[1]);
+    // Bewust het echte, tekengevoelige nettobedrag per categorie bewaren (niet Math.abs'en):
+    // anders telt een categorie die per saldo een meevaller is (bv. een terugbetaling) hier
+    // toch als uitgave mee, en klopt het TOTAAL van deze kaart niet meer met de koptegel.
+    const sorted = Object.entries(map).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
     const total = sorted.reduce((s,[,v])=>s+v,0);
     return {sorted, total};
   }
@@ -1509,14 +1521,14 @@ function renderLopendeMaandView(){
     if(selectedFilter.type==='category') return r.category===selectedFilter.value;
     if(selectedFilter.value==='INKOMEN') return JUL_INCOME_CATS.includes(r.category);
     if(selectedFilter.value==='VAST') return effectiveBucket(r)==='vast' && !JUL_INCOME_CATS.includes(r.category) && r.category!=='Sparen';
-    if(selectedFilter.value==='DAGELIJKS') return effectiveBucket(r)==='dagelijks' && !JUL_INCOME_CATS.includes(r.category) && !JUL_INTERN_CATS.includes(r.category) && r.category!=='Sparen' && r.category!=='Reizen' && r.category!=='Casa 3S (project)' && r.category!=='Belastingafrekening';
+    if(selectedFilter.value==='DAGELIJKS') return effectiveBucket(r)==='dagelijks' && !JUL_INCOME_CATS.includes(r.category) && !JUL_INTERN_CATS.includes(r.category) && r.category!=='Sparen' && !isReizenMetBudget(r) && r.category!=='Casa 3S (project)' && r.category!=='Belastingafrekening';
     if(selectedFilter.value==='BELASTINGAFREKENING') return r.category==='Belastingafrekening';
     if(selectedFilter.value==='CASA_PROJECT') return r.category==='Casa 3S (project)';
     if(selectedFilter.value==='SPAREN') return r.category==='Sparen' && r.vendor.includes('Casa Tre Sorelle');
     if(selectedFilter.value==='REIZEN') return r.category==='Reizen';
     return r.source===selectedFilter.value;
   }
-  const ledgerRowsAll = all.filter(r=>!JUL_INTERN_CATS.includes(r.category)).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const ledgerRowsAll = all.filter(r=>!JUL_INTERN_CATS.includes(r.category) && !isReizenMetBudget(r)).slice().sort((a,b)=>b.date.localeCompare(a.date));
   const ledgerRows = ledgerRowsAll.filter(matchesFilterJul);
   const srcColor = {RABO:'var(--brass)', ING:'var(--teal)', AMEX:'var(--rose)', 'ING CC':'var(--ingcc)'};
   const filterChip = selectedFilter ? `
@@ -1558,7 +1570,7 @@ function renderLopendeMaandView(){
     const barHtml = renderBarList(donut.sorted, donut.total, {
       showDot: toonBolletjes,
       budgetFor: (name)=> toonBolletjes ? budgetMap[name] : null,
-      formatAmt: (val)=> fmt(isIncomeLike?val:-val),
+      formatAmt: (val)=> fmt(isIncomeLike?Math.abs(val):val),
       rowAttrs: (name)=>{ const catKey=expandKey+'|'+name; return ` data-cat-toggle="${catKey}" style="cursor:pointer;${categoryExpand===catKey?'font-weight:600;':''}"`; },
       indicator: (name)=>{ const catKey=expandKey+'|'+name; return categoryExpand===catKey?' ▾':''; },
       detailFor: (name)=>{
@@ -1589,7 +1601,7 @@ function renderLopendeMaandView(){
     });
     const detail = isOpen ? `<div class="card" style="grid-column: 1 / -1;">
       <div class="card-label">${label} — samenstelling</div>
-      <div class="bar-total"><span>Totaal</span><b>${fmt(isIncomeLike?donut.total:-donut.total).replace('€','€ ')}</b></div>
+      <div class="bar-total"><span>Totaal</span><b>${fmt(isIncomeLike?Math.abs(donut.total):donut.total).replace('€','€ ')}</b></div>
       ${barHtml}
     </div>` : '';
     const actueelVoorBudget = rows.reduce((s,r)=>s+Math.abs(r.amount),0);
