@@ -1167,7 +1167,7 @@ const REIZEN_KEYWORDS = {
 };
 const JUL_INCOME_CATS = ["Salaris","Belastingteruggave","Overig inkomen"];
 const JUL_INTERN_CATS = ["__INTERN_RABO__","__INTERN_ING__","__INTERN_SPAREN__","__AMEX_BETALING__","__INGCC_BETALING__","__SPAREN_NAAR_C3S__","__SPAREN_NAAR_REIZEN__"];
-const JUL_VASTE_LASTEN_CATS = ["Hypotheek","Auto","Verzekeringen","Bankkosten","Abonnementen","Nutsvoorzieningen","Vakbond","Muziek","Medisch","Goede doelen","Casa 3S","Zakelijk","Paardrijden","Familie"];
+const JUL_VASTE_LASTEN_CATS = ["Hypotheek","Auto","Verzekeringen","Bankkosten","Abonnementen","Nutsvoorzieningen","Vakbond","Muziek","Goede doelen","Casa 3S","Zakelijk","Paardrijden","Familie"];
 const ALLE_CATEGORIEEN = ["Abonnementen", "Auto", "Autokosten", "Bankkosten", "Belastingafrekening", "Belastingteruggave", "Boodschappen", "Casa 3S", "Casa 3S (project)", "Eten & drinken", "Familie", "Goede doelen", "Hobby", "Hypotheek", "Kleding", "Medisch", "Muziek", "Nutsvoorzieningen", "Overig", "Overig inkomen", "Paardrijden", "Parkeren", "Reizen", "Salaris", "Shopping", "Sparen", "Sport", "Vakbond", "Verzekeringen", "Verzorging", "Wonen", "Zakelijk"];
 /* Begroot bedrag per categorie (jouw eigen Excel-budget + eerdere analyse van Rabo-vaste lasten) — gebruikt in Lopende maand om begroot vs. uitgegeven te tonen.
    Autokosten/Parkeren blijven bewust ongemapt (apart gehouden, geen samengevoegd budget nodig).
@@ -1201,7 +1201,7 @@ let bucketOverrides = {}; // txKey -> 'vast'|'dagelijks', handmatige verplaatsin
 let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 1 van "selecteren, dan verplaatsen"
 let overridesLoaded = false;
 let overridesSource = 'fallback'; // wordt 'live' zodra de Supabase-fetch is gelukt
-const DASHBOARD_VERSION = '2026-07-30 00:30 — UI: hoofdpagina-indeling aangepast — rechterkolom Lopende/Vermogen/Volgende/Vorige, linkerkolom Salaris/Reizen/Hypotheek/Casa 3S (ZZP-tegel nog niet toegevoegd, even afstemmen wat daarin moet). Data (vorige versie): ING-export 24–28 juli verwerkt als ING_TX_AUG (36 transacties). UI: som in Aflossen-hoofdtegel + sticky vermogensgrafiek.';
+const DASHBOARD_VERSION = '2026-07-30 18:15 — Bugfix: interne overschrijvingen (zoals de €4.891 Rabo→ING) stonden in de Lopende maand-ledger met een kapotte categorie-badge ("Abonnementen", omdat __INTERN_RABO__ niet in de keuzelijst voorkomt en de <select> dan op de eerste optie terugvalt). Nu net als bij Vorige maand: interne transfers worden uit deze transactielijst gefilterd, die horen er sowieso niet als "uitgave" tussen te staan. Vorige versie: LM_-configblokje voor soepele maandovergang.';
 function txKey(t){ return t.date+'|'+t.vendor+'|'+t.amount; }
 /* Normaliseert een leveranciersnaam tot een stabiele sleutel, zodat "ALBERT HEIJN 1860 RHOON NLD" en
    "ALBERT HEIJN 1345 BARENDRECHT" allebei op "albert heijn" uitkomen — ongeacht filiaal/stad/land/store-nummer. */
@@ -2020,17 +2020,26 @@ function categorieRaboAandeel(categorieNaam){
   const totaal = rabo+ing+amex;
   return totaal>0 ? rabo/totaal : 1; // onbekende/nieuwe categorie: aanname 100% Rabo (veiligste kant — reserveert liever te veel dan te weinig)
 }
-/* Uitgegeven-zover-deze-maand per categorie, uit de echte Lopende-maand-transacties (RABO_TX_AUG + ING/AMEX zodra die er zijn) */
-function categorieUitgegeven(categorieNaam){
-  const som = (arr)=> (arr||[]).filter(t=>t.category===categorieNaam).reduce((s,t)=>s+Math.abs(t.amount),0);
-  return som(RABO_TX_AUG) + som(typeof ING_TX_AUG!=='undefined'?ING_TX_AUG:[]) + som(typeof AMEX_TX_AUG!=='undefined'?AMEX_TX_AUG:[]);
-}
 function renderVolgendeMaandView(){
-  // Salaris is al binnen (24 juli) — dus geen voorspelling meer nodig, gewoon de echte bedragen gebruiken.
-  const ROB_ACTUEEL = (RABO_TX_AUG.find(t=>t.vendor.includes('Luchtverkeersleiding'))||{}).amount || 0;
-  const LINDY = (RABO_TX_AUG.find(t=>t.vendor.includes('SARO (salaris'))||{}).amount || 0;
-  const LINDY_VERGOEDING = (RABO_TX_AUG.find(t=>t.vendor.includes('SARO (vergoedingen'))||{}).amount || 0;
-  const BELASTING = (RABO_TX_AUG.find(t=>t.category==='Belastingteruggave')||{}).amount || 0;
+  // ===== ÉÉN plek om over te schakelen naar een nieuwe "lopende maand" =====
+  // Bij een nieuwe maand: (1) maak RABO_TX_<MND>/ING_TX_<MND> aan met de echte transacties, (2) zet ze óók
+  // in de pools-array van alleBekendeTransacties(), (3) verander hieronder alleen deze vijf regels.
+  // De rest van deze functie (budget-bolletjes, live Dagelijks-voorspelling, werkelijk-vs-verwacht-split,
+  // verplaats-tussen-buckets, drill-down naar losse transacties) rekent daar automatisch mee door —
+  // dat hoeft dus niet elke maand opnieuw gebouwd te worden. Alleen VAST_COMPONENTEN hieronder blijft
+  // bewust een handmatige lijst (echte contractbedragen); check die bedragen even bij de overstap
+  // (meestal ongewijzigd, met MAAND_KORT bepaalt ENEL/IMU/Muziek-seizoenlogica zichzelf al).
+  const LM_JAAR = 2026;
+  const LM_MAAND = 8;           // 1=jan .. 12=dec
+  const LM_MAAND_KORT = 'aug';  // moet matchen met de sleutels in ENEL_MAANDEN/IMU_MAANDEN/MUZIEK_MAANDEN
+  const LM_RABO_TX = RABO_TX_AUG;
+  const LM_ING_TX = ING_TX_AUG;
+
+  // Salaris is al binnen — dus geen voorspelling meer nodig, gewoon de echte bedragen gebruiken.
+  const ROB_ACTUEEL = (LM_RABO_TX.find(t=>t.vendor.includes('Luchtverkeersleiding'))||{}).amount || 0;
+  const LINDY = (LM_RABO_TX.find(t=>t.vendor.includes('SARO (salaris'))||{}).amount || 0;
+  const LINDY_VERGOEDING = (LM_RABO_TX.find(t=>t.vendor.includes('SARO (vergoedingen'))||{}).amount || 0;
+  const BELASTING = (LM_RABO_TX.find(t=>t.category==='Belastingteruggave')||{}).amount || 0;
   const ROB_SPAREN=2000.00;
   const INKOMEN_COMPONENTEN = {"Salaris": ROB_ACTUEEL+LINDY, "Belastingteruggave": BELASTING, "Overig inkomen": LINDY_VERGOEDING};
   const SALARIS_SUBCOMPONENTEN = {"Rob — LVNL (basis)": ROB_ACTUEEL, "Lindy — SARO": LINDY};
@@ -2039,33 +2048,40 @@ function renderVolgendeMaandView(){
     "Hypotheek": 2597.40, "Auto": 896.53, "Verzekeringen": 163.33+347.20,
     "Nutsvoorzieningen": 26.00+139.19, "Telecom": 94.99, "Abonnementen": 28.63+39.30+89.78,
     "Goede doelen": 2.00, "Bankkosten": 4.65+4.53+20.00, "Casa 3S": 415.28+61.00,
-    "Medisch": 157.92, "Vakbond": 25.60, "Muziek": 0.00, "Paardrijden": 325.00+143.18, "Zakelijk": 117.45,
+    "Vakbond": 25.60, "Muziek": 0.00, "Paardrijden": 325.00+143.18, "Zakelijk": 117.45,
     /* Muziek (CultuurLocaal) op €0: 25 jul-24 aug valt volledig in de bevestigde zomerstop (geen incasso's jul/aug/sep).
-       Actieve maanden (jan-jun, okt-dec): €182,73/mnd — nieuw tarief sinds okt, zie vendor_patronen in Supabase. */
+       Actieve maanden (jan-jun, okt-dec): €182,73/mnd — nieuw tarief sinds okt, zie vendor_patronen in Supabase.
+       Medisch staat hier bewust niet (meer) bij — dat is geen vaste premie maar wisselende eigen-bijdrage/apotheek-kosten,
+       en hoort dus bij Dagelijks (zie DAGELIJKS_COMPONENTEN, die het live meeneemt). */
   };
   const vastTotaal = Object.values(VAST_COMPONENTEN).reduce((a,b)=>a+b,0);
-  const DAGELIJKS_COMPONENTEN = {
-    "Boodschappen": 1305.91, "Eten & drinken": 286.86, "Kleding": 251.12,
-    "Shopping": 50.65, "Wonen": 151.43, "Autokosten": 37.90, "Parkeren": 18.44,
-    "Verzorging": 23.77, "Overig": 47.26, "Hobby": 61.56, "Entertainment": 16.69,
-  };
-  const variabel = Object.values(DAGELIJKS_COMPONENTEN).reduce((a,b)=>a+b,0); // = 2.251,59 — gemiddelde over 7-8 mnd echte ING/AMEX-data, na categorie-correcties
+  // Live berekend (net als de Sep-voorspelling): groeit vanzelf mee zodra er een nieuwe maand aan data bijkomt,
+  // hoeft dus niet elke maand met de hand herrekend en overgetypt te worden.
+  const DAGELIJKS_COMPONENTEN = voorspellingDagelijksPerCategorie(LM_JAAR, LM_MAAND).perCategorie;
+  const variabel = Object.values(DAGELIJKS_COMPONENTEN).reduce((a,b)=>a+b,0);
   const inkomenTotaal = Object.values(INKOMEN_COMPONENTEN).reduce((a,b)=>a+b,0);
   const sparenBasis = ROB_SPAREN+LINDY;
   const netto = inkomenTotaal - sparenBasis - vastTotaal - variabel;
 
-  // Uitgegeven-tot-nu-toe vs. Verwacht (volledige maand), per categorie — voor Vaste lasten en Dagelijks
-  const vastUitgegevenPerCat = Object.fromEntries(Object.keys(VAST_COMPONENTEN).map(c=>[c, categorieUitgegeven(c)]));
-  const dagelijksUitgegevenPerCat = Object.fromEntries(Object.keys(DAGELIJKS_COMPONENTEN).map(c=>[c, categorieUitgegeven(c)]));
-  const vastUitgegevenTotaal = Object.values(vastUitgegevenPerCat).reduce((a,b)=>a+b,0);
-  const dagelijksUitgegevenTotaal = Object.values(dagelijksUitgegevenPerCat).reduce((a,b)=>a+b,0);
+  // Uitgegeven-tot-nu-toe vs. Verwacht (volledige maand) — op basis van de werkelijke bucket (incl. handmatige
+  // vast/dagelijks-verplaatsingen via bucketOverrides), niet op een vaste categorielijst. Zo blijven het bovenste
+  // percentage-cijfer en de uitgeklapte samenstelling altijd exact met elkaar in lijn.
+  const isSpendRow = (r)=> !JUL_INCOME_CATS.includes(r.category) && !JUL_INTERN_CATS.includes(r.category) && r.category!=='Sparen' && !isReizenMetBudget(r) && r.category!=='Casa 3S (project)' && r.category!=='Belastingafrekening';
+  const augTxAll = [
+    ...LM_RABO_TX.map(t=>({...t, category: effectiveCategory(t), source:'RABO'})),
+    ...LM_ING_TX.map(t=>({...t, category: effectiveCategory(t), source:'ING'})),
+  ];
+  const augSpend = augTxAll.filter(isSpendRow);
+  const vastRowsActueel = augSpend.filter(r=>effectiveBucket(r)==='vast');
+  const dagelijksRowsActueel = augSpend.filter(r=>effectiveBucket(r)==='dagelijks');
+  const vastUitgegevenTotaal = vastRowsActueel.reduce((s,r)=>s+Math.abs(r.amount),0);
+  const dagelijksUitgegevenTotaal = dagelijksRowsActueel.reduce((s,r)=>s+Math.abs(r.amount),0);
   const lopendeBestedingsruimte = inkomenTotaal - sparenBasis - vastUitgegevenTotaal - dagelijksUitgegevenTotaal;
 
   // Na salaris: Rabo → ING — inkomen is al bekend (salaris viel al op 24 juli), maar vaste lasten die nog van Rabo
   // moeten afgaan zijn deels nog niet gebeurd — dus voorspellen we het Rabo-aandeel per categorie (uit juli-data),
   // met een buffer omdat ook "vaste" lasten iets kunnen variëren.
-  const AUG_INCOME_CATS = ["Salaris","Belastingteruggave","Overig inkomen"];
-  const inkomenRabo = RABO_TX_AUG.filter(t=>AUG_INCOME_CATS.includes(t.category)).reduce((s,t)=>s+t.amount,0);
+  const inkomenRabo = LM_RABO_TX.filter(t=>JUL_INCOME_CATS.includes(t.category)).reduce((s,t)=>s+t.amount,0);
   const vastRaboVerwacht = Object.entries(VAST_COMPONENTEN).reduce((som,[cat,bedrag])=>som+bedrag*categorieRaboAandeel(cat), 0);
   const vastRaboVerwachtMetBuffer = vastRaboVerwacht * (1+VAST_LASTEN_BUFFER_PCT/100);
   const restNaarIng = inkomenRabo - vastRaboVerwachtMetBuffer - sparenBasis;
@@ -2117,10 +2133,62 @@ function renderVolgendeMaandView(){
     </div>`;
   }
 
+  // Vaste lasten & Dagelijks: bij uitklappen tonen we de WERKELIJKE transacties van deze maand tot nu toe
+  // (LM_RABO_TX + LM_ING_TX, met effectiveCategory + effectiveBucket), niet de voorspelling — die staat al
+  // in het bovenste cijfer. Budget-bolletje moet altijd een kleur hebben: val terug op de eigen voorspelling/
+  // vaste-lastenbedrag als er geen Excel-budget bekend is voor die categorie.
+  const casa3sBudgetAug = CASA_LENING + (ENEL_MAANDEN.has(LM_MAAND_KORT)?ENEL_BEDRAG:0) + (IMU_MAANDEN.has(LM_MAAND_KORT)?IMU_BEDRAG:0);
+  const muziekBudgetAug = MUZIEK_MAANDEN.has(LM_MAAND_KORT) ? MUZIEK_BEDRAG : 0;
+  const budgetMapAug = {...VAST_COMPONENTEN, ...DAGELIJKS_COMPONENTEN, ...BUDGET_CATEGORIE_MAP, 'Casa 3S': casa3sBudgetAug, 'Muziek': muziekBudgetAug};
+  function actueelDetail(titel, rowsActueel, expandKey){
+    const perCat = {};
+    rowsActueel.forEach(r=>{ perCat[r.category] = (perCat[r.category]||0) + Math.abs(r.amount); });
+    const sorted = Object.entries(perCat).filter(([,v])=>v>0.001).sort((a,b)=>b[1]-a[1]);
+    const total = sorted.reduce((s,[,v])=>s+v,0);
+    const targetBucket = (expandKey==='vast') ? 'dagelijks' : 'vast';
+    const barHtml = renderBarList(sorted, total, {
+      showDot: true,
+      budgetFor: (name)=> budgetMapAug[name],
+      rowAttrs: (name)=>{ const catKey=expandKey+'|'+name; return ` data-cat-toggle="${catKey}" style="cursor:pointer;${categoryExpand===catKey?'font-weight:600;':''}"`; },
+      indicator: (name)=>{ const catKey=expandKey+'|'+name; return categoryExpand===catKey?' ▾':' ▸'; },
+      detailFor: (name)=>{
+        const catKey = expandKey+'|'+name;
+        if(categoryExpand!==catKey) return '';
+        const matching = rowsActueel.filter(r=>r.category===name).slice().sort((a,b)=>b.date.localeCompare(a.date));
+        const catTotal = matching.reduce((s,r)=>s+Math.abs(r.amount),0);
+        const budget = budgetMapAug[name];
+        const overBudget = budget!=null && catTotal > budget;
+        const budgetKleur = budget!=null ? (overBudget?'var(--dot-over)':'var(--dot-ok)') : 'var(--muted)';
+        const geselecteerdInDezeTegel = matching.filter(r=>bucketSelection.has(txKey(r))).length;
+        const verplaatsKnop = geselecteerdInDezeTegel>0 ? `
+          <div class="cdt-divider"></div>
+          <button data-move-bucket="${targetBucket}" style="width:100%;background:var(--rule);border:none;color:var(--paper);border-radius:6px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;">
+            Verplaats ${geselecteerdInDezeTegel} geselecteerde${geselecteerdInDezeTegel===1?'':'n'} naar ${targetBucket}
+          </button>` : '';
+        return `<div class="cat-detail-tile">
+          <div class="cdt-total">${fmt(catTotal)}</div>
+          <div class="cdt-budget" style="color:${budgetKleur};">${budget!=null ? 'begroot '+fmt(budget).replace('€','€ ') : 'geen budget bekend'}</div>
+          <div class="cdt-divider"></div>
+          <ul class="ledger-list" style="list-style:none;margin:0;padding:0;">${matching.map(t=>txRow2Html(t, {showBucketToggle:true})).join('')}</ul>
+          ${verplaatsKnop}
+        </div>`;
+      },
+    });
+    return `<div class="card" style="grid-column: 1 / -1;">
+      <div class="card-label">${titel} — samenstelling (werkelijk, tot nu toe)</div>
+      <div class="bar-total"><span>Totaal</span><b>${fmt(total).replace('€','€ ')}</b></div>
+      ${total>0 ? barHtml : `<div style="font-size:12px;color:var(--muted);padding:8px 0;">Nog geen transacties in deze categorie deze maand.</div>`}
+    </div>`;
+  }
+
   function tile(label, bedrag, sub, expandKey, cls, voortgang){
     const isOpen = volgendeExpand===expandKey;
     const map = {inkomen:INKOMEN_COMPONENTEN, vast:VAST_COMPONENTEN, dagelijks:DAGELIJKS_COMPONENTEN, sparen:SPAREN_COMPONENTEN};
-    const detail = isOpen ? expandCard(label, map[expandKey], expandKey) : '';
+    const detail = !isOpen ? '' : (
+      expandKey==='vast' ? actueelDetail(label, vastRowsActueel, expandKey) :
+      expandKey==='dagelijks' ? actueelDetail(label, dagelijksRowsActueel, expandKey) :
+      expandCard(label, map[expandKey], expandKey)
+    );
     const pct = voortgang ? Math.min(100, Math.round(voortgang.uitgegeven/voortgang.verwacht*100)) : null;
     const figuur = voortgang
       ? `<div class="stat-figure ${cls}">${fmt(-voortgang.uitgegeven)}</div><div class="stat-sub">van verwacht ${fmt(-voortgang.verwacht)} (${pct}%)</div>`
@@ -2171,10 +2239,10 @@ function renderVolgendeMaandView(){
       </div>
     </div>
     <div class="card ledger-card">
-      <div class="card-label"><span>Alle transacties tot nu toe</span><span class="ledger-count">${RABO_TX_AUG.length + ING_TX_AUG.length}</span></div>
+      <div class="card-label"><span>Alle transacties tot nu toe</span><span class="ledger-count">${augTxAll.filter(t=>!JUL_INTERN_CATS.includes(t.category)).length}</span></div>
       <ul class="ledger-list" style="list-style:none;margin:0;padding:0;">
-        ${[...RABO_TX_AUG.map(t=>({...t, category: effectiveCategory(t), source:'RABO'})), ...ING_TX_AUG.map(t=>({...t, category: effectiveCategory(t), source:'ING'}))]
-          .sort((a,b)=>b.date.localeCompare(a.date)).map(t=>txRow2Html(t)).join('')}
+        ${augTxAll.filter(t=>!JUL_INTERN_CATS.includes(t.category))
+          .slice().sort((a,b)=>b.date.localeCompare(a.date)).map(t=>txRow2Html(t)).join('')}
       </ul>
     </div>
 
