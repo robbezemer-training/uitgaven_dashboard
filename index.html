@@ -1125,7 +1125,7 @@ function maandenVoorPeriode(eindJaar){
 /* ---------- Reizen: meerjarenplanning ---------- */
 /* status: 'lopend' = echt, budget vastgesteld, sparen loopt | 'planning' = wordt nu gepland, budget nog niet definitief | 'idee' = richtbedrag, kan nog helemaal wijzigen */
 const REIZEN_PLANNING = [
-  {id:'italie-2026', jaar:2026, naam:'Italië', timing:'zomer', budget:15000, status:'lopend', potje:'Italië (vakantie)', borg:{bedrag:1000, vendor:'K. Ros (vakantie Italie)', omschrijving:'Van de €6.700 aan K. Ros is €1.000 borg — komt na afloop van het huisverblijf weer terug, telt niet als echte uitgave.'}},
+  {id:'italie-2026', jaar:2026, naam:'Italië', timing:'zomer', budget:15000, status:'lopend', potje:'Italië (vakantie)', start:'2026-07-20', eind:'2026-08-08', borg:{bedrag:1000, vendor:'K. Ros (vakantie Italie)', omschrijving:'Van de €6.700 aan K. Ros is €1.000 borg — komt na afloop van het huisverblijf weer terug, telt niet als echte uitgave.'}},
   {id:'thailand-2026', jaar:2026, naam:'Thailand', timing:'dec', budget:14483, status:'lopend', potje:'Thailand (vakantie)', handmatig:{begroot:14483, betaald:7959, saldo:5775, bron:'eigen begroting (Basis)'}},
   {id:'japan-2027', jaar:2027, naam:'Japan', timing:'mei', budget:25000, status:'planning', potje:'Japan (nieuw doel)'},
   {id:'italie-2027', jaar:2027, naam:'Italië', timing:'zomer', budget:4000, status:'idee'},
@@ -1201,7 +1201,7 @@ let bucketOverrides = {}; // txKey -> 'vast'|'dagelijks', handmatige verplaatsin
 let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 1 van "selecteren, dan verplaatsen"
 let overridesLoaded = false;
 let overridesSource = 'fallback'; // wordt 'live' zodra de Supabase-fetch is gelukt
-const DASHBOARD_VERSION = '2026-07-30 18:15 — Bugfix: interne overschrijvingen (zoals de €4.891 Rabo→ING) stonden in de Lopende maand-ledger met een kapotte categorie-badge ("Abonnementen", omdat __INTERN_RABO__ niet in de keuzelijst voorkomt en de <select> dan op de eerste optie terugvalt). Nu net als bij Vorige maand: interne transfers worden uit deze transactielijst gefilterd, die horen er sowieso niet als "uitgave" tussen te staan. Vorige versie: LM_-configblokje voor soepele maandovergang.';
+const DASHBOARD_VERSION = '2026-07-30 18:50 — Verfijning reistoewijzing: de datumbereik-automatiek van de vorige versie koppelt nu alleen nog automatisch aan de reis als de omschrijving er ook buitenlands uitziet (eindigt op een landcode ≠ NLD, zoals ING dat aanlevert: "... ROMA ITA"). Een Nederlandse besteding die toevallig binnen de reisperiode valt (bv. een doorlopend abonnement) wordt dus NIET automatisch aan de reis gehangen, maar blijft staan in "Verwerken — nog te plaatsen" (Reizen-tab) — daar kies je zelf: bij de reis, of gewoon Dagelijks. Zolang die transactie daar nog staat, telt hij standaard gewoon mee als Dagelijks. Hetzelfde geldt voor bedragen vlak vóór/na de officiële reisdatum: die vallen sowieso buiten het datumbereik en lopen dus al via dezelfde band (keyword-match, anders "te verwerken"). Elke nieuwe reis heeft alleen wel een start/eind-datum in REIZEN_PLANNING nodig om hiervan te profiteren. Vorige versie: datumbereik-detectie op basis van bevestigde reisperiode.';
 function txKey(t){ return t.date+'|'+t.vendor+'|'+t.amount; }
 /* Normaliseert een leveranciersnaam tot een stabiele sleutel, zodat "ALBERT HEIJN 1860 RHOON NLD" en
    "ALBERT HEIJN 1345 BARENDRECHT" allebei op "albert heijn" uitkomen — ongeacht filiaal/stad/land/store-nummer. */
@@ -1306,8 +1306,25 @@ function voorspellingDagelijksPerCategorie(huidigJaar, huidigMaand){
   });
   return {perCategorie: result, aantalMaanden: maanden.length, maanden};
 }
+function lijktBuitenlandseBesteding(t){
+  // Simpele, onderhoudsvrije heuristiek: eindigt de omschrijving op een 3-letterige landcode die niet NLD is
+  // (zoals ING dat aanlevert: "... ROMA ITA", "... SIENA ITA")? Dan vrijwel zeker een buitenlandse besteding.
+  // "NLD" (of geen landcode) = onduidelijk/binnenlands — die NIET automatisch aan een reis koppelen, ook al
+  // valt de datum binnen de reisperiode: dat kan namelijk ook gewoon een normale NL-uitgave zijn terwijl je
+  // toevallig weg bent (bv. een abonnement dat blijft doorlopen). Zulke gevallen horen thuis in "Verwerken —
+  // nog te plaatsen", waar handmatig gekozen wordt: bij de reis, of toch gewoon Dagelijks.
+  const m = t.vendor.trim().match(/([A-Z]{3})$/);
+  return !!m && m[1]!=='NLD';
+}
 function autoDetectReis(t){
   if(t.category!=='Reizen' && t.category!=='__SPAREN_NAAR_REIZEN__') return null;
+  // 1) Datumbereik + buitenlandse besteding: als de transactiedatum binnen de bevestigde reisperiode van
+  //    precies één reis valt ÉN de omschrijving er buitenlands uitziet, is dat de sterkste (en onderhoudsvrije)
+  //    aanwijzing — werkt ook voor leveranciers die niet in de keyword-lijst staan. Binnenlandse transacties
+  //    tijdens diezelfde periode koppelen we bewust NIET automatisch (zie lijktBuitenlandseBesteding hierboven).
+  const datumMatches = REIZEN_PLANNING.filter(p=>p.start && p.eind && t.date>=p.start && t.date<=p.eind);
+  if(datumMatches.length===1 && lijktBuitenlandseBesteding(t)) return datumMatches[0].id;
+  // 2) Keyword-match als er geen (eenduidig) datumbereik + buitenland-match is
   const v = t.vendor.toLowerCase();
   for(const [id, kws] of Object.entries(REIZEN_KEYWORDS)){
     if(kws.some(k=>{
