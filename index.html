@@ -1212,7 +1212,7 @@ let reisBudgetEditOpen = null; // reis-id waarvan het budget nu bewerkt wordt, o
 let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 1 van "selecteren, dan verplaatsen"
 let overridesLoaded = false;
 let overridesSource = 'fallback'; // wordt 'live' zodra de Supabase-fetch is gelukt
-const DASHBOARD_VERSION = '2026-07-30 23:55 — Feature: reisbudgetten zijn nu zelf aan te passen — potloodje op de Budget-tegel (Reizen-tab) opent een invoerveld, opslaan bewaart het direct in Supabase (nieuwe kind reis_budget, CHECK-constraint op de overrides-tabel uitgebreid). Meteen gebruikt: Thailand-2026 staat nu op €15.000 budget i.p.v. €14.483 (jouw eigen ronde getal, expres met marge). Bijvangst: bucket-verplaatsingen (vast/dagelijks) bleken door dezelfde te-strenge CHECK-constraint nooit echt naar Supabase weggeschreven te zijn — werkte alleen binnen de sessie. Nu ook gefixt. Vorige versie: Thailand-reisperiode (19 dec–2 jan) vastgelegd.';
+const DASHBOARD_VERSION = '2026-07-30 23:55 — Bugfix: kiezen van "— geen reis —" in de "Verwerken — nog te plaatsen"-tegel (Reizen) had geen zichtbaar effect — de transactie bleef daar gewoon staan, want "expliciet geen reis" en "nog geen keuze gemaakt" werden identiek behandeld (allebei simpelweg "geen rid"). Nu telt een expliciete "geen reis"-keuze als opgelost en verdwijnt de transactie uit de wachtrij, zoals verwacht. Vorige versie: reisbudgetten zelf aanpasbaar via potloodje + CHECK-constraint-fix voor bucket-verplaatsingen.';
 function txKey(t){ return t.date+'|'+t.vendor+'|'+t.amount; }
 /* Normaliseert een leveranciersnaam tot een stabiele sleutel, zodat "ALBERT HEIJN 1860 RHOON NLD" en
    "ALBERT HEIJN 1345 BARENDRECHT" allebei op "albert heijn" uitkomen — ongeacht filiaal/stad/land/store-nummer. */
@@ -1913,8 +1913,10 @@ function renderReizenView(){
   const nietToegewezen = [];
   reizenSpend.forEach(t=>{
     const rid = effectiveReis(t);
+    const key = txKey(t._orig);
+    const expliciteGeenReis = reisOverrides[key] === ''; // je hebt zelf al "— geen reis —" gekozen: opgelost, hoeft niet meer in de wachtrij
     if(rid && perReis[rid]){ perReis[rid].uitgegeven += t.amount; perReis[rid].tx.push(t); }
-    else if(t.date >= '2026-06-01'){ nietToegewezen.push(t); } // ouder, ongematcht = geschiedenis zonder functie, niet tonen
+    else if(!expliciteGeenReis && t.date >= '2026-06-01'){ nietToegewezen.push(t); } // ouder, ongematcht = geschiedenis zonder functie, niet tonen
   });
   nietToegewezen.sort((a,b)=>b.date.localeCompare(a.date));
 
