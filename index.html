@@ -310,35 +310,46 @@
   .note-card b{ color: var(--paper-dim); }
 
   .reis-jaar-header{
-    font-family:'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--brass); margin: 18px 0 6px; padding-top: 10px; border-top: 1px solid var(--rule);
+    font-family:'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; letter-spacing: 0.04em;
+    color: var(--brass); margin: 14px 0 6px; padding-top: 8px; border-top: 1px solid var(--rule);
   }
   .reis-jaar-header:first-child{ margin-top: 0; padding-top: 0; border-top: none; }
   .reis-plan-row{
-    display: grid; grid-template-columns: 1.8fr 0.9fr 1fr 1fr 1fr; gap: 8px; align-items: center;
-    padding: 9px 0; border-bottom: 1px solid var(--rule); font-size: 13px;
+    padding: 10px 0; border-bottom: 1px solid var(--rule);
   }
   .reis-plan-row:last-child{ border-bottom: none; }
-  .reis-plan-header{
-    display: grid; grid-template-columns: 1.8fr 0.9fr 1fr 1fr 1fr; gap: 8px;
-    font-family:'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
-    padding-bottom: 6px; border-bottom: 1px solid var(--rule);
+  .rp-bestemming{
+    font-family:'Inter',sans-serif; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 6px;
   }
-  .reis-plan-header span, .reis-plan-row .rp-val{ text-align: right; font-family:'IBM Plex Mono', monospace; font-size: 12.5px; }
-  .reis-plan-header span:first-child, .rp-naam{ text-align: left; font-family:'Inter',sans-serif; }
-  .rp-naam small{ display:block; color: var(--muted); font-size: 10.5px; font-weight: 400; }
+  .rp-bestemming small{ display:block; color: var(--muted); font-size: 11.5px; font-weight: 400; margin-top: 1px; }
+  .rp-pills{ display:flex; gap:6px; flex-wrap:nowrap; margin-bottom: 6px; }
+  .rp-pill-select{
+    font-family:'IBM Plex Mono', monospace; font-size: 12.5px; letter-spacing: .02em;
+    padding: 7px 4px; border-radius: 20px; border: 1px solid var(--rule); background: var(--panel); color: var(--paper);
+    min-height: 34px; flex: 1 1 0; min-width: 0; text-align: center; text-align-last: center;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .rp-pill-jaar{ border-color: var(--teal); color: var(--teal); flex: 0 0 30%; font-size: 15px; font-weight: 600; }
+  .rp-pill-periode{ border-color: var(--c-reizen); color: var(--c-reizen); flex: 1 1 34%; }
+  .rp-pill-status{ flex: 1 1 36%; }
+  .rp-timing-custom-input{
+    display:block; width: 100%; box-sizing: border-box; margin-bottom: 8px;
+    font-family:'IBM Plex Mono', monospace; font-size: 13px; padding: 7px 10px;
+    border-radius: 8px; border: 1px solid var(--rule); background: var(--panel); color: var(--paper);
+  }
+  .rp-line{
+    display:flex; justify-content: space-between; align-items: baseline; padding: 2px 0;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .rp-line .rp-label{ color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+  .rp-line .rp-value{ font-size: 15px; }
+  .rp-budget-input{
+    width: 90px; text-align: right; font-family:'IBM Plex Mono', monospace; font-size: 15px;
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 6px 8px; color: var(--paper);
+  }
   .reis-status-pill{
     font-family:'IBM Plex Mono', monospace; font-size: 9.5px; letter-spacing: .04em; text-transform: uppercase;
     padding: 3px 7px; border-radius: 20px; border: 1px solid; white-space: nowrap; text-align: center;
-  }
-  @media (max-width: 720px){
-    .reis-plan-header{ display:none; }
-    .reis-plan-row{ grid-template-columns: 1fr 1fr; row-gap: 4px; }
-    .rp-naam{ grid-column: 1 / -1; }
-    .rp-val{ text-align: left; font-size: 11.5px; color: var(--muted); }
-    .rp-budget::before{ content: "Budget: "; }
-    .rp-uitgegeven::before{ content: "Uitgegeven: "; }
-    .rp-rest::before{ content: "Rest: "; }
   }
 
   footer{ margin-top: 30px; font-size: 12.5px; color: var(--muted); line-height: 1.6; border-top: 1px solid var(--rule); padding-top: 18px; }
@@ -1210,11 +1221,14 @@ let vendorOverrides = {}; // vendorKey -> categorie, leert per leverancier i.p.v
 let reisOverrides = {}; // txKey -> reis-id ('' = expliciet losgekoppeld van een reis)
 let bucketOverrides = {}; // txKey -> 'vast'|'dagelijks', handmatige verplaatsing tussen de twee groepen
 let reisBudgetOverrides = {}; // reis-id -> aangepast budget (override van het vaste getal in REIZEN_PLANNING)
+let reisPlanOverrides = {}; // reis-id -> {jaar, timing, status} — aanpassingen via tikken/dropdown in de meerjarenplanning
+let reisRowEditOpen = null; // "<id>|timing" of "<id>|budget" — welk veld in de meerjarenplanning-rij nu bewerkt wordt
+let reisTimingCustomFor = null; // reis-id waarvoor de vrije-tekst "anders"-invoer bij timing getoond wordt
 let reisBudgetEditOpen = null; // reis-id waarvan het budget nu bewerkt wordt, of null
 let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 1 van "selecteren, dan verplaatsen"
 let overridesLoaded = false;
 let overridesSource = 'fallback'; // wordt 'live' zodra de Supabase-fetch is gelukt
-const DASHBOARD_VERSION = '2026-07-31 00:20 — Data: ING Creditcard (2x nieuwe ASPIT-tol, 28 juli) en ING Betaalrekening (12 nieuwe transacties, 29-30 juli) verwerkt. De Flemming B.V. (-30 en -210, 29 juli) als Boodschappen gezet — geen reiskosten, gewoon een doorlopende NL-betaling tijdens de reis. Transavia Airlines CV +54,50 (30 juli) is een terugbetaling, netto verrekend binnen Reizen. Alle Italiaanse posten zonder ITA-landcode-suffix (Famila, Armonia Bar, Atac, Salderiso, Lucania Transfer, Coffee Shop Vittoria, Mondo Brillante) handmatig aan Italië-2026 gekoppeld, want de automatische datumbereik-detectie kan alleen op de ITA-suffix herkennen. Vorige versie: bugfix "geen reis"-keuze in Verwerken-tegel.';
+const DASHBOARD_VERSION = '2026-07-31 09:15 — Meerjarenplanning (Reizen-tab): jaarblok toont nu ook het totale budget van alle ideeën in dat jaar (bv. "2027 · totaal €4.000"). Een reis die op "wordt gepland" gezet is, krijgt in zijn tegel een "↩ Terug naar idee"-knop om die weer terug te zetten naar de meerjarenplanning (alleen zichtbaar bij status "wordt gepland", niet bij "lopend"). Vorige versie: jaartal-kop groter, status als tik-knop i.p.v. dropdown.';
 function txKey(t){ return t.date+'|'+t.vendor+'|'+t.amount; }
 /* Normaliseert een leveranciersnaam tot een stabiele sleutel, zodat "ALBERT HEIJN 1860 RHOON NLD" en
    "ALBERT HEIJN 1345 BARENDRECHT" allebei op "albert heijn" uitkomen — ongeacht filiaal/stad/land/store-nummer. */
@@ -1356,6 +1370,28 @@ function effectiveBudget(p){
   const ov = reisBudgetOverrides[p.id];
   return ov!=null ? parseFloat(ov) : p.budget;
 }
+function effectiveJaar(p){
+  const ov = reisPlanOverrides[p.id];
+  return (ov && ov.jaar!=null) ? ov.jaar : p.jaar;
+}
+function effectiveTiming(p){
+  const ov = reisPlanOverrides[p.id];
+  return (ov && ov.timing) ? ov.timing : p.timing;
+}
+function effectiveStatus(p){
+  const ov = reisPlanOverrides[p.id];
+  return (ov && ov.status) ? ov.status : p.status;
+}
+const REIZEN_STATUS_CYCLE = {idee:'planning', planning:'lopend', lopend:'idee'};
+const REIZEN_JAAR_OPTIES = [2026,2027,2028,2029,2030,2031,2032,2033,2034,2035,2036];
+const REIZEN_TIMING_OPTIES = ['kerst','voorjaar','mei','zomer','herfst'];
+const REIZEN_TIMING_LABEL = {kerst:'Kerst', voorjaar:'Voorjaar', mei:'Mei', zomer:'Zomer', herfst:'Herfst', anders:'Anders…'};
+function setReisPlanOverride(reisId, patch){
+  const cur = reisPlanOverrides[reisId] || {};
+  const next = {...cur, ...patch};
+  reisPlanOverrides[reisId] = next;
+  saveOverrideRow('reis_plan', reisId, JSON.stringify(next));
+}
 function isReizenMetBudget(r){
   // true als een Reizen-transactie op een reis staat die ook echt een budget/potje heeft.
   // Reizen zonder budget (of niet-geplaatste transacties) tellen gewoon mee als normale uitgave —
@@ -1381,6 +1417,7 @@ function applyOverridesFallback(){
     else if(r.kind==='vendor') vendorOverrides[r.key] = r.value;
     else if(r.kind==='bucket') bucketOverrides[r.key] = r.value;
     else if(r.kind==='reis_budget') reisBudgetOverrides[r.key] = r.value;
+    else if(r.kind==='reis_plan') reisPlanOverrides[r.key] = JSON.parse(r.value);
   });
 }
 async function loadOverrides(){
@@ -1395,6 +1432,7 @@ async function loadOverrides(){
         else if(r.kind==='vendor') vendorOverrides[r.key] = r.value;
         else if(r.kind==='bucket') bucketOverrides[r.key] = r.value;
         else if(r.kind==='reis_budget') reisBudgetOverrides[r.key] = r.value;
+        else if(r.kind==='reis_plan') reisPlanOverrides[r.key] = JSON.parse(r.value);
       });
       overridesSource = 'live';
     }
@@ -1899,6 +1937,9 @@ function renderReisDetailCard(p, data, sparenActies){
         <div class="stat-sub">${restBudget==null?'geen budget bekend':(restBudget>=0?'nog beschikbaar binnen het budget':'budget al overschreden')}</div>
       </div>
     </div>
+    ${effectiveStatus(p)==='planning' ? `<div style="margin-bottom:12px;">
+      <span data-demote-idee="${p.id}" style="cursor:pointer;display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--muted);border:1px solid var(--rule);border-radius:20px;padding:6px 14px;">↩ Terug naar idee</span>
+    </div>` : ''}
     ${p.borg ? `<div class="note-card card" style="margin-bottom:12px;">
       <span style="color:var(--muted);font-size:12px;">🔒 <b>Bevat nog ${fmt(p.borg.bedrag)} borg (${p.borg.vendor})</b> die na afloop terugkomt — "Rest van budget" hierboven is hier al voor gecorrigeerd (dus dat is je écht besteedbare bedrag). Alleen je bankrekening klopt tijdelijk niet 1-op-1 hiermee, tot de borg terug is.</span>
     </div>` : ''}
@@ -1935,8 +1976,8 @@ function renderReizenView(){
   const alleToegewezen = REIZEN_PLANNING.flatMap(p=>perReis[p.id].tx);
   const alleReisTx = [...alleToegewezen, ...nietToegewezen].sort((a,b)=>b.date.localeCompare(a.date));
 
-  const jaren = [...new Set(REIZEN_PLANNING.map(p=>p.jaar))];
-  const lopendeReizen = REIZEN_PLANNING.filter(p=>p.status==='lopend' || p.status==='planning');
+  const jaren = [...new Set(REIZEN_PLANNING.filter(p=>effectiveStatus(p)==='idee').map(p=>effectiveJaar(p)))].sort((a,b)=>a-b);
+  const lopendeReizen = REIZEN_PLANNING.filter(p=>effectiveStatus(p)==='lopend' || effectiveStatus(p)==='planning');
 
   const reisFilterActief = selectedFilter && selectedFilter.type==='reis';
   const gefilterdeReis = reisFilterActief ? REIZEN_PLANNING.find(p=>p.id===selectedFilter.value) : null;
@@ -1972,34 +2013,54 @@ function renderReizenView(){
 
     ${lopendeReizen.map(p=>{
       const isOpen = reisTripExpand===p.id;
+      const timingLabel = REIZEN_TIMING_OPTIES.includes(effectiveTiming(p)) ? REIZEN_TIMING_LABEL[effectiveTiming(p)] : effectiveTiming(p);
       const tile = `<div class="card" data-reis-trip-toggle="${p.id}" style="cursor:pointer;margin-bottom:${isOpen?'12px':'12px'};">
-        <div class="card-label">${p.jaar}</div>
-        <div class="stat-figure pos">${p.naam}${isOpen?' ▾':' ▸'}</div>
+        <div class="card-label">${effectiveJaar(p)}</div>
+        <div class="stat-figure pos">${p.naam} <span style="font-size:12px;font-weight:400;color:var(--muted);">· ${timingLabel}</span>${isOpen?' ▾':' ▸'}</div>
       </div>`;
       const detail = isOpen ? renderReisDetailCard(p, perReis[p.id], perReisSparen[p.id]) : '';
       return tile + detail;
     }).join('')}
 
-    <div class="card">
-      <div class="card-label">Meerjarenplanning (2026–2036)</div>
-      <div class="reis-plan-header"><span>Reis</span><span>Status</span><span>Budget</span><span>Uitgegeven</span><span>Rest</span></div>
-      ${jaren.map(j=>`
-        <div class="reis-jaar-header">${j}</div>
-        ${REIZEN_PLANNING.filter(p=>p.jaar===j).map(p=>{
-          const u = perReis[p.id].uitgegeven; // al negatief
+    <div style="color:var(--brass);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;margin:18px 0 8px;">Meerjarenplanning (2026–2036)</div>
+    <div style="color:var(--muted);font-size:11px;margin:-4px 0 10px;">Ideeën/richtbedragen zonder vaste planning. Zodra een reis op "wordt gepland" of "lopend" gezet wordt, krijgt hij een eigen tegel hierboven en verdwijnt hij uit dit overzicht.</div>
+    ${jaren.map(j=>{
+      const trips = REIZEN_PLANNING.filter(p=>effectiveJaar(p)===j && effectiveStatus(p)==='idee');
+      if(trips.length===0) return '';
+      const budgetSom = trips.reduce((s,p)=>{ const b=effectiveBudget(p); return s+(b||0); },0);
+      const header = `<div class="reis-jaar-header">${j} <span style="color:var(--muted);font-weight:400;font-size:12.5px;">· totaal ${fmt(budgetSom)}</span></div>`;
+      const detail = `<div class="card" style="margin-bottom:10px;padding-top:12px;padding-bottom:4px;">
+        ${trips.map(p=>{
           const budget = effectiveBudget(p);
-          const rest = budget!=null ? budget + u : null;
           const actief = reisFilterActief && selectedFilter.value===p.id;
-          return `<div class="reis-plan-row" data-filter-reis="${p.id}" style="cursor:pointer;${actief?'background:rgba(224,180,41,0.1);font-weight:600;':''}">
-            <span class="rp-naam">${p.naam} <small>${p.timing}${p.notitie?' · '+p.notitie:''}</small></span>
-            <span class="rp-val"><span class="reis-status-pill" style="color:${REIZEN_STATUS_COLOR[p.status]};border-color:${REIZEN_STATUS_COLOR[p.status]}">${REIZEN_STATUS_LABEL[p.status]}</span></span>
-            <span class="rp-val rp-budget">${budget!=null?fmt(budget):'n.t.b.'}</span>
-            <span class="rp-val rp-uitgegeven">${u!==0?fmt(u):'—'}</span>
-            <span class="rp-val rp-rest">${rest!=null?fmt(rest):'—'}</span>
+          const timing = effectiveTiming(p);
+          const status = effectiveStatus(p);
+          const timingIsAnders = reisTimingCustomFor===p.id || !REIZEN_TIMING_OPTIES.includes(timing);
+          const budgetEditing = reisRowEditOpen === (p.id+'|budget');
+          return `<div class="reis-plan-row" data-trip-id="${p.id}" style="${actief?'background:rgba(224,180,41,0.1);':''}">
+            <div class="rp-bestemming" data-filter-reis="${p.id}">${p.naam}${p.notitie?`<small>${p.notitie}</small>`:''}</div>
+            <div class="rp-pills">
+              <select data-jaar-select="${p.id}" class="rp-pill-select rp-pill-jaar">
+                ${REIZEN_JAAR_OPTIES.map(y=>`<option value="${y}" ${y===j?'selected':''}>${y}</option>`).join('')}
+              </select>
+              <select data-timing-select="${p.id}" class="rp-pill-select rp-pill-periode">
+                ${REIZEN_TIMING_OPTIES.map(o=>`<option value="${o}" ${(!timingIsAnders && timing===o)?'selected':''}>${REIZEN_TIMING_LABEL[o]}</option>`).join('')}
+                <option value="anders" ${timingIsAnders?'selected':''}>${REIZEN_TIMING_LABEL.anders}</option>
+              </select>
+              <span data-promote-status="${p.id}" class="rp-pill-select rp-pill-status" style="color:${REIZEN_STATUS_COLOR.idee};border-color:${REIZEN_STATUS_COLOR.idee};cursor:pointer;">Idee ▸ plannen</span>
+            </div>
+            ${timingIsAnders ? `<input type="text" data-timing-custom-input="${p.id}" value="${REIZEN_TIMING_OPTIES.includes(timing)?'':(timing||'')}" placeholder="eigen omschrijving voor periode" class="rp-timing-custom-input" />` : ''}
+            <div class="rp-line">
+              <span class="rp-label">Budget</span>
+              <span class="rp-value">${budgetEditing
+                ? `<input type="number" inputmode="decimal" data-budget-row-input="${p.id}" value="${budget!=null?budget:''}" class="rp-budget-input" />`
+                : `<span data-edit-budget-row="${p.id}" style="cursor:text;text-decoration:underline dotted;">${budget!=null?fmt(budget):'n.t.b.'}</span>`}</span>
+            </div>
           </div>`;
         }).join('')}
-      `).join('')}
-    </div>
+      </div>`;
+      return header + detail;
+    }).join('')}
 
     <div class="card ledger-card" id="reis-toegewezen-ledger">
       <div class="card-label"><span>Alle reistransacties</span><span class="ledger-count">${alleGetoond.length} regels</span></div>
@@ -3574,6 +3635,75 @@ function render(){
   document.querySelectorAll('[data-edit-cat]').forEach(el=>el.addEventListener('click',(e)=>e.stopPropagation()));
   document.querySelectorAll('[data-edit-reis]').forEach(el=>el.addEventListener('change',(e)=>{ e.stopPropagation(); setReisOverrideByKey(el.dataset.editReis, el.value); }));
   document.querySelectorAll('[data-edit-reis]').forEach(el=>el.addEventListener('click',(e)=>e.stopPropagation()));
+
+  // ---- Meerjarenplanning: jaar/periode als dropdown, status = tik-om-te-plannen, budget tikken ----
+  document.querySelectorAll('[data-promote-status]').forEach(el=>el.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const id = el.dataset.promoteStatus;
+    setReisPlanOverride(id, {status: 'planning'});
+    render();
+  }));
+  document.querySelectorAll('[data-demote-idee]').forEach(el=>el.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const id = el.dataset.demoteIdee;
+    setReisPlanOverride(id, {status: 'idee'});
+    reisTripExpand = null;
+    render();
+  }));
+  document.querySelectorAll('[data-timing-select]').forEach(el=>{
+    el.addEventListener('click',(e)=>e.stopPropagation());
+    el.addEventListener('change',(e)=>{
+      const id = el.dataset.timingSelect;
+      const val = e.target.value;
+      if(val==='anders'){
+        reisTimingCustomFor = id;
+        render();
+        const input = document.querySelector('[data-timing-custom-input="'+CSS.escape(id)+'"]');
+        if(input){ input.focus(); input.select(); }
+      } else {
+        setReisPlanOverride(id, {timing: val});
+        reisTimingCustomFor = null;
+        render();
+      }
+    });
+  });
+  document.querySelectorAll('[data-timing-custom-input]').forEach(el=>{
+    el.addEventListener('click',(e)=>e.stopPropagation());
+    el.addEventListener('keydown',(e)=>{ if(e.key==='Enter') e.target.blur(); });
+    el.addEventListener('blur',(e)=>{
+      const id = el.dataset.timingCustomInput;
+      setReisPlanOverride(id, {timing: e.target.value.trim()});
+      reisTimingCustomFor = null;
+      render();
+    });
+  });
+  document.querySelectorAll('[data-edit-budget-row]').forEach(el=>el.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    reisRowEditOpen = el.dataset.editBudgetRow + '|budget';
+    render();
+    const input = document.querySelector('[data-budget-row-input="'+CSS.escape(el.dataset.editBudgetRow)+'"]');
+    if(input){ input.focus(); input.select(); }
+  }));
+  document.querySelectorAll('[data-budget-row-input]').forEach(el=>{
+    el.addEventListener('click',(e)=>e.stopPropagation());
+    el.addEventListener('keydown',(e)=>{ if(e.key==='Enter') e.target.blur(); });
+    el.addEventListener('blur',(e)=>{
+      const id = el.dataset.budgetRowInput;
+      const waarde = parseFloat(e.target.value);
+      if(!isNaN(waarde)) setReisBudgetOverride(id, waarde);
+      reisRowEditOpen = null;
+      render();
+    });
+  });
+  document.querySelectorAll('[data-jaar-select]').forEach(el=>{
+    el.addEventListener('click',(e)=>e.stopPropagation());
+    el.addEventListener('change',(e)=>{
+      const id = el.dataset.jaarSelect;
+      const nieuwJaar = parseInt(e.target.value, 10);
+      setReisPlanOverride(id, {jaar: nieuwJaar});
+      render();
+    });
+  });
 }
 function scrollToLedger(){
   scrollToSelector('.ledger-card');
