@@ -1189,7 +1189,7 @@ const REIZEN_KEYWORDS = {
 };
 const JUL_INCOME_CATS = ["Salaris","Belastingteruggave","Overig inkomen"];
 const JUL_INTERN_CATS = ["__INTERN_RABO__","__INTERN_ING__","__INTERN_SPAREN__","__AMEX_BETALING__","__INGCC_BETALING__","__SPAREN_NAAR_C3S__","__SPAREN_NAAR_REIZEN__","__MC_AFLOSSING__"];
-const JUL_VASTE_LASTEN_CATS = ["Hypotheek","Auto","Verzekeringen","Bankkosten","Abonnementen","Nutsvoorzieningen","Vakbond","Muziek","Goede doelen","Casa 3S","Zakelijk","Paardrijden","Familie"];
+const JUL_VASTE_LASTEN_CATS = ["Hypotheek","Auto","Verzekeringen","Bankkosten","Abonnementen","Nutsvoorzieningen","Telecom","Vakbond","Muziek","Goede doelen","Casa 3S","Zakelijk","Paardrijden","Familie"];
 const ALLE_CATEGORIEEN = ["Abonnementen", "Auto", "Autokosten", "Bankkosten", "Belastingafrekening", "Belastingteruggave", "Boodschappen", "Casa 3S", "Casa 3S (project)", "Eten & drinken", "Familie", "Goede doelen", "Hobby", "Hypotheek", "Kleding", "Medisch", "Muziek", "Nutsvoorzieningen", "Overig", "Overig inkomen", "Paardrijden", "Parkeren", "Reizen", "Salaris", "Shopping", "Sparen", "Sport", "Vakbond", "Verzekeringen", "Verzorging", "Wonen", "Zakelijk"];
 /* Begroot bedrag per categorie (jouw eigen Excel-budget + eerdere analyse van Rabo-vaste lasten) — gebruikt in Lopende maand om begroot vs. uitgegeven te tonen.
    Autokosten/Parkeren blijven bewust ongemapt (apart gehouden, geen samengevoegd budget nodig).
@@ -1220,6 +1220,7 @@ let categoryOverrides = {};
 let vendorOverrides = {}; // vendorKey -> categorie, leert per leverancier i.p.v. per losse transactie
 let reisOverrides = {}; // txKey -> reis-id ('' = expliciet losgekoppeld van een reis)
 let bucketOverrides = {}; // txKey -> 'vast'|'dagelijks', handmatige verplaatsing tussen de twee groepen
+let bucketCategorieOverrides = {}; // categorie -> {bucket:'vast'|'dagelijks', since:'YYYY-MM-DD'} — structurele regel, geldt alleen vanaf 'since' (niet met terugwerkende kracht)
 let reisBudgetOverrides = {}; // reis-id -> aangepast budget (override van het vaste getal in REIZEN_PLANNING)
 let reisPlanOverrides = {}; // reis-id -> {jaar, timing, status} — aanpassingen via tikken/dropdown in de meerjarenplanning
 let reisRowEditOpen = null; // "<id>|timing" of "<id>|budget" — welk veld in de meerjarenplanning-rij nu bewerkt wordt
@@ -1228,7 +1229,7 @@ let reisBudgetEditOpen = null; // reis-id waarvan het budget nu bewerkt wordt, o
 let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 1 van "selecteren, dan verplaatsen"
 let overridesLoaded = false;
 let overridesSource = 'fallback'; // wordt 'live' zodra de Supabase-fetch is gelukt
-const DASHBOARD_VERSION = '2026-08-04 23:30 - Structurele fix: Incasso ING creditcard was op meerdere maanden fout getagd als Reizen-uitgave (dubbeltelling met MC_TX_ALL), niet alleen in augustus. Juni-data (-1097,49) ook gecorrigeerd naar __INGCC_BETALING__. Vendor-regel vastgelegd in Supabase overrides + offline fallback + Claude-memory zodat dit niet opnieuw kan gebeuren. Vorige versie: augustus-fix voor dezelfde vendor.';
+const DASHBOARD_VERSION = '2026-08-05 00:15 - Nieuwe functie: verplaats naar Vast/Dagelijks is nu 1 actie die structureel werkt. Bij het tikken op de knop wordt zowel de geselecteerde transactie verplaatst als een categorie-regel gezet (Supabase, kind=bucket_categorie) die vanaf vandaag geldt voor alle toekomstige transacties van die categorie - historische, al afgesloten maanden blijven ongewijzigd (niet met terugwerkende kracht). Los te bedienen vanuit de app zelf, geen code-aanpassing meer nodig voor dit soort herindelingen. Vorige versie: Telecom naar vaste-lasten-lijst.';
 function txKey(t){ return t.date+'|'+t.vendor+'|'+t.amount; }
 /* Normaliseert een leveranciersnaam tot een stabiele sleutel, zodat "ALBERT HEIJN 1860 RHOON NLD" en
    "ALBERT HEIJN 1345 BARENDRECHT" allebei op "albert heijn" uitkomen — ongeacht filiaal/stad/land/store-nummer. */
@@ -1444,6 +1445,8 @@ function reisAfwikkelingVoorMaand(jaar, maand){
 function effectiveBucket(t){
   const key = txKey(t);
   if(bucketOverrides[key]) return bucketOverrides[key];
+  const catRule = bucketCategorieOverrides[t.category];
+  if(catRule && t.date >= catRule.since) return catRule.bucket; // structureel, maar alleen vanaf de datum dat de regel gezet is
   return JUL_VASTE_LASTEN_CATS.includes(t.category) ? 'vast' : 'dagelijks';
 }
 // Statische snapshot van de Supabase 'overrides'-tabel (peildatum 22-07-2026, 21:19).
@@ -1457,6 +1460,7 @@ function applyOverridesFallback(){
     else if(r.kind==='reis') reisOverrides[r.key] = r.value;
     else if(r.kind==='vendor') vendorOverrides[r.key] = r.value;
     else if(r.kind==='bucket') bucketOverrides[r.key] = r.value;
+    else if(r.kind==='bucket_categorie') bucketCategorieOverrides[r.key] = {bucket:r.value, since:r.since||'2026-08-05'};
     else if(r.kind==='reis_budget') reisBudgetOverrides[r.key] = r.value;
     else if(r.kind==='reis_plan') reisPlanOverrides[r.key] = JSON.parse(r.value);
   });
@@ -1464,7 +1468,7 @@ function applyOverridesFallback(){
 async function loadOverrides(){
   applyOverridesFallback(); // altijd eerst toepassen — werkt dus ook lokaal/offline geopend
   try{
-    const res = await fetch(SUPABASE_URL+'/rest/v1/overrides?select=key,kind,value', {headers: SUPABASE_HEADERS});
+    const res = await fetch(SUPABASE_URL+'/rest/v1/overrides?select=key,kind,value,updated_at', {headers: SUPABASE_HEADERS});
     if(res.ok){
       const rows = await res.json();
       rows.forEach(r=>{
@@ -1472,6 +1476,7 @@ async function loadOverrides(){
         else if(r.kind==='reis') reisOverrides[r.key] = r.value;
         else if(r.kind==='vendor') vendorOverrides[r.key] = r.value;
         else if(r.kind==='bucket') bucketOverrides[r.key] = r.value;
+        else if(r.kind==='bucket_categorie') bucketCategorieOverrides[r.key] = {bucket:r.value, since:(r.updated_at||'').slice(0,10) || '2026-08-05'};
         else if(r.kind==='reis_budget') reisBudgetOverrides[r.key] = r.value;
         else if(r.kind==='reis_plan') reisPlanOverrides[r.key] = JSON.parse(r.value);
       });
@@ -1577,6 +1582,17 @@ async function setBucketOverrideByKey(key, newBucket){
     saveOverrideRow('bucket', key, newBucket);
   }
   render();
+}
+async function setBucketCategorieOverride(categorie, newBucket){
+  const vandaag = new Date().toISOString().slice(0,10);
+  bucketCategorieOverrides[categorie] = {bucket:newBucket, since:vandaag};
+  try{
+    await fetch(SUPABASE_URL+'/rest/v1/overrides?on_conflict=kind,key', {
+      method: 'POST',
+      headers: {...SUPABASE_HEADERS, 'Prefer': 'resolution=merge-duplicates'},
+      body: JSON.stringify([{key:categorie, kind:'bucket_categorie', value:newBucket, updated_at: new Date().toISOString()}])
+    });
+  }catch(e){ /* offline: verandering blijft lokaal staan tot volgende succesvolle save */ }
 }
 async function setReisBudgetOverride(reisId, newBudget){
   reisBudgetOverrides[reisId] = String(newBudget);
@@ -1783,7 +1799,7 @@ function renderLopendeMaandView(){
         const verplaatsKnop = geselecteerdInDezeTegel>0 ? `
           <div class="cdt-divider"></div>
           <button data-move-bucket="${targetBucket}" style="width:100%;background:var(--rule);border:none;color:var(--paper);border-radius:6px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;">
-            Verplaats ${geselecteerdInDezeTegel} geselecteerde${geselecteerdInDezeTegel===1?'':'n'} naar ${targetBucket}
+            Verplaats naar ${targetBucket} (geldt voortaan voor deze hele categorie)
           </button>` : '';
         return `<div class="cat-detail-tile">
           <div class="cdt-total">${fmt(displayTotal)}</div>
@@ -2576,7 +2592,7 @@ function renderVolgendeMaandView(){
         const verplaatsKnop = geselecteerdInDezeTegel>0 ? `
           <div class="cdt-divider"></div>
           <button data-move-bucket="${targetBucket}" style="width:100%;background:var(--rule);border:none;color:var(--paper);border-radius:6px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;">
-            Verplaats ${geselecteerdInDezeTegel} geselecteerde${geselecteerdInDezeTegel===1?'':'n'} naar ${targetBucket}
+            Verplaats naar ${targetBucket} (geldt voortaan voor deze hele categorie)
           </button>` : '';
         return `<div class="cat-detail-tile">
           <div class="cdt-total">${fmt(catTotal)}</div>
@@ -3890,8 +3906,16 @@ function render(){
   document.querySelectorAll('[data-move-bucket]').forEach(el=>el.addEventListener('click',(e)=>{
     e.stopPropagation();
     const target = el.dataset.moveBucket;
-    [...bucketSelection].forEach(key=>setBucketOverrideByKey(key, target));
+    const alleTx = alleBekendeTransacties();
+    const categorieen = new Set();
+    [...bucketSelection].forEach(key=>{
+      setBucketOverrideByKey(key, target);
+      const match = alleTx.find(t=>txKey(t)===key);
+      if(match) categorieen.add(effectiveCategory(match));
+    });
+    categorieen.forEach(cat=>setBucketCategorieOverride(cat, target)); // structureel: geldt voortaan voor deze categorie, niet met terugwerkende kracht
     bucketSelection.clear();
+    render();
   }));
   document.querySelectorAll('[data-goto-view]').forEach(el=>el.addEventListener('click',()=>{ view=el.dataset.gotoView; selectedFilter=null; render(); }));
   document.querySelectorAll('[data-scroll-to]').forEach(el=>el.addEventListener('click',()=>{ scrollToSelector('#'+el.dataset.scrollTo); }));
