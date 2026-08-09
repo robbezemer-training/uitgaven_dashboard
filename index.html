@@ -107,6 +107,18 @@
 
   .tile-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
   .tile-grid--home{ margin-top: 28px; }
+  .c3s-select{
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23ffffff' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat; background-position: right 8px center; background-size: 10px 7px;
+    padding: 6px 24px 6px 10px !important;
+    font-size: 13px !important;
+    min-height: 30px;
+    border-radius: 6px;
+  }
+  .c3s-select--muted{
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23c9c2b3' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  }
   .app-tile{
     background: var(--panel); border: 1px solid var(--rule); border-radius: 16px;
     padding: 20px 18px; display:flex; flex-direction:column; align-items:flex-start; gap: 16px;
@@ -1723,8 +1735,6 @@ const C3S_POSTEN = [
 {"id":"werk-33","categorie":"werkzaamheid","omschrijving":"Zoutwater zuiveringssysteem zwembad","omschrijving_it":"Sistema depurazione piscina al sale","begroot":10000,"akkoord":10000,"factuurnr":null,"iva_pct":10,"subcategorie":"Zwembad","volgorde":33},
 {"id":"werk-34","categorie":"werkzaamheid","omschrijving":"Afdekranden (uit 1e offerte, nog nodig?)","omschrijving_it":"Fornitura e installazione di sordi di ritta","begroot":700,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Zwembad","volgorde":34},
 {"id":"werk-35","categorie":"werkzaamheid","omschrijving":"Douchebak plaatsen (huis + berging)","omschrijving_it":"Posizionare il piatto doccia","begroot":500,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":35},
-{"id":"werk-36","categorie":"werkzaamheid","omschrijving":"Reiniging gebouw (nog nodig?)","omschrijving_it":"Pulizia dell'edificio","begroot":null,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":36},
-{"id":"werk-37","categorie":"werkzaamheid","omschrijving":"Zwembad gebruiksklaar opleveren","omschrijving_it":"Consegna della piscina pronta all'uso","begroot":null,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Zwembad","volgorde":37},
 {"id":"mat-01","categorie":"materiaal","omschrijving":"Ramen en deuren","begroot":15000,"akkoord":15200,"factuurnr":null,"iva_pct":22,"volgorde":1},
 {"id":"mat-02","categorie":"materiaal","omschrijving":"Binnendeuren (5x)","begroot":1000,"akkoord":820,"factuurnr":null,"iva_pct":22,"volgorde":2},
 {"id":"mat-03","categorie":"materiaal","omschrijving":"Badkamer","begroot":2500,"akkoord":3138,"factuurnr":null,"iva_pct":22,"volgorde":3},
@@ -1870,10 +1880,10 @@ function renderCasaProjectView(){
       </div>`
     ).join('');
     const huidigeSc = c3sSubcatOverrides[p.id]||p.subcategorie||'Overig';
-    const catPicker = subOrderList ? `<select data-c3s-cat="${p.id}" style="font-size:10px;background:var(--card2);color:var(--muted);border:1px solid var(--line);border-radius:4px;margin-top:4px;padding:1px 4px;">
+    const catPicker = subOrderList ? `<select data-c3s-cat="${p.id}" class="c3s-select c3s-select--muted" style="background-color:var(--card2);color:var(--muted);border:1px solid var(--line);margin-top:6px;">
       ${subOrderList.map(sc=>`<option value="${sc}" ${sc===huidigeSc?'selected':''}>${sc}</option>`).join('')}
     </select>` : '';
-    const statusPicker = isWerk ? `<select data-c3s-voortgang="${p.id}" style="font-size:11px;padding:2px 6px;border-radius:4px;background:${meta.color};color:#fff;border:none;font-weight:600;">
+    const statusPicker = isWerk ? `<select data-c3s-voortgang="${p.id}" class="c3s-select" style="background-color:${meta.color};color:#fff;border:none;font-weight:600;">
       <option value="niet_akkoord" ${statusUnified.value==='niet_akkoord'?'selected':''}>Niet akkoord</option>
       <option value="akkoord" ${statusUnified.value==='akkoord'?'selected':''}>Akkoord</option>
       <option value="gestart" ${statusUnified.value==='gestart'?'selected':''}>Gestart</option>
