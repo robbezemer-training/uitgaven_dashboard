@@ -1227,6 +1227,11 @@ function c3sGenereerBouwPdf(){
   allePosten.forEach(p=>{ const sc = c3sSubcatOverrides[p.id]||p.subcategorie||'Overig'; (bySub[sc]=bySub[sc]||[]).push(p); });
   const extraCats = Object.keys(bySub).filter(sc=>!subOrder.includes(sc));
   const groepen = [...subOrder, ...extraCats].filter(sc=>bySub[sc]);
+  const betaaldKleur = (p)=>{
+    const betaald = betaaldVoorPostExport(p);
+    if(betaald<=0) return '#111';
+    return betaald > c3sBudget(p)+0.01 ? '#c0392b' : '#1e8a4c'; // rood = te veel, groen = gelijk of minder dan akkoord
+  };
   const rowHtml = (p)=>{
     const statusVal = c3sEffectieveStatus(p, heuristicGestartIds).value;
     const statusNl = C3S_STATUS4_META[statusVal].label;
@@ -1247,7 +1252,7 @@ function c3sGenereerBouwPdf(){
       <td style="text-align:right;">${fmt(c3sBudgetNetto(p))}</td>
       <td style="text-align:right;">${p.iva_pct?p.iva_pct+'%':''}</td>
       <td style="text-align:right;">${fmt(c3sBudget(p))}</td>
-      <td style="text-align:right;">${fmt(betaaldVoorPostExport(p))}</td>
+      <td style="text-align:right;color:${betaaldKleur(p)};font-weight:600;">${fmt(betaaldVoorPostExport(p))}</td>
     </tr>${opmerkingRij}`;
   };
   const groepenHtml = groepen.map(sc=>{
@@ -1325,7 +1330,7 @@ function c3sGenereerPdf(taal){
         <td>${statusLabel}</td>
         <td style="text-align:right;">${fmt(c3sBudgetNetto(p))}</td>
         <td style="text-align:right;">${fmt(c3sBudget(p))}</td>
-        <td style="text-align:right;">${fmt(betaaldVoorPostExport(p))}</td>
+        <td style="text-align:right;color:${(()=>{ const b=betaaldVoorPostExport(p); if(b<=0) return '#111'; return b>c3sBudget(p)+0.01?'#c0392b':'#1e8a4c'; })()};font-weight:600;">${fmt(betaaldVoorPostExport(p))}</td>
       </tr>`;
     }).join('');
     const totExcl = posten.reduce((s,p)=>s+c3sBudgetNetto(p),0);
