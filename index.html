@@ -1245,6 +1245,14 @@ function c3sGenereerBouwPdf(){
       </td>
       <td colspan="4"></td>
     </tr>` : '';
+    const gekoppeldeFacturen = c3sFacturenVoorPost(p.id);
+    const facturenRij = gekoppeldeFacturen.length ? `<tr>
+      <td></td>
+      <td colspan="2" style="color:#666;padding-top:0;padding-bottom:8px;font-size:9.5px;">
+        Factuur / Fattura: ${gekoppeldeFacturen.map(f=>`${f.aannemer}${f.factuurnr?' nr.'+f.factuurnr:''} — ${fmt(f.bedrag)} (${f.betaald?'betaald/pagata':'open/aperta'})`).join('; ')}
+      </td>
+      <td colspan="4"></td>
+    </tr>` : '';
     return `<tr>
       <td>${p.omschrijving}</td>
       <td>${p.omschrijving_it||''}</td>
@@ -1253,7 +1261,7 @@ function c3sGenereerBouwPdf(){
       <td style="text-align:right;">${p.iva_pct?p.iva_pct+'%':''}</td>
       <td style="text-align:right;">${fmt(c3sBudget(p))}</td>
       <td style="text-align:right;color:${betaaldKleur(p)};font-weight:600;">${fmt(betaaldVoorPostExport(p))}</td>
-    </tr>${opmerkingRij}`;
+    </tr>${facturenRij}${opmerkingRij}`;
   };
   const groepenHtml = groepen.map(sc=>{
     const posten = bySub[sc].slice().sort((a,b)=>a.volgorde-b.volgorde);
