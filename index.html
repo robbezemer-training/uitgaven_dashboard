@@ -3085,6 +3085,10 @@ function vermogenMaandenLive(){
   if(Math.abs(delta) < 0.01) return VERMOGEN_MAANDEN;
   return VERMOGEN_MAANDEN.map((r,i)=> i < idx ? r : {...r, basis: r.basis + delta, basis2: r.basis2 + delta});
 }
+function vermogenEenmaligePostenLive(maand){
+  const statisch = VERMOGEN_EENMALIGE_POSTEN[maand] || [];
+  return statisch.map(p => p.naam==='Casa 3S — huisbetaling' ? {...p, bedrag: -c3sTotaalOpenBedrag()} : p);
+}
 function renderVermogenNominaal(){
   const maandenLive = vermogenMaandenLive();
   const startIdx = maandenLive.findIndex(r=>r.m===VERMOGEN_NU_LABEL);
@@ -3102,7 +3106,7 @@ function renderVermogenNominaal(){
     const breakdown = [{naam:'Rob', bedrag:r.rob||0}, {naam:'Lindy', bedrag:r.lindy||0}, {naam:'Deurwaarder', bedrag:r.heks||0}];
     if(r.extra) breakdown.push({naam: r.extra<0 ? 'Gemeentelijke heffingen' : 'Bijzondere inkomst', bedrag:r.extra});
     if(r.bedrag) breakdown.push({naam:r.wat||'Uitgave', bedrag:-r.bedrag});
-    const eenmaligPosten = VERMOGEN_EENMALIGE_POSTEN[r.m]||[];
+    const eenmaligPosten = vermogenEenmaligePostenLive(r.m);
     if(vermogenAflos==='ja' && hypotheekGekozenDelen.length){
       const p = parseVermogenMaandLabel(r.m);
       const nuTotaalMnd = p ? p.jaar*12+p.maand : null;
@@ -3248,7 +3252,7 @@ function renderVermogenIkv(){
       const label = labels[m];
       const reisPosten = reisBetalingen.get(label) || [];
       const reisTotaal = reisPosten.reduce((a,b)=>a+b.bedrag,0);
-      const eenmaligPosten = VERMOGEN_EENMALIGE_POSTEN[label] || [];
+      const eenmaligPosten = vermogenEenmaligePostenLive(label);
       const eenmaligTotaal = eenmaligPosten.reduce((a,b)=>a+b.bedrag,0);
       // Vakantiegeld/13e maand: vervang het oude bedrag direct door het precieze model (niet meer na pensionering).
       // Lindy's vakantietoeslag/eindejaarsuitkering bestonden nog niet in het oude model — die komen er gewoon bij.
@@ -3326,8 +3330,8 @@ function renderVermogenIkv(){
   const chartSerie = [VERMOGEN_NU_BEDRAG, ...alleMaanden.map(m=>m.waarde)];
 
   const c3sMomenten = [];
-  Object.entries(VERMOGEN_EENMALIGE_POSTEN).forEach(([label,posten])=>{
-    posten.forEach(p=>c3sMomenten.push({type:'c3s', label:p.naam, jaar:label, bedrag:p.bedrag}));
+  Object.keys(VERMOGEN_EENMALIGE_POSTEN).forEach(label=>{
+    vermogenEenmaligePostenLive(label).forEach(p=>c3sMomenten.push({type:'c3s', label:p.naam, jaar:label, bedrag:p.bedrag}));
   });
   periodesData.forEach(j=>{
     if(j.extraUitgBasis) c3sMomenten.push({type:'c3s', label:'Buffer extra uitgaven (max '+fmt(-(j.extraUitgBasis||0))+'/jr)', jaar:j.jaar, bedrag:j.extraUitgBasis});
