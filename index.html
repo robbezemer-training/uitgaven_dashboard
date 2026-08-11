@@ -3071,9 +3071,24 @@ function renderMomentenLijst(momenten){
     </ul>
   </div>`;
 }
+function c3sTotaalOpenBedrag(){
+  return C3S_POSTEN.reduce((s,p)=>s + c3sBudget(p) - betaaldVoorPostExport(p), 0);
+}
+function vermogenMaandenLive(){
+  // Koppelt de eenmalige Casa 3S-huisbetaling (februari 2027) aan het live "Open"-bedrag uit de Casa 3S-tab,
+  // i.p.v. het oude, ingebakken schattingsgetal van €189.058. Alles vanaf die maand schuift mee met het verschil.
+  const idx = VERMOGEN_MAANDEN.findIndex(r=>r.m==='februari 2027');
+  if(idx===-1) return VERMOGEN_MAANDEN;
+  const liveOpen = c3sTotaalOpenBedrag();
+  const oudeSchatting = 189058;
+  const delta = oudeSchatting - liveOpen;
+  if(Math.abs(delta) < 0.01) return VERMOGEN_MAANDEN;
+  return VERMOGEN_MAANDEN.map((r,i)=> i < idx ? r : {...r, basis: r.basis + delta, basis2: r.basis2 + delta});
+}
 function renderVermogenNominaal(){
-  const startIdx = VERMOGEN_MAANDEN.findIndex(r=>r.m===VERMOGEN_NU_LABEL);
-  const slice = VERMOGEN_MAANDEN.slice(startIdx);
+  const maandenLive = vermogenMaandenLive();
+  const startIdx = maandenLive.findIndex(r=>r.m===VERMOGEN_NU_LABEL);
+  const slice = maandenLive.slice(startIdx);
   const offset = VERMOGEN_NU_BEDRAG - slice[0].basis;
   const basisAflos = vermogenAflos==='ja' ? berekenBasisMetAflossing(slice) : null;
   const actief = slice.map((r,i)=>(vermogenAflos==='ja'?basisAflos[i]:r.basis)+offset);
