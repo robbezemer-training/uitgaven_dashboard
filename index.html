@@ -818,7 +818,12 @@ let reisBudgetEditOpen = null; // reis-id waarvan het budget nu bewerkt wordt, o
 let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 1 van "selecteren, dan verplaatsen"
 let overridesLoaded = false;
 let overridesSource = 'fallback'; // wordt 'live' zodra de Supabase-fetch is gelukt
-const DASHBOARD_VERSION = '2026-08-13t - Afdekranden (werk-34, €700) en Douchebak plaatsen (werk-35, €500) blijven op hun huidige bedrag staan (niet naar €0, zoals ik eerder had verondersteld) — Rob bevestigt: onduidelijk wat het precies is, moet nagevraagd worden bij de aannemer. Alleen de notities bijgewerkt om dat expliciet te maken, bedragen en status ongewijzigd.';
+const DASHBOARD_VERSION = '2026-08-13y - Correctie op de vorige fix: werk-32 (Zwembadinstallatie) terug naar 22% IVA — Rob bevestigt dat dit het echte tarief is, zichtbaar op de factuur, ondanks dat Excel voor het hele Bouw-blok een versimpeld 10%-blanket-tarief gebruikt in zijn totaalformule. Feitelijke juistheid per post gaat voor op precies aansluiten bij Excels vereenvoudigde total. c3sTotaalOpenBedrag() stijgt hierdoor met €420 (naar €166.594,00). Rob bevestigt ook: Onvoorzien-mechanisme (verschil tussen begroot en werkelijke prijs per Afwerking-post wordt verrekend in de buffer), en de behandeling van Kappen bomen/Grind/Herstel dak kloppen nu allemaal. Rob gaat vanaf nu de Excel-download van dit dashboard gebruiken als bron voor zijn eigen Numbers-administratie — dit dashboard wordt daarmee leidend i.p.v. andersom.';
+const DASHBOARD_VERSION_PREV_2026_08_13x = '2026-08-13x - Rob had gelijk dat "en dat kan dus niet" — het gat volledig herleid i.p.v. er genoegen mee te nemen. Van €29.674 naar €330,90 onverklaard (98,9% verklaard), via vijf concrete, elk individueel geverifieerde oorzaken: (1) Betaald miste €16.500 aan ongekoppelde Lanzillotti-voorschot-facturen (post_ids:[]) — nieuwe functie c3sBetaaldOngekoppeld() telt deze nu mee in zowel c3sTotaalOpenBedrag als c3sProjectNogTeBetalen als het Casa3S-scherm. (2) "Onvoorzien"-buffer toonde het volledige oorspronkelijke bedrag (€14.945) terwijl Excel al €10.580,16 aan overschrijdingen elders (zoals het niet-begrote Herstel dak) had verrekend — akkoord aangepast naar het echte restant (€3.577,74 netto, matcht Excel-cel U76 exact). (3) Badkamer/Tegels hadden lichte data-invoerfouten (€99 en €5,76 te hoog per stuk) — gecorrigeerd naar Excels netto-kolom. (4) werk-32 (Zwembadinstallatie) stond op 22% IVA i.p.v. het blanket 10%-tarief dat Excel voor alle Bouw-posten hanteert — gecorrigeerd. Resterende, bewuste (niet-foutieve) verschillen: Grind (€1.220, Wellicht-status telt als richtprijs, ook al is er nog niets uitgegeven) en twee posten op status "Niet" (Kappen 2 olijfbomen, Sluiten opening schoorsteen, samen €495) die Robs dashboard terecht uitsluit maar Excels simpele kolomsom nog meetelt — dat is het dashboard dat hier eigenlijk NAUWKEURIGER is dan de Excel-formule zelf. Live-relatie opnieuw geverifieerd na alle fixes: +€1.000 op een post geeft nog steeds correct +€1.100 (incl. 10% IVA) in het totaal.';
+const DASHBOARD_VERSION_PREV_2026_08_13w = '2026-08-13w - Rob wees terecht op een fundamenteel probleem: de vorige fix (2026-08-13v) had de Casa3S-totalen losgekoppeld van de losse posten en vastgezet op een Excel-cijfer — dus een postwijziging had geen enkel effect meer op het getoonde totaal. Teruggedraaid, en de ÉCHTE oorzaak van de mismatch gevonden: c3sBudgetNetto() gaf voorrang aan Akkoord boven Offerte, terwijl Excels eigen mastertotaal (K62) voor Bouw-posten uitsluitend de Offerte-kolom optelt en Akkoord-aanpassingen negeert — precies wat Rob al veel eerder deze sessie zei ("wij houden hier de offerte-prijs aan, niet de akkoord-kolom"), maar dat was nooit goed in de rekenlogica doorgevoerd. Fix: nieuw veld "telMethode" per post — "offerte" (37 echte Bouw-posten, alleen begroot telt, akkoord genegeerd voor het totaal, matcht Excel K62) vs standaard "netto" (materiaal/aankoop-posten + twee posten die eigenlijk uit Excels Materialen-nettotabel komen ondanks hun werkzaamheid-categorie — Herstel dak, Zwembad verwarming — daar blijft akkoord vóór begroot gelden). c3sTotaalOpenBedrag()/c3sProjectNogTeBetalen() weer teruggezet naar een ECHTE, live postensom (geen vastgezet Excel-cijfer meer) — geverifieerd met een live-test: begroot van een post +€1.000 geeft het totaal correct +€1.100 (incl. 10% IVA). RESULTAAT, EERLIJK: het gat is fors kleiner (Open ging van €196.552 naar €193.802, en het onderliggende Begroot-verschil met Excel is nu nog maar ~€13.174 i.p.v. de eerdere ~€15.924) maar NIET volledig gesloten — nog niet 100% herleid tot de laatste euro. Bekende resterende bijdragen: Grind toont €1.000 indicatief (Wellicht-status, telt als richtprijs) terwijl Excel momenteel €0 toont (nog niets uitgegeven) — bewuste keuze, geen fout, maar wel een verschil. Voor de rest nog geen sluitende verklaring gevonden binnen de tijd van deze sessie. Aan Rob voorgelegd: doorzoeken tot op de cent, of is "live-relatie hersteld + gat van ~32k naar ~13k" voor nu voldoende?';
+const DASHBOARD_VERSION_PREV_2026_08_13v = '2026-08-13v - BELANGRIJKE FIX #2: Rob vergeleek het Casa 3S-overzichtsscherm met zijn Excel en zag €196.552 Open i.p.v. €164.128,10 — een DERDE plek (naast Balans en PDF, al eerder gefixt) die nog zijn eigen, afwijkende C3S_POSTEN-optelling gebruikte i.p.v. de leidende Excel-cijfers. Oorzaak, na volledige regel-voor-regel controle: categoriseringsverschil (Herstel dak/Zwembad verwarming staan in Excel bij "Afwerking"-materialen maar op Robs eigen verzoek bij "Bouw"/werkzaamheid in dit dashboard — per saldo neutraal voor het totaal, maar verstoort een 1-op-1-vergelijking) + het feit dat Excel de Bouw-kosten niet apart optelt maar al meerekent binnen de Afwerking-kolom (K62×1,1 zit al in U78/U79 verwerkt). Structurele oplossing: drie samenhangende constanten toegevoegd — C3S_TOTAAL_BEGROOT_LEIDEND (297.572, uit Excel-cel U81), C3S_TOTAAL_BETAALD_LEIDEND (133.443,90 = Koop-betaald E19 + Bouw-betaald X100), en C3S_NOG_TE_BETALEN_LEIDEND (het verschil, 164.128,10) — sluiten nu per definitie exact op elkaar aan. Casa 3S-hero-cijfers (Begroot/Betaald/Open) gebruiken deze nu i.p.v. de eigen postentelling (die blijft intern beschikbaar als totaalBegrootPosten/totaalBetaaldPosten, ter referentie/debug, maar wordt niet meer getoond). Oude, stale C3S_NOG_TE_BETALEN_OFFICIEEL-constante (nog op €189.058, een eerdere sessie se cijfer) verwijderd — c3sProjectNogTeBetalen() gebruikt nu ook de nieuwe leidende cijfers. Geverifieerd: Casa3S-scherm, Balans-kaart, en PDF/Excel-export tonen nu alle drie exact hetzelfde open-bedrag (€164.128,10) — geen enkele plek in de app rekent nog met een eigen, afwijkend cijfer.';
+const DASHBOARD_VERSION_PREV_2026_08_13u = '2026-08-13u - BELANGRIJKE FIX: de PDF/Excel-export (c3sVermogenProjectie) had een EIGEN, oudere kopie van de vermogens-/reserveringslogica die niet meeliep met de grote herbouw van vandaag (reservering-vs-echte-uitgave, 9-maanden-venster, Thailand-sluiting) — Rob signaleerde dit zelf n.a.v. een gegenereerde PDF die nog augustus Lindy €2.300/Deurwaarder €900 en geen Grind toonde. Root cause: c3sVermogenProjectie() rekende los van renderVermogenNominaal(), met zijn eigen rauwe basis+offset-berekening, dus Japans -16.000 verscheen in de PDF nog gewoon in februari 2027 i.p.v. pas als echte uitgave in mei 2027. Structurele oplossing i.p.v. losse patch: nieuwe gedeelde functie berekenVermogenProjectieCore(metAflossing) bevat nu de VOLLEDIGE reservering/uitgave/sluiting-logica op één plek; renderVermogenNominaal() én c3sVermogenProjectie() gebruiken beide dezelfde functie — kunnen dus nooit meer uit elkaar lopen. PDF/Excel "Overig"-kolom toont nu ook expliciet "reservering gestart"/"uitgegeven"/"reis afgesloten"-notities i.p.v. het oude, inmiddels-onjuiste reizenBedrag/reizenWat-veld. Geverifieerd: augustus 2026 in de PDF toont nu Lindy €2.490/Deurwaarder €0 (matcht de eerdere fix) en "Japan — reservering gestart"; april→mei 2027-verschil klopt exact (-€21.800, want €27.000 Japan-uitgave in mei, niet meer februari).';
+const DASHBOARD_VERSION_PREV_2026_08_13t = '2026-08-13t - Afdekranden (werk-34, €700) en Douchebak plaatsen (werk-35, €500) blijven op hun huidige bedrag staan (niet naar €0, zoals ik eerder had verondersteld) — Rob bevestigt: onduidelijk wat het precies is, moet nagevraagd worden bij de aannemer. Alleen de notities bijgewerkt om dat expliciet te maken, bedragen en status ongewijzigd.';
 const DASHBOARD_VERSION_PREV_2026_08_13s = '2026-08-13s - C3S_POSTEN vergeleken tegen Robs Excel, post voor post (59 posten gecheckt). Bevinding: aankoop-09 (Geometra/Giampiero) was al correct — begroot excl. IVA (€16.275) × 1,22 = €19.855,50, klopt met Excel; eerdere "verschil"-melding was een fout van mij (excl. vs incl. IVA verward). Twee echte fixes: (1) nieuwe post mat-13 "Grind" toegevoegd (Afwerking, €1.000, status Wellicht — staat in de offerte maar nog geen beslissing/uitvoering, Rob bevestigt). (2) mat-10 "Herstel dak": begroot terug naar €0 (was abusievelijk €4.500, matcht nu Excels oorspronkelijke nul-begroting), akkoord/netto blijft €4.500 (wat het echt kostte, via c3sBudgetNetto dat "akkoord" vóór "begroot" gebruikt) — Rob bevestigt dat dit soort overschrijdingen uit "Onvoorzien" komt, niet als losse afwijking. Nog open, aan Rob gevraagd: werk-34 (Afdekranden, €700→Excel €0) en werk-35 (Douchebak, €500→Excel €0) — lijken op basis van Excel + bestaande notities niet meer nodig, maar nog niet expliciet door Rob bevestigd.';
 const DASHBOARD_VERSION_PREV_2026_08_13r = '2026-08-13r - Op Robs verzoek: c3sTotaalOpenBedrag() gebruikt nu Robs eigen Excel-cel (U80, "Nog te betalen") als leidende bron i.p.v. de eigen C3S_POSTEN-optelling die uit de pas was gaan lopen (dashboard zei ±195-198k, Robs sheet zegt €164.128,10). Nieuwe constante C3S_NOG_TE_BETALEN_LEIDEND=164128.10, uit de geüploade "Casa_Tre_Sorelle_financien.xlsx" (tabblad "Begroting piccolo", peildatum 10-08-2026). Formule nagerekend: Afwerking-totaal incl. IVA (176.610) + Koop-nog-te-betalen (11.528,10) − Bouw-al-betaald (24.010) = 164.128,10 — Rob houdt hier de Offerte-prijs aan, niet de losse Akkoord-kolom, precies zoals de sheet-formule zelf ook doet. Werkt automatisch door in Balans-kaart, maandregels en de C3S-huisbetaling-koppeling in Vermogen (Nominaal). Geen live koppeling mogelijk met een extern Excel-bestand — moet handmatig bijgewerkt worden bij een nieuwe versie van Robs sheet.';
 const DASHBOARD_VERSION_PREV_2026_08_13q = '2026-08-13q - Op Robs verzoek: lopende reizen met een live potje (Thailand) sluiten nu ook af — potje telt niet meer voor altijd als "doel" mee, maar stopt zodra de eind-datum van de reis bereikt is (nieuwe helper reisPotjeSluitLabel(), uit het bestaande eind-veld in REIZEN_PLANNING). Getest: Thailand (eind 2027-01-02) telt mee t/m december 2026, is weg vanaf januari 2027, breakdown toont "Thailand — reis afgesloten" op het sluitingsmoment. reisPotjesTotaalNu was een constante, nu per-rij (reisPotjesTotaalPerRij) — geldt zowel voor de maandregels als de top-kaart (die alleen "nu" hoeft te checken, maar wel consistent moet blijven zodra de tijd verstrijkt).';
@@ -1245,8 +1250,7 @@ function c3sExporteerExcel(){
   aoa.push(['Maand', 'Rob', 'Lindy', 'Deurwaarder', 'Overig', '', 'Vermogen', 'C3S-pot (scenario)']);
   vp.rijen.forEach(r=>{
     const extraTxt = r.extra ? (r.extra<0?`Heffingen ${fmt(r.extra)}`:`Extra +${fmt(r.extra)}`) : '';
-    const reisTxt = r.reizenBedrag ? `${r.reizenWat||'Reizen'} -${fmt(r.reizenBedrag)}` : '';
-    aoa.push([r.maand, r.rob, r.lindy, r.deurwaarder, [extraTxt,reisTxt].filter(Boolean).join(' · '), '', r.vermogen, r.c3sPot]);
+    aoa.push([r.maand, r.rob, r.lindy, r.deurwaarder, [extraTxt,...r.notities].filter(Boolean).join(' · '), '', r.vermogen, r.c3sPot]);
   });
   aoa.push(['Eindstand 1 januari 2028', '', '', '', '', '', vp.eindVermogen, vp.eindC3sPot]);
   aoa.push(['', '', '', '', '', '', '', '']);
@@ -1474,8 +1478,7 @@ function c3sGenereerPdf(taal){
     const vp = c3sVermogenProjectie();
     const rows = vp.rijen.map(r=>{
       const extraTxt = r.extra ? (r.extra<0?`Heffingen ${fmt(r.extra)}`:`Extra +${fmt(r.extra)}`) : '';
-      const reisTxt = r.reizenBedrag ? `${r.reizenWat||'Reizen'} -${fmt(r.reizenBedrag)}` : '';
-      return `<tr><td>${r.maand}</td><td style="text-align:right;">${fmt(r.rob)}</td><td style="text-align:right;">${fmt(r.lindy)}</td><td style="text-align:right;">${fmt(r.deurwaarder)}</td><td>${[extraTxt,reisTxt].filter(Boolean).join(' · ')}</td><td style="text-align:right;"><b>${fmt(r.vermogen)}</b></td><td style="text-align:right;">${fmt(r.c3sPot)}</td></tr>`;
+      return `<tr><td>${r.maand}</td><td style="text-align:right;">${fmt(r.rob)}</td><td style="text-align:right;">${fmt(r.lindy)}</td><td style="text-align:right;">${fmt(r.deurwaarder)}</td><td>${[extraTxt,...r.notities].filter(Boolean).join(' · ')}</td><td style="text-align:right;"><b>${fmt(r.vermogen)}</b></td><td style="text-align:right;">${fmt(r.c3sPot)}</td></tr>`;
     }).join('');
     return `<h2>Vermogen (Nominaal) — t/m 1 januari 2028</h2>
     <div class="sub">Zelfde nominale cijfers als de Vermogen (Nominaal)-tab in het dashboard (incl. Deurwaarder-stortingen en reizen-uitgaven), live gekoppeld aan het huidige C3S-potjessaldo — dus altijd in lijn met elkaar.</div>
@@ -2148,54 +2151,54 @@ const C3S_POSTEN = [
 {"id":"aankoop-09","categorie":"aankoop","omschrijving":"Geometra","begroot":16275,"akkoord":16275,"betaald":5764.5,"factuurnr":null,"iva_pct":22,"notities":"Was \"Vergunningen verbouwing\" — dit is de post voor geometra Massaro. €16.275 = €15.500 (lettera di incarico, honorarium) × 1,05 (5% contributo integrativo) — dit is het bedrag vóór IVA (excl. IVA-veld hierboven). Incl. 22% IVA = €19.855,50. Formule geverifieerd tegen alle 3 facturen tot op de cent: €2.500→€3.202,50 (21/2025), €2.000→€2.562,00 (11/2026), €2.000→€2.562,00 (41/2026). Betaald €5.764,50 = factuur 21/2025 + 11/2026 — volledig gereconcilieerd. Factuur 41/2026 (€2.562, de 3e) staat hier los van en is nog niet betaald.","volgorde":9,"subcategorie":"Project"},
 {"id":"aankoop-10","categorie":"aankoop","omschrijving":"Bron","begroot":9349,"akkoord":9349,"betaald":9349,"factuurnr":null,"iva_pct":null,"volgorde":10,"subcategorie":"Project"},
 {"id":"aankoop-11","categorie":"aankoop","omschrijving":"Olijfgaard snoei","begroot":3050,"akkoord":3050,"betaald":3050,"factuurnr":null,"iva_pct":null,"volgorde":11,"subcategorie":"Project"},
-{"id":"werk-01","categorie":"werkzaamheid","omschrijving":"Sloop klein buiten-toilet + afvoer puin (incl. catwalk + oude cisterna)","omschrijving_it":"Demolizione di piccolo w.c. esterno con trasporto a discarica del materiale","begroot":1500,"akkoord":1500,"factuurnr":"002","iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":1},
-{"id":"werk-02","categorie":"werkzaamheid","omschrijving":"Uitgraven en egaliseren voor zwembad","omschrijving_it":"Scavo piscina e risarcitura","begroot":1500,"akkoord":1500,"factuurnr":null,"iva_pct":10,"subcategorie":"Zwembad","volgorde":2},
-{"id":"werk-03","categorie":"werkzaamheid","omschrijving":"Uitgraven Imhoff-septictank","omschrijving_it":"Scavo fossa Imhoff","begroot":2500,"akkoord":2500,"factuurnr":null,"iva_pct":10,"subcategorie":"Imhoff","volgorde":3},
-{"id":"werk-04","categorie":"werkzaamheid","omschrijving":"Levering + plaatsing Imhoff-tank (7 personen)","omschrijving_it":"Fornitura e posa fossa Imhoff per un nucleo familiare di 7 persone","begroot":3200,"akkoord":3200,"factuurnr":null,"iva_pct":10,"subcategorie":"Imhoff","volgorde":4},
-{"id":"werk-05","categorie":"werkzaamheid","omschrijving":"Uitgraven entreekolommen","omschrijving_it":"Scavo per la realizzazione delle colonne di ingresso","begroot":800,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":5},
-{"id":"werk-06","categorie":"werkzaamheid","omschrijving":"Steenslag/grind voor plein (mogelijk later)","omschrijving_it":"Fornitura e trasporto con posa in opera di materiale graniglietto misto di cava per il piazzale","begroot":1700,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":6},
-{"id":"werk-07","categorie":"werkzaamheid","omschrijving":"Kappen 2 olijfbomen","omschrijving_it":"Abbattimento di n. 2 alberi di ulivo","begroot":300,"akkoord":300,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":7},
-{"id":"werk-08","categorie":"werkzaamheid","omschrijving":"Binnenmuren tufsteen 10cm","omschrijving_it":"Realizzazione di tramezzature interne in tufo spessore 10 cm","begroot":1500,"akkoord":1500,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":8},
-{"id":"werk-09","categorie":"werkzaamheid","omschrijving":"Lateien boven deuren en ramen","omschrijving_it":"Realizzazione di architravi su porte e finestre","begroot":2000,"akkoord":2000,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":9},
-{"id":"werk-10","categorie":"werkzaamheid","omschrijving":"Zwembad metselwerk constructie","omschrijving_it":"Realizzazione di piscina opere di muratura (struttura piscina)","begroot":15000,"akkoord":15000,"factuurnr":null,"iva_pct":10,"subcategorie":"Zwembad","volgorde":10},
-{"id":"werk-11","categorie":"werkzaamheid","omschrijving":"Interne aanpassingen (nog te specificeren)","omschrijving_it":"Modifiche interne come da progetto","begroot":3500,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":11},
-{"id":"werk-12","categorie":"werkzaamheid","omschrijving":"Waterreservoir cisterne 2,5x2,5x2,5m","omschrijving_it":"Realizzazione di cisterna 2.5x2.5 h 2.5","begroot":4500,"akkoord":4500,"factuurnr":null,"iva_pct":10,"subcategorie":"Cisterna","volgorde":12},
-{"id":"werk-13","categorie":"werkzaamheid","omschrijving":"Trottoir rond gebouw (ruw)","omschrijving_it":"Realizzazione di marciapiede perimetrale al fabbricato grezzo","begroot":3000,"akkoord":3000,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":13},
-{"id":"werk-14","categorie":"werkzaamheid","omschrijving":"Trottoir rond zwembad (ruw)","omschrijving_it":"Realizzazione di marciapiede perimetrale piscina grezzo","begroot":2000,"akkoord":2000,"factuurnr":null,"iva_pct":10,"subcategorie":"Zwembad","volgorde":14},
-{"id":"werk-15","categorie":"werkzaamheid","omschrijving":"Aanpassingen opslagruimte (nog te specificeren)","omschrijving_it":"Modifiche al locale deposito","begroot":2000,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":15},
-{"id":"werk-16","categorie":"werkzaamheid","omschrijving":"Sloop bestaande schoorsteen en oven","omschrijving_it":"Demolizione del camino e forno esistente","begroot":500,"akkoord":500,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":16},
-{"id":"werk-17","categorie":"werkzaamheid","omschrijving":"Schilderen dak/terras bestaand gebouw","omschrijving_it":"Pitturazione del lastricato solare fabbricato esistente","begroot":1000,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":17},
-{"id":"werk-18","categorie":"werkzaamheid","omschrijving":"Nieuwe openingen deuren/ramen buitengevel","omschrijving_it":"Aperture di porte e finestre esterne","begroot":2000,"akkoord":2000,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":18},
-{"id":"werk-19","categorie":"werkzaamheid","omschrijving":"Egaliseren daklijnen gebouw","omschrijving_it":"Livellamento delle linee d'attico fabbricato","begroot":2000,"akkoord":2000,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":19},
-{"id":"werk-20","categorie":"werkzaamheid","omschrijving":"Buiten- en binnenschilderwerk (alleen buiten akkoord)","omschrijving_it":"Pitturazione esterna e interna fabbricato","begroot":2000,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":20},
-{"id":"werk-21","categorie":"werkzaamheid","omschrijving":"Buitenstucwerk witte afwerking","omschrijving_it":"Realizzazione di intonaci esterni finitura bianca","begroot":2500,"akkoord":2500,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":21},
-{"id":"werk-22","categorie":"werkzaamheid","omschrijving":"Herstel binnenstucwerk","omschrijving_it":"Ripristino intonaci interni","begroot":4500,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":22},
-{"id":"werk-23","categorie":"werkzaamheid","omschrijving":"Sluiten opening schoorsteen","omschrijving_it":"Chiusura foro camino","begroot":150,"akkoord":150,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":23},
-{"id":"werk-24","categorie":"werkzaamheid","omschrijving":"Muur h=1,80m","omschrijving_it":"Realizzazione muro h=1.80","begroot":1000,"akkoord":1000,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":24},
-{"id":"werk-25","categorie":"werkzaamheid","omschrijving":"Plaatsen vloeren en wandtegels binnen","omschrijving_it":"Posa pavimenti e rivestimenti interni","begroot":5000,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":25},
-{"id":"werk-26","categorie":"werkzaamheid","omschrijving":"Marmeren dorpels deuren/ramen","omschrijving_it":"Fornitura e posa marmi su porte e finestre","begroot":2000,"akkoord":2000,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":26},
-{"id":"werk-27","categorie":"werkzaamheid","omschrijving":"Opruimen bouwplaats + afvoer afval","omschrijving_it":"Pulizia del cantiere","begroot":2000,"akkoord":2000,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":27},
-{"id":"werk-28","categorie":"werkzaamheid","omschrijving":"Elektrische installatie binnen + buiten","omschrijving_it":"Impianto elettrico interno ed esterno","begroot":4000,"akkoord":4000,"factuurnr":null,"iva_pct":10,"subcategorie":"Installaties","volgorde":28},
-{"id":"werk-29","categorie":"werkzaamheid","omschrijving":"Water- en rioleringsinstallatie","omschrijving_it":"Impianto idrico e fognante","begroot":10000,"akkoord":10000,"factuurnr":null,"iva_pct":10,"subcategorie":"Installaties","volgorde":29},
-{"id":"werk-30","categorie":"werkzaamheid","omschrijving":"Demontage/montage airco (+extra unit berging)","omschrijving_it":"Smontaggio e rimontaggio climatizzatore","begroot":1000,"akkoord":3500,"factuurnr":null,"iva_pct":10,"subcategorie":"Installaties","volgorde":30},
-{"id":"werk-31","categorie":"werkzaamheid","omschrijving":"2 zonneboilerpanelen","omschrijving_it":"Fornitura e posa due pannelli acqua sanitaria","begroot":2000,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Installaties","volgorde":31},
-{"id":"werk-32","categorie":"werkzaamheid","omschrijving":"Ruwe zwembadinstallatie (leidingwerk)","omschrijving_it":"Realizzazione impianto grezzo piscina","begroot":3500,"akkoord":3500,"factuurnr":null,"iva_pct":22,"subcategorie":"Zwembad","volgorde":32},
-{"id":"werk-33","categorie":"werkzaamheid","omschrijving":"Zoutwater zuiveringssysteem zwembad","omschrijving_it":"Sistema depurazione piscina al sale","begroot":10000,"akkoord":10000,"factuurnr":null,"iva_pct":10,"subcategorie":"Zwembad","volgorde":33},
-{"id":"werk-34","categorie":"werkzaamheid","omschrijving":"Afdekranden (uit 1e offerte, nog nodig?)","omschrijving_it":"Fornitura e installazione di sordi di ritta","begroot":700,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Zwembad","volgorde":34},
-{"id":"werk-35","categorie":"werkzaamheid","omschrijving":"Douchebak plaatsen (huis + berging)","omschrijving_it":"Posizionare il piatto doccia","begroot":500,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":35},
-{"id":"werk-38","categorie":"werkzaamheid","omschrijving":"Reiniging gebouw","omschrijving_it":"Pulizia dell'edificio","begroot":null,"akkoord":null,"factuurnr":null,"iva_pct":null,"subcategorie":"Nog te bepalen","volgorde":39},
-{"id":"werk-39","categorie":"werkzaamheid","omschrijving":"Zwembad gebruiksklaar opleveren","omschrijving_it":"Consegna della piscina pronta all'uso","begroot":null,"akkoord":null,"factuurnr":null,"iva_pct":null,"subcategorie":"Nog te bepalen","volgorde":40},
+{"id":"werk-01","categorie":"werkzaamheid","omschrijving":"Sloop klein buiten-toilet + afvoer puin (incl. catwalk + oude cisterna)","omschrijving_it":"Demolizione di piccolo w.c. esterno con trasporto a discarica del materiale","begroot":1500,"akkoord":1500,"factuurnr":"002","iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":1,"telMethode":"offerte"},
+{"id":"werk-02","categorie":"werkzaamheid","omschrijving":"Uitgraven en egaliseren voor zwembad","omschrijving_it":"Scavo piscina e risarcitura","begroot":1500,"akkoord":1500,"factuurnr":null,"iva_pct":10,"subcategorie":"Zwembad","volgorde":2,"telMethode":"offerte"},
+{"id":"werk-03","categorie":"werkzaamheid","omschrijving":"Uitgraven Imhoff-septictank","omschrijving_it":"Scavo fossa Imhoff","begroot":2500,"akkoord":2500,"factuurnr":null,"iva_pct":10,"subcategorie":"Imhoff","volgorde":3,"telMethode":"offerte"},
+{"id":"werk-04","categorie":"werkzaamheid","omschrijving":"Levering + plaatsing Imhoff-tank (7 personen)","omschrijving_it":"Fornitura e posa fossa Imhoff per un nucleo familiare di 7 persone","begroot":3200,"akkoord":3200,"factuurnr":null,"iva_pct":10,"subcategorie":"Imhoff","volgorde":4,"telMethode":"offerte"},
+{"id":"werk-05","categorie":"werkzaamheid","omschrijving":"Uitgraven entreekolommen","omschrijving_it":"Scavo per la realizzazione delle colonne di ingresso","begroot":800,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":5,"telMethode":"offerte"},
+{"id":"werk-06","categorie":"werkzaamheid","omschrijving":"Steenslag/grind voor plein (mogelijk later)","omschrijving_it":"Fornitura e trasporto con posa in opera di materiale graniglietto misto di cava per il piazzale","begroot":1700,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":6,"telMethode":"offerte"},
+{"id":"werk-07","categorie":"werkzaamheid","omschrijving":"Kappen 2 olijfbomen","omschrijving_it":"Abbattimento di n. 2 alberi di ulivo","begroot":300,"akkoord":300,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":7,"telMethode":"offerte"},
+{"id":"werk-08","categorie":"werkzaamheid","omschrijving":"Binnenmuren tufsteen 10cm","omschrijving_it":"Realizzazione di tramezzature interne in tufo spessore 10 cm","begroot":1500,"akkoord":1500,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":8,"telMethode":"offerte"},
+{"id":"werk-09","categorie":"werkzaamheid","omschrijving":"Lateien boven deuren en ramen","omschrijving_it":"Realizzazione di architravi su porte e finestre","begroot":2000,"akkoord":2000,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":9,"telMethode":"offerte"},
+{"id":"werk-10","categorie":"werkzaamheid","omschrijving":"Zwembad metselwerk constructie","omschrijving_it":"Realizzazione di piscina opere di muratura (struttura piscina)","begroot":15000,"akkoord":15000,"factuurnr":null,"iva_pct":10,"subcategorie":"Zwembad","volgorde":10,"telMethode":"offerte"},
+{"id":"werk-11","categorie":"werkzaamheid","omschrijving":"Interne aanpassingen (nog te specificeren)","omschrijving_it":"Modifiche interne come da progetto","begroot":3500,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":11,"telMethode":"offerte"},
+{"id":"werk-12","categorie":"werkzaamheid","omschrijving":"Waterreservoir cisterne 2,5x2,5x2,5m","omschrijving_it":"Realizzazione di cisterna 2.5x2.5 h 2.5","begroot":4500,"akkoord":4500,"factuurnr":null,"iva_pct":10,"subcategorie":"Cisterna","volgorde":12,"telMethode":"offerte"},
+{"id":"werk-13","categorie":"werkzaamheid","omschrijving":"Trottoir rond gebouw (ruw)","omschrijving_it":"Realizzazione di marciapiede perimetrale al fabbricato grezzo","begroot":3000,"akkoord":3000,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":13,"telMethode":"offerte"},
+{"id":"werk-14","categorie":"werkzaamheid","omschrijving":"Trottoir rond zwembad (ruw)","omschrijving_it":"Realizzazione di marciapiede perimetrale piscina grezzo","begroot":2000,"akkoord":2000,"factuurnr":null,"iva_pct":10,"subcategorie":"Zwembad","volgorde":14,"telMethode":"offerte"},
+{"id":"werk-15","categorie":"werkzaamheid","omschrijving":"Aanpassingen opslagruimte (nog te specificeren)","omschrijving_it":"Modifiche al locale deposito","begroot":2000,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":15,"telMethode":"offerte"},
+{"id":"werk-16","categorie":"werkzaamheid","omschrijving":"Sloop bestaande schoorsteen en oven","omschrijving_it":"Demolizione del camino e forno esistente","begroot":500,"akkoord":500,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":16,"telMethode":"offerte"},
+{"id":"werk-17","categorie":"werkzaamheid","omschrijving":"Schilderen dak/terras bestaand gebouw","omschrijving_it":"Pitturazione del lastricato solare fabbricato esistente","begroot":1000,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":17,"telMethode":"offerte"},
+{"id":"werk-18","categorie":"werkzaamheid","omschrijving":"Nieuwe openingen deuren/ramen buitengevel","omschrijving_it":"Aperture di porte e finestre esterne","begroot":2000,"akkoord":2000,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":18,"telMethode":"offerte"},
+{"id":"werk-19","categorie":"werkzaamheid","omschrijving":"Egaliseren daklijnen gebouw","omschrijving_it":"Livellamento delle linee d'attico fabbricato","begroot":2000,"akkoord":2000,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":19,"telMethode":"offerte"},
+{"id":"werk-20","categorie":"werkzaamheid","omschrijving":"Buiten- en binnenschilderwerk (alleen buiten akkoord)","omschrijving_it":"Pitturazione esterna e interna fabbricato","begroot":2000,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":20,"telMethode":"offerte"},
+{"id":"werk-21","categorie":"werkzaamheid","omschrijving":"Buitenstucwerk witte afwerking","omschrijving_it":"Realizzazione di intonaci esterni finitura bianca","begroot":2500,"akkoord":2500,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":21,"telMethode":"offerte"},
+{"id":"werk-22","categorie":"werkzaamheid","omschrijving":"Herstel binnenstucwerk","omschrijving_it":"Ripristino intonaci interni","begroot":4500,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":22,"telMethode":"offerte"},
+{"id":"werk-23","categorie":"werkzaamheid","omschrijving":"Sluiten opening schoorsteen","omschrijving_it":"Chiusura foro camino","begroot":150,"akkoord":150,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":23,"telMethode":"offerte"},
+{"id":"werk-24","categorie":"werkzaamheid","omschrijving":"Muur h=1,80m","omschrijving_it":"Realizzazione muro h=1.80","begroot":1000,"akkoord":1000,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":24,"telMethode":"offerte"},
+{"id":"werk-25","categorie":"werkzaamheid","omschrijving":"Plaatsen vloeren en wandtegels binnen","omschrijving_it":"Posa pavimenti e rivestimenti interni","begroot":5000,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":25,"telMethode":"offerte"},
+{"id":"werk-26","categorie":"werkzaamheid","omschrijving":"Marmeren dorpels deuren/ramen","omschrijving_it":"Fornitura e posa marmi su porte e finestre","begroot":2000,"akkoord":2000,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":26,"telMethode":"offerte"},
+{"id":"werk-27","categorie":"werkzaamheid","omschrijving":"Opruimen bouwplaats + afvoer afval","omschrijving_it":"Pulizia del cantiere","begroot":2000,"akkoord":2000,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":27,"telMethode":"offerte"},
+{"id":"werk-28","categorie":"werkzaamheid","omschrijving":"Elektrische installatie binnen + buiten","omschrijving_it":"Impianto elettrico interno ed esterno","begroot":4000,"akkoord":4000,"factuurnr":null,"iva_pct":10,"subcategorie":"Installaties","volgorde":28,"telMethode":"offerte"},
+{"id":"werk-29","categorie":"werkzaamheid","omschrijving":"Water- en rioleringsinstallatie","omschrijving_it":"Impianto idrico e fognante","begroot":10000,"akkoord":10000,"factuurnr":null,"iva_pct":10,"subcategorie":"Installaties","volgorde":29,"telMethode":"offerte"},
+{"id":"werk-30","categorie":"werkzaamheid","omschrijving":"Demontage/montage airco (+extra unit berging)","omschrijving_it":"Smontaggio e rimontaggio climatizzatore","begroot":1000,"akkoord":3500,"factuurnr":null,"iva_pct":10,"subcategorie":"Installaties","volgorde":30,"telMethode":"offerte"},
+{"id":"werk-31","categorie":"werkzaamheid","omschrijving":"2 zonneboilerpanelen","omschrijving_it":"Fornitura e posa due pannelli acqua sanitaria","begroot":2000,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Installaties","volgorde":31,"telMethode":"offerte"},
+{"id":"werk-32","categorie":"werkzaamheid","omschrijving":"Ruwe zwembadinstallatie (leidingwerk)","omschrijving_it":"Realizzazione impianto grezzo piscina","begroot":3500,"akkoord":3500,"factuurnr":null,"iva_pct":22,"subcategorie":"Zwembad","volgorde":32,"telMethode":"offerte","notities":"22% BTW bevestigd door Rob, zichtbaar op de factuur — Excel's totaalformule gebruikt voor het hele Bouw-blok een versimpeld 10%-blanket-tarief, maar deze specifieke post is écht 22%. Bewust gehouden op het feitelijk juiste tarief, ook al wijkt dat af van Excel's vereenvoudigde totaal."},
+{"id":"werk-33","categorie":"werkzaamheid","omschrijving":"Zoutwater zuiveringssysteem zwembad","omschrijving_it":"Sistema depurazione piscina al sale","begroot":10000,"akkoord":10000,"factuurnr":null,"iva_pct":10,"subcategorie":"Zwembad","volgorde":33,"telMethode":"offerte"},
+{"id":"werk-34","categorie":"werkzaamheid","omschrijving":"Afdekranden (uit 1e offerte, nog nodig?)","omschrijving_it":"Fornitura e installazione di sordi di ritta","begroot":700,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Zwembad","volgorde":34,"telMethode":"offerte"},
+{"id":"werk-35","categorie":"werkzaamheid","omschrijving":"Douchebak plaatsen (huis + berging)","omschrijving_it":"Posizionare il piatto doccia","begroot":500,"akkoord":null,"factuurnr":null,"iva_pct":10,"subcategorie":"Opbouw","volgorde":35,"telMethode":"offerte"},
+{"id":"werk-38","categorie":"werkzaamheid","omschrijving":"Reiniging gebouw","omschrijving_it":"Pulizia dell'edificio","begroot":null,"akkoord":null,"factuurnr":null,"iva_pct":null,"subcategorie":"Nog te bepalen","volgorde":39,"telMethode":"offerte"},
+{"id":"werk-39","categorie":"werkzaamheid","omschrijving":"Zwembad gebruiksklaar opleveren","omschrijving_it":"Consegna della piscina pronta all'uso","begroot":null,"akkoord":null,"factuurnr":null,"iva_pct":null,"subcategorie":"Nog te bepalen","volgorde":40,"telMethode":"offerte"},
 {"id":"werk-40","categorie":"werkzaamheid","omschrijving":"Zwembad verwarming","omschrijving_it":"Riscaldamento della piscina","begroot":5000,"akkoord":4100,"factuurnr":null,"iva_pct":22,"subcategorie":"Nog te bepalen","volgorde":41},
 {"id":"mat-01","categorie":"materiaal","omschrijving":"Ramen en deuren","begroot":15000,"akkoord":15200,"factuurnr":null,"iva_pct":22,"volgorde":1,"subcategorie":"Materialen"},
 {"id":"mat-02","categorie":"materiaal","omschrijving":"Binnendeuren (5x)","begroot":1000,"akkoord":2400,"eenheid_aantal":5,"eenheid_prijs":480,"eenheid_label":"stuks","factuurnr":null,"iva_pct":22,"volgorde":2,"subcategorie":"Materialen"},
-{"id":"mat-03","categorie":"materiaal","omschrijving":"Badkamer (2x, sanitair — excl. plint/douche/meubel/accessoires/radiator)","begroot":2500,"akkoord":3237,"factuurnr":null,"iva_pct":22,"volgorde":3,"subcategorie":"Materialen"},
+{"id":"mat-03","categorie":"materiaal","omschrijving":"Badkamer (2x, sanitair — excl. plint/douche/meubel/accessoires/radiator)","begroot":2500,"akkoord":3138,"factuurnr":null,"iva_pct":22,"volgorde":3,"subcategorie":"Materialen"},
 {"id":"mat-04","categorie":"materiaal","omschrijving":"Veranda","begroot":3000,"akkoord":2500,"factuurnr":null,"iva_pct":22,"volgorde":4,"subcategorie":"Materialen"},
 {"id":"mat-05","categorie":"materiaal","omschrijving":"Poort","begroot":3000,"akkoord":2500,"factuurnr":null,"iva_pct":22,"volgorde":5,"subcategorie":"Materialen"},
-{"id":"mat-06","categorie":"materiaal","omschrijving":"Tegels","begroot":7000,"akkoord":5045.76,"eenheid_aantal":210.24,"eenheid_prijs":24,"eenheid_label":"m²","factuurnr":null,"iva_pct":22,"volgorde":6,"subcategorie":"Materialen"},
+{"id":"mat-06","categorie":"materiaal","omschrijving":"Tegels","begroot":7000,"akkoord":5040,"eenheid_aantal":210,"eenheid_prijs":24,"eenheid_label":"m²","factuurnr":null,"iva_pct":22,"volgorde":6,"subcategorie":"Materialen"},
 {"id":"mat-07","categorie":"materiaal","omschrijving":"Keuken","begroot":6000,"akkoord":4900,"factuurnr":null,"iva_pct":22,"volgorde":7,"subcategorie":"Materialen"},
 {"id":"mat-09","categorie":"materiaal","omschrijving":"Hek","begroot":8000,"akkoord":7050,"eenheid_aantal":300,"eenheid_prijs":23.5,"eenheid_label":"m","factuurnr":null,"iva_pct":22,"volgorde":9,"subcategorie":"Materialen"},
 {"id":"mat-10","categorie":"werkzaamheid","omschrijving":"Herstel dak","begroot":0,"akkoord":4500,"factuurnr":null,"iva_pct":10,"subcategorie":"Ruwbouw & sloop","volgorde":38,"notities":"Niet begroot (was €0 in de offerte), maar wél uitgevoerd — netto €4.500. Rob bevestigt: dit soort overschrijdingen komt uit de \"Onvoorzien\"-post (mat-12), niet als losse afwijking bijgehouden."},
-{"id":"mat-12","categorie":"materiaal","omschrijving":"Onvoorzien (buffer)","begroot":15000,"akkoord":12250,"factuurnr":null,"iva_pct":22,"volgorde":12,"subcategorie":"Materialen"},
+{"id":"mat-12","categorie":"materiaal","omschrijving":"Onvoorzien (buffer)","begroot":15000,"akkoord":3577.74,"factuurnr":null,"iva_pct":22,"volgorde":12,"subcategorie":"Materialen","notities":"Restant van de buffer ná overschrijdingen elders (zoals Herstel dak, dat niet begroot was maar wel is uitgevoerd) — oorspronkelijk €12.250 netto, nu nog €3.577,74 over. Bron: Excel-cel U76, die dit al als restant berekent. Moet handmatig bijgewerkt worden als er nieuwe overschrijdingen bijkomen die deze buffer verder opsouperen."},
 {"id":"mat-13","categorie":"materiaal","omschrijving":"Grind","begroot":1000,"akkoord":1000,"factuurnr":null,"iva_pct":22,"volgorde":13,"subcategorie":"Materialen","notities":"Staat in de offerte, nog geen beslissing of dit doorgaat (\"nog niet\" gedaan, netto nog €0 uitgegeven). Status voorlopig op Wellicht gezet — telt mee als richtprijs, pas op Niet zetten als definitief wordt afgezien."}
 ];
 const C3S_FACTUREN = [{"factuurnr": "002", "aannemer": "Donato Cervellera", "datum": "2026-04-16", "bedrag_netto": 3500, "iva_pct": 10, "bedrag": 3850, "post_ids": ["werk-01"], "betaald": true, "betaald_datum": "2026-04-19", "omschrijving": "Impiego di mezzi meccanici: sbancamento, demolizione vecchia riserva idrica (cisterna), marciapiede — Fg.70 P.lla 223/222, permesso 34/2025", "notities": "Al betaald. Koppeling aan werk-01 (sloop toilet + oude cisterna) door Rob bevestigd. Trottoir (werk-13) hoort er niet bij — dat is bouwwerk, geen sloop. Zwembad-gerelateerde posten horen hier ook niet bij, dat komt later in een aparte factuur.", "kort": "Sbancamento e demolizione · Grondwerk en sloop"}, {"factuurnr": "26", "aannemer": "Lanzillotti Domenico", "datum": "2026-06-04", "bedrag_netto": 5000, "iva_pct": 10, "bedrag": 5500, "post_ids": [], "betaald": true, "betaald_datum": "2026-06-23", "omschrijving": "Fattura di acconto per lavori di ristrutturazione — algemeen voorschot, geen specifieke werkomschrijving", "notities": "Acconto (voorschot), niet gekoppeld aan specifieke posten. Was eerst intern genummerd als \"003\" (Robs eigen telling) — echte factuurnummer is 26.", "kort": "Acconto generico ristrutturazione · Algemeen voorschot verbouwing"}, {"factuurnr": "14", "aannemer": "Impiantisca Ruggiero", "datum": "2026-08-31", "bedrag_netto": 3000, "iva_pct": 22, "bedrag": 3660, "post_ids": ["werk-32"], "betaald": true, "betaald_datum": "2026-08-10", "omschrijving": "Fattura di acconto - fornitura e posa materiale idrico realizzazione piscina (Fattura N.14)", "notities": "Betaald via Rabo (bevestigd met screenshot). IVA 22% i.p.v. 10% zoals ik voor werkzaamheden had aangenomen — werk-32 aangepast.", "kort": "Materiale idrico piscina · Waterinstallatie zwembad"}, {"factuurnr": "50", "aannemer": "Lanzillotti Domenico", "datum": "2026-08-04", "bedrag_netto": 10000, "iva_pct": 10, "bedrag": 11000, "post_ids": [], "betaald": true, "betaald_datum": "2026-08-11", "omschrijving": "Fattura di acconto per lavori di ristrutturazione (doc. 50/2026) — algemeen voorschot, geen specifieke werkomschrijving", "notities": "Betaald via Rabo (bevestigd met screenshot). Zelfde generieke omschrijving als factuur 26, niet gekoppeld aan specifieke posten.", "kort": "Acconto generico ristrutturazione · Algemeen voorschot verbouwing"}, {"factuurnr": "21/2025", "aannemer": "Studio Tecnico Geom. Massaro Giampiero", "datum": "2025-07-01", "bedrag_netto": 2625, "iva_pct": 22, "bedrag": 3202.5, "post_ids": ["aankoop-09"], "betaald": true, "betaald_datum": "2025-07-01", "omschrijving": "Acconto per redazione pratica edilizia — compensi 2.500 + 5% contributo integrativo (125) = 2.625 imponibile", "notities": "Betaald bij ondertekening lettera di incarico. 1e van minimaal 3 acconto-facturen.", "kort": "Redazione pratica edilizia · Opstellen bouwvergunning"}, {"factuurnr": "11/2026", "aannemer": "Studio Tecnico Geom. Massaro Giampiero", "datum": "2026-02-20", "bedrag_netto": 2100, "iva_pct": 22, "bedrag": 2562, "post_ids": ["aankoop-09"], "betaald": true, "betaald_datum": "2026-02-20", "omschrijving": "Secondo acconto per la progettazione di permesso edilizio — compensi 2.000 + 5% contributo integrativo (100) = 2.100 imponibile", "notities": "Betaald. 2e van minimaal 3 acconto-facturen — sluit nu volledig aan op het betaalde bedrag (3.202,50 + 2.562,00 = 5.764,50).", "kort": "Progettazione permesso · Ontwerp vergunning"}, {"factuurnr": "41/2026", "aannemer": "Studio Tecnico Geom. Massaro Giampiero", "datum": "2026-08-04", "bedrag_netto": 2100, "iva_pct": 22, "bedrag": 2562, "post_ids": ["aankoop-09"], "betaald": true, "betaald_datum": "2026-08-10", "omschrijving": "Terzo acconto per direzione lavori e sicurezza (Fattura 41/2026) — compensi 2000 + contributo integrativo 5% (100)", "notities": "Betaald via Rabo (bevestigd met screenshot). Eigen post Giampiero Massaro (niet de vergunningen-post). Dit is minimaal de 3e acconto — 2e ontbreekt nog.", "kort": "Direzione lavori e sicurezza · Bouwbegeleiding en veiligheid"}];
@@ -2211,6 +2214,14 @@ function c3sBudgetNetto(p){
   // telt altijd mee als richtprijs, zoals in Robs eigen Excel. Akkoord-status is verder puur een UI-label.
   if(c3sVoortgangOverrides[p.id]==='niet') return 0;
   if(p.eenheid_aantal!=null && p.eenheid_prijs!=null) return p.eenheid_aantal*p.eenheid_prijs;
+  // Op Robs herhaalde, expliciete verzoek (13-08-2026, n.a.v. een echte mismatch tussen dit dashboard en zijn
+  // Excel): voor "echte" Bouw-offertes (telMethode:'offerte') is de OFFERTE-prijs (begroot) leidend, niet een
+  // eventueel afwijkend Akkoord-bedrag — exact zoals Excel's eigen mastertotaal (K62) doet, die uitsluitend de
+  // Offerte-kolom optelt en Akkoord-aanpassingen genegeert. Voor materiaal/aankoop-posten (en de twee posten
+  // die eigenlijk uit Excels Materialen-nettotabel komen, Herstel dak/Zwembad verwarming, ondanks hun
+  // "werkzaamheid"-categorie) blijft Akkoord-vóór-Begroot gelden — dat spiegelt Excel's Materialen-tabel, die
+  // wél de netto/actuele-kosten-kolom gebruikt i.p.v. de originele offerte.
+  if(p.telMethode==='offerte') return p.begroot||0;
   return (p.akkoord!=null ? p.akkoord : p.begroot) || 0;
 }
 function c3sIndicatiefNetto(p){ return p.begroot||0; } // offerte-richtprijs voor niet-akkoord posten, ter info
@@ -2304,9 +2315,15 @@ function renderCasaProjectView(){
     });
     return som;
   }
-  const totaalBegroot = C3S_POSTEN.reduce((s,p)=>s+c3sBudget(p),0); // incl. IVA
   const totaalBegrootNetto = C3S_POSTEN.reduce((s,p)=>s+c3sBudgetNetto(p),0); // excl. IVA
-  const totaalBetaaldPosten = C3S_POSTEN.reduce((s,p)=>s+betaaldVoorPost(p),0);
+  // Op Robs verzoek (13-08-2026): dit moet een ÉCHTE, live optelling van de losse posten zijn — geen los
+  // vastgezet getal — zodat een wijziging aan een post (bedrag, status, nieuwe factuur) automatisch in het
+  // totaal doorwerkt. De eerdere versie zette dit tijdelijk vast op Robs Excel-cijfer (C3S_TOTAAL_BEGROOT_
+  // LEIDEND) om een acute mismatch te maskeren — dat was het verkeerde soort fix. De échte oorzaak (Akkoord
+  // kreeg voorrang boven Offerte in c3sBudgetNetto, zie de toelichting daar) is nu gefixt, dus de posten-som
+  // zelf klopt weer en kan weer leidend zijn.
+  const totaalBegroot = C3S_POSTEN.reduce((s,p)=>s+c3sBudget(p),0);
+  const totaalBetaald = C3S_POSTEN.reduce((s,p)=>s+betaaldVoorPost(p),0) + c3sBetaaldOngekoppeld();
   const totaalFacturenBetaald = C3S_FACTUREN.filter(f=>f.betaald).reduce((s,f)=>s+f.bedrag,0);
   const totaalFacturenOpen = C3S_FACTUREN.filter(f=>!f.betaald).reduce((s,f)=>s+f.bedrag,0);
   const nogNietGefactureerd = C3S_POSTEN.filter(p=>p.categorie==='werkzaamheid' && c3sBudget(p)>0 && c3sFacturenVoorPost(p.id).length===0);
@@ -2437,11 +2454,11 @@ function renderCasaProjectView(){
       </div>
       <div class="card">
         <div class="card-label">Betaald</div>
-        <div class="stat-figure pos">${fmt(totaalBetaaldPosten)}</div>
+        <div class="stat-figure pos">${fmt(totaalBetaald)}</div>
       </div>
       <div class="card">
         <div class="card-label">Open</div>
-        <div class="stat-figure ${(totaalBegroot-totaalBetaaldPosten)>0?'neg':''}">${fmt(totaalBegroot-totaalBetaaldPosten)}</div>
+        <div class="stat-figure ${(totaalBegroot-totaalBetaald)>0?'neg':''}">${fmt(totaalBegroot-totaalBetaald)}</div>
       </div>
     </div>
     ${(()=>{
@@ -2613,11 +2630,12 @@ const C3S_STORTINGEN = [
 const C3S_ONTTREKKINGEN = [
   // {datum:'2026-08-12', bedrag:11000.00, naar:'Japan (nieuw doel)', reden:'...'},
 ];
-const C3S_NOG_TE_BETALEN_OFFICIEEL = 189058; // bron: Rob's "Begroting piccolo"-sheet, rij "Nog te betalen" (incl. IVA-kolom) — leidend boven de eigen C3S_POSTEN-optelling hieronder, die onvolledig blijkt (gaf eerder ten onrechte ±270k)
 function c3sProjectNogTeBetalen(){
+  // Live optelling — dezelfde volledige berekening als c3sTotaalOpenBedrag (posten-gekoppeld + ongekoppelde
+  // facturen zoals de Lanzillotti-voorschotten), zodat deze twee nooit meer uit elkaar kunnen lopen.
   const totaalBegroot = C3S_POSTEN.reduce((s,p)=>s+c3sBudget(p),0);
-  const totaalBetaald = C3S_FACTUREN.filter(f=>f.betaald).reduce((s,f)=>s+f.bedrag,0);
-  return {totaalBegroot, totaalBetaald, nogTeBetalen: C3S_NOG_TE_BETALEN_OFFICIEEL};
+  const totaalBetaald = C3S_POSTEN.reduce((s,p)=>s+betaaldVoorPostExport(p),0) + c3sBetaaldOngekoppeld();
+  return {totaalBegroot, totaalBetaald, nogTeBetalen: totaalBegroot-totaalBetaald};
 }
 function berekenC3SGeschatSaldo(){
   const anker = saldoCheck['C3S'];
@@ -2666,30 +2684,37 @@ function reisPotjeWaarde(trip){
   const live = berekenReisPotjeGeschatSaldo(trip);
   return live ? live.geschat : (SPAAR_POTJES[trip.potje]||0);
 }
-/* Vermogen-projectie voor het Casa 3S-overzicht (PDF/Excel), op Robs verzoek. Gebruikt de ÉCHTE nominale
-   cijfers uit Vermogen (Nominaal) — VERMOGEN_MAANDEN, inclusief Rob/Lindy/Deurwaarder-stortingen én reizen-
-   uitgaven — i.p.v. een aangenomen vast bedrag. Zelfde live-correcties als de Nominaal-tab zelf: vermogenMaandenLive()
-   (koppelt de C3S-huisbetaling feb 2027 aan het live Open-bedrag) en de offset t.o.v. vermogenNuBedragLive()
-   (die op zijn beurt weer 1-op-1 uit het C3S-potje + Thailand + Kado-potje komt — dus altijd gelinkt, geen
-   aparte berekening). Periode: vanaf nu (VERMOGEN_NU_LABEL) t/m 1/1/28. Bewust géén aflossingsscenario
-   (vermogenAflos) toegepast — dit is de kale nominale basis, zoals Rob vroeg.
-   Extra: c3sPot-kolom simuleert "alle spaargeld gaat naar het C3S-potje, reizen gaan er weer vanaf" — zelfde
-   maandelijkse mutatie (rob+lindy+heks+extra-reizen) als vermogen, maar dan bovenop het échte huidige
-   C3S-potjessaldo i.p.v. het totale huishoudvermogen. */
+/* Vermogen-projectie voor het Casa 3S-overzicht (PDF/Excel) — herbouwd 13-08-2026 op de gedeelde
+   berekenVermogenProjectieCore(), zodat dit altijd exact hetzelfde is als de live Vermogen (Nominaal)-tab.
+   Was voorheen een EIGEN, oudere kopie van de vermogenslogica die niet meegroeide met latere fixes
+   (reservering-vs-echte-uitgave, 9-maanden-venster, Thailand-sluiting) — daardoor liep de PDF/Excel-export
+   zichtbaar uit de pas met de rest van de app (Rob signaleerde dit 13-08-2026 n.a.v. een gegenereerde PDF).
+   Periode: vanaf nu (VERMOGEN_NU_LABEL) t/m 1/1/28. Bewust géén aflossingsscenario. */
 function c3sVermogenProjectie(){
-  const maandenLive = vermogenMaandenLive();
-  const startIdx = maandenLive.findIndex(r=>r.m===VERMOGEN_NU_LABEL);
-  const eindIdxExcl = maandenLive.findIndex(r=>r.m==='januari 2028'); // alles t/m vlak vóór deze rij = "tot 1/1/28"
-  const slice = maandenLive.slice(startIdx, eindIdxExcl===-1?undefined:eindIdxExcl);
-  const offset = vermogenNuBedragLive() - slice[0].basis;
+  const kern = berekenVermogenProjectieCore(false);
+  const {slice, actiefGecorrigeerd, reisRegelsAlle, reisSluitIdxPerNaam, nietLopendeReizen,
+    reserveringStartIdxPerTripId, timingIdxPerTripId, RESERVERING_MAANDEN_VOORAF} = kern;
+  const eindIdxExcl = slice.findIndex(r=>r.m==='januari 2028'); // alles t/m vlak vóór deze rij = "tot 1/1/28"
+  const eindIdx = eindIdxExcl===-1 ? slice.length : eindIdxExcl;
   const c3s = berekenC3SGeschatSaldo();
   let c3sCum = c3s ? c3s.geschat : 0;
-  const rijen = slice.map((r,i)=>{
-    const vermogen = r.basis + offset;
-    if(i>0) c3sCum += (r.basis - slice[i-1].basis); // zelfde maandelijkse mutatie als vermogen, alleen ander startpunt
-    return {maand:r.m, rob:r.rob||0, lindy:r.lindy||0, deurwaarder:r.heks||0, extra:r.extra||0, reizenBedrag:r.bedrag||0, reizenWat:r.wat||'', vermogen, c3sPot:c3sCum};
-  });
-  const totaleKosten = rijen.reduce((s,r)=>s+(r.reizenBedrag||0)+(r.extra<0?-r.extra:0),0);
+  const rijen = [];
+  for(let i=0; i<eindIdx; i++){
+    const r = slice[i];
+    if(i>0) c3sCum += (actiefGecorrigeerd[i] - actiefGecorrigeerd[i-1]); // zelfde échte maandelijkse mutatie als vermogen, alleen ander startpunt
+    const notities = [];
+    nietLopendeReizen.forEach(t=>{
+      if(reserveringStartIdxPerTripId[t.id]===i) notities.push(`${t.naam} — reservering gestart (${RESERVERING_MAANDEN_VOORAF} mnd vooraf)`);
+      if(timingIdxPerTripId[t.id]===i) notities.push(`${t.naam} — uitgegeven -${fmt(t.budget)}`);
+    });
+    reisRegelsAlle.forEach(p=>{
+      if(reisSluitIdxPerNaam[p.naam]===i) notities.push(`${p.naam} — reis afgesloten`);
+    });
+    rijen.push({maand:r.m, rob:r.rob||0, lindy:r.lindy||0, deurwaarder:r.heks||0, extra:r.extra||0, notities, vermogen:actiefGecorrigeerd[i], c3sPot:c3sCum});
+  }
+  const totaleUitgaven = nietLopendeReizen.reduce((s,t)=>{ const idx = timingIdxPerTripId[t.id]; return s + (idx!==-1 && idx<eindIdx ? t.budget : 0); }, 0);
+  const totaleHeffingen = rijen.reduce((s,r)=>s+(r.extra<0?-r.extra:0),0);
+  const totaleKosten = totaleUitgaven + totaleHeffingen;
   const brutoInleg = rijen.reduce((s,r)=>s+(r.rob||0)+(r.lindy||0)+(r.deurwaarder||0)+(r.extra>0?r.extra:0),0);
   return {rijen, startVermogen: vermogenNuBedragLive(), eindVermogen: rijen.length?rijen[rijen.length-1].vermogen:vermogenNuBedragLive(), totaleKosten, brutoInleg, rest: brutoInleg-totaleKosten, c3sStart: c3s?c3s.geschat:0, c3sPeildatum: c3s?c3s.laatsteBekend:null, eindC3sPot: rijen.length?rijen[rijen.length-1].c3sPot:(c3s?c3s.geschat:0)};
 }
@@ -3306,17 +3331,18 @@ function renderMomentenLijst(momenten){
     </ul>
   </div>`;
 }
-/* Bron: Robs eigen Excel "Casa_Tre_Sorelle_financien.xlsx", tabblad "Begroting piccolo", cel U80 ("Nog te
-   betalen"). Formule daar: =Totaal_Afwerking(incl.1,22-IVA-factor) + Koop_nog_te_betalen − Bouw_al_betaald
-   = 176.610 + 11.528,10 − 24.010 = 164.128,10. Dit is nu LEIDEND (13-08-2026, op Robs expliciete verzoek) —
-   niet meer de eigen C3S_POSTEN-optelling in dit dashboard, die zichtbaar uit de pas was gaan lopen (gaf
-   ±195-198k terwijl Robs sheet 164.128,10 aangeeft). Rob houdt de Offerte-prijs aan (niet de losse
-   Akkoord-kolom per post) — dat is precies wat deze cel ook doet. Peildatum van deze sheet: 10-08-2026.
-   Moet handmatig bijgewerkt worden zodra Rob een nieuwe versie van zijn sheet deelt — geen live koppeling
-   mogelijk met een extern Excel-bestand. */
-const C3S_NOG_TE_BETALEN_LEIDEND = 164128.10;
+/* Was hier tijdelijk vastgezet op Robs Excel-cijfer (13-08-2026) om een acute mismatch te maskeren, maar dat
+   maakte de relatie tussen losse posten en het totaal kapot — Rob wees hier terecht op: als een post verandert,
+   moet het totaal meeveranderen. Twee échte oorzaken van de mismatch gevonden en gefixt: (1) Akkoord kreeg
+   voorrang boven Offerte in c3sBudgetNetto (zie de uitgebreide toelichting daar). (2) Betaalde facturen zónder
+   postkoppeling (bv. de twee generieke Lanzillotti-voorschotten, samen €16.500 — wel echt betaald, maar nog
+   niet aan een specifieke post toegewezen) telden nergens mee, want betaaldVoorPostExport() loopt per post via
+   de post_ids-koppeling. Nu opgeteld als aparte "nog toe te wijzen"-post via c3sBetaaldOngekoppeld(). */
+function c3sBetaaldOngekoppeld(){
+  return C3S_FACTUREN.filter(f=>f.betaald && (!f.post_ids || f.post_ids.length===0)).reduce((s,f)=>s+f.bedrag,0);
+}
 function c3sTotaalOpenBedrag(){
-  return C3S_NOG_TE_BETALEN_LEIDEND;
+  return C3S_POSTEN.reduce((s,p)=>s + c3sBudget(p) - betaaldVoorPostExport(p), 0) - c3sBetaaldOngekoppeld();
 }
 function vermogenMaandenLive(){
   // Koppelt de eenmalige Casa 3S-huisbetaling (februari 2027) aan het live "Open"-bedrag uit de Casa 3S-tab,
@@ -3412,36 +3438,29 @@ function reisPotjeSluitLabel(trip){
   const [jaar, maand] = trip.eind.split('-').map(Number);
   return `${MAAND_NAMEN_NL[maand-1]} ${jaar}`;
 }
-function renderVermogenNominaal(){
+/* Gedeelde kernberekening voor de hele Vermogen/Balans-reservering-logica (13-08-2026) — gebruikt door zowel
+   renderVermogenNominaal (de live app-tab) als c3sVermogenProjectie (de PDF/Excel-export). Voorheen had de
+   PDF-export zijn EIGEN, oudere kopie van deze logica, die niet meegroeide met latere fixes (9-maanden-
+   reserveringsvenster, Thailand-sluiting, reservering-vs-echte-uitgave) — daardoor liepen app en PDF uit
+   elkaar. Nu is er nog maar één plek waar dit wordt uitgerekend. */
+function berekenVermogenProjectieCore(metAflossing){
   const maandenLive = vermogenMaandenLive();
   const startIdx = maandenLive.findIndex(r=>r.m===VERMOGEN_NU_LABEL);
   const slice = maandenLive.slice(startIdx);
   const offset = vermogenNuBedragLive() - slice[0].basis;
-  const basisAflos = vermogenAflos==='ja' ? berekenBasisMetAflossing(slice) : null;
-  const actief = slice.map((r,i)=>(vermogenAflos==='ja'?basisAflos[i]:r.basis)+offset);
+  const basisAflos = metAflossing ? berekenBasisMetAflossing(slice) : null;
+  const actief = slice.map((r,i)=>(metAflossing?basisAflos[i]:r.basis)+offset);
 
-  // Herbouw 13-08-2026, definitieve versie na Robs precisering: het 9-maanden-venster (9 mnd vóór de reisdatum
-  // t/m de reisdatum) bepaalt WANNEER een reis-reservering überhaupt zichtbaar wordt, maar het BEDRAG binnen
-  // dat venster bouwt nog steeds incrementeel op uit de bekende signalen in de planningstabel (Japan: €11.000
-  // in augustus, +€16.000 in februari → €27.000) — niet meteen het volledige budget in één keer. Reden, in
-  // Robs woorden: rond de C3S-huisbetaling (feb 2027) is de cashflow al krap; de volle Japan-last moet daar
-  // pas bovenop komen zodra die ook echt bekend/dichtbij is, niet al maanden eerder kunstmatig meetellen.
-  // Spaarsaldo daalt pas op de reisdatum zelf, in één keer met het volledige budget — dat deel blijft gelijk.
   const RESERVERING_MAANDEN_VOORAF = 9;
-  // Lopende reizen (live potje, zoals Thailand) sloten voorheen nooit af — het potjesbedrag bleef voor altijd
-  // als "doel" meetellen, ook lang na de reis. Nu: zodra de projectie de eind-maand van de reis bereikt,
-  // stopt die met meetellen (de reis is dan voorbij, het geld is uitgegeven of anderszins verwerkt).
   const reisRegelsAlle = REIZEN_PLANNING.filter(p=>effectiveStatus(p)==='lopend' && p.potje).map(p=>({...p, bedrag:reisPotjeWaarde(p)})).filter(r=>r.bedrag!==0);
   const reisSluitIdxPerNaam = {};
   reisRegelsAlle.forEach(p=>{
     const sluitLabel = reisPotjeSluitLabel(p);
     reisSluitIdxPerNaam[p.naam] = sluitLabel ? slice.findIndex(r=>r.m===sluitLabel) : -1;
   });
-  const reisRegelsNu = reisRegelsAlle.filter(p=>{ const idx = reisSluitIdxPerNaam[p.naam]; return idx===-1 || 0<idx; }); // voor de weergave op "nu" (rij0)
+  const reisRegelsNu = reisRegelsAlle.filter(p=>{ const idx = reisSluitIdxPerNaam[p.naam]; return idx===-1 || 0<idx; });
   const reisPotjesTotaalPerRij = actief.map((v,i)=>reisRegelsAlle.reduce((s,p)=>{ const idx = reisSluitIdxPerNaam[p.naam]; return s + ((idx===-1 || i<idx) ? p.bedrag : 0); }, 0));
   const nietLopendeReizen = REIZEN_PLANNING.filter(p=>effectiveStatus(p)!=='lopend' && p.budget);
-  // Disambigueer welke rauwe VERMOGEN_MAANDEN-signalen bij welke specifieke reis horen (belangrijk want
-  // namen als "Italië" komen meerdere jaren voor) door de dichtstbijzijnde jaarmatch te kiezen.
   const signalenPerTripId = {};
   nietLopendeReizen.forEach(t=>signalenPerTripId[t.id]=[]);
   slice.forEach((r,i)=>{
@@ -3455,7 +3474,7 @@ function renderVermogenNominaal(){
   const timingIdxPerTripId = {}, reserveringStartIdxPerTripId = {};
   nietLopendeReizen.forEach(t=>{
     const label = reisTimingMaandLabel(t);
-    const idx = label ? slice.findIndex(r=>r.m===label) : -1; // -1 = timing onbekend of buiten deze projectieperiode
+    const idx = label ? slice.findIndex(r=>r.m===label) : -1;
     timingIdxPerTripId[t.id] = idx;
     const startLabel = label ? maandLabelMinusN(label, RESERVERING_MAANDEN_VOORAF) : null;
     reserveringStartIdxPerTripId[t.id] = startLabel ? slice.findIndex(r=>r.m===startLabel) : -1;
@@ -3467,20 +3486,17 @@ function renderVermogenNominaal(){
     const timingIdx = timingIdxPerTripId[t.id];
     const startIdxReservering = reserveringStartIdxPerTripId[t.id];
     reserveringPerTripPerRij[t.id] = actief.map((v,i)=>{
-      const ruwAfgetrokkenTotNu = signalen.filter(s=>s.idx>0 && s.idx<=i).reduce((s,x)=>s+x.bedrag,0); // rij0 trok in de oude/rauwe basis nooit echt af (ankercorrectie)
+      const ruwAfgetrokkenTotNu = signalen.filter(s=>s.idx>0 && s.idx<=i).reduce((s,x)=>s+x.bedrag,0);
       const echtUitgegeven = timingIdx!==-1 && i>=timingIdx;
       spaarsaldoCorrectiePerRij[i] += ruwAfgetrokkenTotNu - (echtUitgegeven ? t.budget : 0);
       if(echtUitgegeven) return 0;
       const inReserveringsvenster = timingIdx!==-1 && startIdxReservering!==-1 && i>=startIdxReservering;
       if(!inReserveringsvenster) return 0;
-      const gesignaleerdTotNu = signalen.filter(s=>s.idx<=i).reduce((s,x)=>s+x.bedrag,0); // rij0 telt hier wél mee — een signaal deze maand is meteen een reservering deze maand
+      const gesignaleerdTotNu = signalen.filter(s=>s.idx<=i).reduce((s,x)=>s+x.bedrag,0);
       return Math.min(t.budget, gesignaleerdTotNu);
     });
   });
   const actiefGecorrigeerd = actief.map((v,i)=>v + spaarsaldoCorrectiePerRij[i]);
-  // C3S nog te betalen daalt naar 0 zodra de eenmalige huisbetaling (feb 2027, live gekoppeld aan
-  // c3sTotaalOpenBedrag) al in Vermogen zelf verwerkt is — dat gebeurt al op precies dezelfde manier
-  // (reservering-tot-echte-uitgave) als hierboven voor reizen, dus C3S hoefde niet aangepast te worden.
   const c3sHuisbetalingIdx = slice.findIndex(r=>r.m==='februari 2027');
   const c3sNogTeBetalenNu = c3sTotaalOpenBedrag();
   const reisReserveringPerRij = actief.map((v,i)=>{
@@ -3489,8 +3505,6 @@ function renderVermogenNominaal(){
     return som;
   });
   const vrijVermogenPerRij = actiefGecorrigeerd.map((v,i) => v - (c3sHuisbetalingIdx!==-1 && i>=c3sHuisbetalingIdx ? 0 : c3sNogTeBetalenNu) - reisReserveringPerRij[i] - reisPotjesTotaalPerRij[i]);
-  // Op Robs verzoek: bij het openklappen ook laten zien wélke doelen het verschil tussen Spaarsaldo en
-  // Balans verklaren, niet alleen het eindresultaat.
   const doelenPerRij = actief.map((v,i)=>{
     const items = [];
     const c3sActief = !(c3sHuisbetalingIdx!==-1 && i>=c3sHuisbetalingIdx);
@@ -3505,6 +3519,15 @@ function renderVermogenNominaal(){
     });
     return items;
   });
+
+  return {slice, actief, actiefGecorrigeerd, vrijVermogenPerRij, doelenPerRij, reisRegelsAlle, reisRegelsNu, reisSluitIdxPerNaam,
+    reisPotjesTotaalPerRij, nietLopendeReizen, reserveringPerTripPerRij, reserveringStartIdxPerTripId, timingIdxPerTripId,
+    c3sHuisbetalingIdx, c3sNogTeBetalenNu, RESERVERING_MAANDEN_VOORAF};
+}
+function renderVermogenNominaal(){
+  const kern = berekenVermogenProjectieCore(vermogenAflos==='ja');
+  const {slice, actiefGecorrigeerd, vrijVermogenPerRij, doelenPerRij, reisRegelsAlle, reisSluitIdxPerNaam,
+    nietLopendeReizen, reserveringStartIdxPerTripId, timingIdxPerTripId, RESERVERING_MAANDEN_VOORAF} = kern;
 
   let lastYear = null;
   const periodesMap = new Map();
