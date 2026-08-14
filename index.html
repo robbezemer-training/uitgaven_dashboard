@@ -818,7 +818,8 @@ let reisBudgetEditOpen = null; // reis-id waarvan het budget nu bewerkt wordt, o
 let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 1 van "selecteren, dan verplaatsen"
 let overridesLoaded = false;
 let overridesSource = 'fallback'; // wordt 'live' zodra de Supabase-fetch is gelukt
-const DASHBOARD_VERSION = '2026-08-13y - Correctie op de vorige fix: werk-32 (Zwembadinstallatie) terug naar 22% IVA — Rob bevestigt dat dit het echte tarief is, zichtbaar op de factuur, ondanks dat Excel voor het hele Bouw-blok een versimpeld 10%-blanket-tarief gebruikt in zijn totaalformule. Feitelijke juistheid per post gaat voor op precies aansluiten bij Excels vereenvoudigde total. c3sTotaalOpenBedrag() stijgt hierdoor met €420 (naar €166.594,00). Rob bevestigt ook: Onvoorzien-mechanisme (verschil tussen begroot en werkelijke prijs per Afwerking-post wordt verrekend in de buffer), en de behandeling van Kappen bomen/Grind/Herstel dak kloppen nu allemaal. Rob gaat vanaf nu de Excel-download van dit dashboard gebruiken als bron voor zijn eigen Numbers-administratie — dit dashboard wordt daarmee leidend i.p.v. andersom.';
+const DASHBOARD_VERSION = '2026-08-13z - C3S-pot-sectie in PDF/Excel volledig herbouwd op Robs uitleg: (1) reisuitgaven beïnvloeden de C3S-pot niet meer — telt nu alleen sparen (Rob+Lindy+Deurwaarder) en de échte C3S-huisbetaling; geverifieerd dat mei 2027 (Japan-uitgave) nu gewoon +€5.200 normale inleg geeft, geen -€27.000 meer. (2) Ontbrekende notitie gevonden en toegevoegd: "Casa 3S — huisbetaling" verscheen nergens in de Overig-kolom, ondanks de grote sprong in februari 2027 — nu wel zichtbaar. (3) Nieuwe kolom "Verschil (t.o.v. nog te betalen)" — C3S-pot minus wat er op dat moment nog open staat, per maand. (4) Nieuwe samenvatting: C3S-pot nu, huisbetalingbedrag+maand, en wanneer de pot weer op €0 staat (project écht afbetaald) — berekend: april 2027, twee maanden na de huisbetaling. Huishoud-Vermogen-kolom uit deze sectie gehaald (Robs verzoek: "we kijken niet naar vermogen hier"), C3S-pot toont nu als het enige resultaatcijfer. Zelfde structuur in zowel PDF als Excel. Nog niet in deze sessie opgepakt (aan Rob voorgelegd, uit tijdgebrek): categorie-opmaak in Excel matcht al grotendeels de PDF-structuur (subkoppen per hoofd-/subcategorie bestonden al), maar echte Excel-FORMULES (SOM/IVA-berekening i.p.v. vaste waarden) zijn niet toegevoegd — dat vergt een grotere herbouw van de Excel-export-functie.';
+const DASHBOARD_VERSION_PREV_2026_08_13y = '2026-08-13y - Correctie op de vorige fix: werk-32 (Zwembadinstallatie) terug naar 22% IVA — Rob bevestigt dat dit het echte tarief is, zichtbaar op de factuur, ondanks dat Excel voor het hele Bouw-blok een versimpeld 10%-blanket-tarief gebruikt in zijn totaalformule. Feitelijke juistheid per post gaat voor op precies aansluiten bij Excels vereenvoudigde total. c3sTotaalOpenBedrag() stijgt hierdoor met €420 (naar €166.594,00). Rob bevestigt ook: Onvoorzien-mechanisme (verschil tussen begroot en werkelijke prijs per Afwerking-post wordt verrekend in de buffer), en de behandeling van Kappen bomen/Grind/Herstel dak kloppen nu allemaal. Rob gaat vanaf nu de Excel-download van dit dashboard gebruiken als bron voor zijn eigen Numbers-administratie — dit dashboard wordt daarmee leidend i.p.v. andersom.';
 const DASHBOARD_VERSION_PREV_2026_08_13x = '2026-08-13x - Rob had gelijk dat "en dat kan dus niet" — het gat volledig herleid i.p.v. er genoegen mee te nemen. Van €29.674 naar €330,90 onverklaard (98,9% verklaard), via vijf concrete, elk individueel geverifieerde oorzaken: (1) Betaald miste €16.500 aan ongekoppelde Lanzillotti-voorschot-facturen (post_ids:[]) — nieuwe functie c3sBetaaldOngekoppeld() telt deze nu mee in zowel c3sTotaalOpenBedrag als c3sProjectNogTeBetalen als het Casa3S-scherm. (2) "Onvoorzien"-buffer toonde het volledige oorspronkelijke bedrag (€14.945) terwijl Excel al €10.580,16 aan overschrijdingen elders (zoals het niet-begrote Herstel dak) had verrekend — akkoord aangepast naar het echte restant (€3.577,74 netto, matcht Excel-cel U76 exact). (3) Badkamer/Tegels hadden lichte data-invoerfouten (€99 en €5,76 te hoog per stuk) — gecorrigeerd naar Excels netto-kolom. (4) werk-32 (Zwembadinstallatie) stond op 22% IVA i.p.v. het blanket 10%-tarief dat Excel voor alle Bouw-posten hanteert — gecorrigeerd. Resterende, bewuste (niet-foutieve) verschillen: Grind (€1.220, Wellicht-status telt als richtprijs, ook al is er nog niets uitgegeven) en twee posten op status "Niet" (Kappen 2 olijfbomen, Sluiten opening schoorsteen, samen €495) die Robs dashboard terecht uitsluit maar Excels simpele kolomsom nog meetelt — dat is het dashboard dat hier eigenlijk NAUWKEURIGER is dan de Excel-formule zelf. Live-relatie opnieuw geverifieerd na alle fixes: +€1.000 op een post geeft nog steeds correct +€1.100 (incl. 10% IVA) in het totaal.';
 const DASHBOARD_VERSION_PREV_2026_08_13w = '2026-08-13w - Rob wees terecht op een fundamenteel probleem: de vorige fix (2026-08-13v) had de Casa3S-totalen losgekoppeld van de losse posten en vastgezet op een Excel-cijfer — dus een postwijziging had geen enkel effect meer op het getoonde totaal. Teruggedraaid, en de ÉCHTE oorzaak van de mismatch gevonden: c3sBudgetNetto() gaf voorrang aan Akkoord boven Offerte, terwijl Excels eigen mastertotaal (K62) voor Bouw-posten uitsluitend de Offerte-kolom optelt en Akkoord-aanpassingen negeert — precies wat Rob al veel eerder deze sessie zei ("wij houden hier de offerte-prijs aan, niet de akkoord-kolom"), maar dat was nooit goed in de rekenlogica doorgevoerd. Fix: nieuw veld "telMethode" per post — "offerte" (37 echte Bouw-posten, alleen begroot telt, akkoord genegeerd voor het totaal, matcht Excel K62) vs standaard "netto" (materiaal/aankoop-posten + twee posten die eigenlijk uit Excels Materialen-nettotabel komen ondanks hun werkzaamheid-categorie — Herstel dak, Zwembad verwarming — daar blijft akkoord vóór begroot gelden). c3sTotaalOpenBedrag()/c3sProjectNogTeBetalen() weer teruggezet naar een ECHTE, live postensom (geen vastgezet Excel-cijfer meer) — geverifieerd met een live-test: begroot van een post +€1.000 geeft het totaal correct +€1.100 (incl. 10% IVA). RESULTAAT, EERLIJK: het gat is fors kleiner (Open ging van €196.552 naar €193.802, en het onderliggende Begroot-verschil met Excel is nu nog maar ~€13.174 i.p.v. de eerdere ~€15.924) maar NIET volledig gesloten — nog niet 100% herleid tot de laatste euro. Bekende resterende bijdragen: Grind toont €1.000 indicatief (Wellicht-status, telt als richtprijs) terwijl Excel momenteel €0 toont (nog niets uitgegeven) — bewuste keuze, geen fout, maar wel een verschil. Voor de rest nog geen sluitende verklaring gevonden binnen de tijd van deze sessie. Aan Rob voorgelegd: doorzoeken tot op de cent, of is "live-relatie hersteld + gat van ~32k naar ~13k" voor nu voldoende?';
 const DASHBOARD_VERSION_PREV_2026_08_13v = '2026-08-13v - BELANGRIJKE FIX #2: Rob vergeleek het Casa 3S-overzichtsscherm met zijn Excel en zag €196.552 Open i.p.v. €164.128,10 — een DERDE plek (naast Balans en PDF, al eerder gefixt) die nog zijn eigen, afwijkende C3S_POSTEN-optelling gebruikte i.p.v. de leidende Excel-cijfers. Oorzaak, na volledige regel-voor-regel controle: categoriseringsverschil (Herstel dak/Zwembad verwarming staan in Excel bij "Afwerking"-materialen maar op Robs eigen verzoek bij "Bouw"/werkzaamheid in dit dashboard — per saldo neutraal voor het totaal, maar verstoort een 1-op-1-vergelijking) + het feit dat Excel de Bouw-kosten niet apart optelt maar al meerekent binnen de Afwerking-kolom (K62×1,1 zit al in U78/U79 verwerkt). Structurele oplossing: drie samenhangende constanten toegevoegd — C3S_TOTAAL_BEGROOT_LEIDEND (297.572, uit Excel-cel U81), C3S_TOTAAL_BETAALD_LEIDEND (133.443,90 = Koop-betaald E19 + Bouw-betaald X100), en C3S_NOG_TE_BETALEN_LEIDEND (het verschil, 164.128,10) — sluiten nu per definitie exact op elkaar aan. Casa 3S-hero-cijfers (Begroot/Betaald/Open) gebruiken deze nu i.p.v. de eigen postentelling (die blijft intern beschikbaar als totaalBegrootPosten/totaalBetaaldPosten, ter referentie/debug, maar wordt niet meer getoond). Oude, stale C3S_NOG_TE_BETALEN_OFFICIEEL-constante (nog op €189.058, een eerdere sessie se cijfer) verwijderd — c3sProjectNogTeBetalen() gebruikt nu ook de nieuwe leidende cijfers. Geverifieerd: Casa3S-scherm, Balans-kaart, en PDF/Excel-export tonen nu alle drie exact hetzelfde open-bedrag (€164.128,10) — geen enkele plek in de app rekent nog met een eigen, afwijkend cijfer.';
@@ -1243,23 +1244,21 @@ function c3sExporteerExcel(){
     aoa.push([`Totaal ${CAT_LABELS[cat]}`, '', '', totExcl, '', totIncl, totBet, '']);
     aoa.push(['', '', '', '', '', '', '', '']); // lege regel tussen hoofdcategorieën
   });
-  // Vermogen (Nominaal), op Robs verzoek: échte nominale cijfers uit VERMOGEN_MAANDEN (incl. Deurwaarder + reizen),
-  // t/m 1/1/28, live gekoppeld aan het C3S-potjessaldo (zie c3sVermogenProjectie voor de volledige toelichting).
+  // C3S-pot-projectie, op Robs verzoek herzien 13-08-2026: alleen sparen + de échte C3S-huisbetaling
+  // beïnvloeden deze pot — reisuitgaven niet (zie c3sVermogenProjectie voor de volledige toelichting).
   const vp = c3sVermogenProjectie();
-  aoa.push(['— VERMOGEN (NOMINAAL) — T/M 1 JANUARI 2028 —', '', '', '', '', '', '', '']);
-  aoa.push(['Maand', 'Rob', 'Lindy', 'Deurwaarder', 'Overig', '', 'Vermogen', 'C3S-pot (scenario)']);
+  aoa.push(['— C3S-POT — T/M 1 JANUARI 2028 —', '', '', '', '', '', '', '']);
+  aoa.push(['Maand', 'Rob', 'Lindy', 'Deurwaarder', 'Overig', '', 'C3S-pot', 'Verschil (t.o.v. nog te betalen)']);
   vp.rijen.forEach(r=>{
-    const extraTxt = r.extra ? (r.extra<0?`Heffingen ${fmt(r.extra)}`:`Extra +${fmt(r.extra)}`) : '';
-    aoa.push([r.maand, r.rob, r.lindy, r.deurwaarder, [extraTxt,...r.notities].filter(Boolean).join(' · '), '', r.vermogen, r.c3sPot]);
+    aoa.push([r.maand, r.rob, r.lindy, r.deurwaarder, r.notities.join(' · '), '', r.c3sPot, r.verschil]);
   });
-  aoa.push(['Eindstand 1 januari 2028', '', '', '', '', '', vp.eindVermogen, vp.eindC3sPot]);
-  aoa.push(['', '', '', '', '', '', '', '']);
-  aoa.push(['Totale kosten (reizen+heffingen)', 'Bruto spaarinleg', 'Rest (netto toename)', '', '', '', '', '']);
-  aoa.push([-vp.totaleKosten, vp.brutoInleg, vp.rest, '', '', '', '', '']);
+  aoa.push(['Eindstand 1 januari 2028', '', '', '', '', '', vp.eindC3sPot, vp.rijen.length?vp.rijen[vp.rijen.length-1].verschil:'']);
   aoa.push(['', '', '', '', '', '', '', '']);
   aoa.push([`C3S-pot nu (peildatum ${vp.c3sPeildatum||'onbekend'})`, '', '', '', '', '', vp.c3sStart, '']);
+  aoa.push([`Huisbetaling (${vp.huisbetalingMaand||'onbekend'})`, '', '', '', '', '', -vp.huisbetalingBedrag, '']);
+  aoa.push(['Pot weer op €0 (project echt afbetaald)', '', '', '', '', '', vp.weerOpNulMaand||'na 1 jan 2028', '']);
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{wch:22},{wch:40},{wch:12},{wch:12},{wch:8},{wch:12},{wch:12},{wch:40}];
+  ws['!cols'] = [{wch:22},{wch:40},{wch:12},{wch:12},{wch:8},{wch:12},{wch:12},{wch:26}];
   XLSX.utils.book_append_sheet(wb, ws, 'Overzicht');
   const facturenRows = C3S_FACTUREN.slice().sort((a,b)=>a.datum.localeCompare(b.datum)).map(f=>({
     'Aannemer': f.aannemer,
@@ -1477,21 +1476,21 @@ function c3sGenereerPdf(taal){
   const vermogenHtml = taal==='nl' ? (()=>{
     const vp = c3sVermogenProjectie();
     const rows = vp.rijen.map(r=>{
-      const extraTxt = r.extra ? (r.extra<0?`Heffingen ${fmt(r.extra)}`:`Extra +${fmt(r.extra)}`) : '';
-      return `<tr><td>${r.maand}</td><td style="text-align:right;">${fmt(r.rob)}</td><td style="text-align:right;">${fmt(r.lindy)}</td><td style="text-align:right;">${fmt(r.deurwaarder)}</td><td>${[extraTxt,...r.notities].filter(Boolean).join(' · ')}</td><td style="text-align:right;"><b>${fmt(r.vermogen)}</b></td><td style="text-align:right;">${fmt(r.c3sPot)}</td></tr>`;
+      return `<tr><td>${r.maand}</td><td style="text-align:right;">${fmt(r.rob)}</td><td style="text-align:right;">${fmt(r.lindy)}</td><td style="text-align:right;">${fmt(r.deurwaarder)}</td><td>${r.notities.join(' · ')}</td><td style="text-align:right;"><b>${fmt(r.c3sPot)}</b></td><td style="text-align:right;">${fmt(r.verschil)}</td></tr>`;
     }).join('');
-    return `<h2>Vermogen (Nominaal) — t/m 1 januari 2028</h2>
-    <div class="sub">Zelfde nominale cijfers als de Vermogen (Nominaal)-tab in het dashboard (incl. Deurwaarder-stortingen en reizen-uitgaven), live gekoppeld aan het huidige C3S-potjessaldo — dus altijd in lijn met elkaar.</div>
+    const laatsteVerschil = vp.rijen.length ? vp.rijen[vp.rijen.length-1].verschil : 0;
+    return `<h2>C3S-pot — t/m 1 januari 2028</h2>
+    <div class="sub">Spaarpot voor Casa 3S: alleen de maandelijkse inleg (Rob/Lindy/Deurwaarder) en de échte C3S-huisbetaling beïnvloeden dit bedrag — reisuitgaven tellen hier bewust niet mee, dit gaat puur over Casa 3S.</div>
     <table>
-      <thead><tr><th>Maand</th><th>Rob</th><th>Lindy</th><th>Deurwaarder</th><th>Overig</th><th>Vermogen</th><th>C3S-pot (scenario)</th></tr></thead>
+      <thead><tr><th>Maand</th><th>Rob</th><th>Lindy</th><th>Deurwaarder</th><th>Overig</th><th>C3S-pot</th><th>Verschil (t.o.v. nog te betalen)</th></tr></thead>
       <tbody>${rows}</tbody>
-      <tfoot><tr><td colspan="5"><b>Eindstand 1 januari 2028</b></td><td style="text-align:right;"><b>${fmt(vp.eindVermogen)}</b></td><td style="text-align:right;"><b>${fmt(vp.eindC3sPot)}</b></td></tr></tfoot>
+      <tfoot><tr><td colspan="5"><b>Eindstand 1 januari 2028</b></td><td style="text-align:right;"><b>${fmt(vp.eindC3sPot)}</b></td><td style="text-align:right;"><b>${fmt(laatsteVerschil)}</b></td></tr></tfoot>
     </table>
     <table style="margin-top:10px;">
-      <thead><tr><th>Totale kosten (reizen + heffingen)</th><th>Bruto spaarinleg (Rob+Lindy+Deurwaarder)</th><th>Rest (netto toename)</th></tr></thead>
-      <tbody><tr><td style="text-align:right;">${fmt(-vp.totaleKosten)}</td><td style="text-align:right;">${fmt(vp.brutoInleg)}</td><td style="text-align:right;"><b>${fmt(vp.rest)}</b></td></tr></tbody>
+      <thead><tr><th>C3S-pot nu</th><th>Huisbetaling (${vp.huisbetalingMaand||'onbekend'})</th><th>Pot weer op €0 (project echt afbetaald)</th></tr></thead>
+      <tbody><tr><td style="text-align:right;">${fmt(vp.c3sStart)}</td><td style="text-align:right;">-${fmt(vp.huisbetalingBedrag)}</td><td style="text-align:right;"><b>${vp.weerOpNulMaand||'na 1 jan 2028'}</b></td></tr></tbody>
     </table>
-    <div class="sub" style="margin-top:8px;">C3S-pot (scenario): huidig potjessaldo (${fmt(vp.c3sStart)}, peildatum ${vp.c3sPeildatum||'onbekend'}) plus dezelfde maandelijkse spaarbeweging als Vermogen hierboven — uitgaande van de aanname dat al het spaargeld naar dit potje gaat en reizen er weer vanaf komen.</div>`;
+    <div class="sub" style="margin-top:8px;">C3S-pot nu: ${fmt(vp.c3sStart)}, peildatum ${vp.c3sPeildatum||'onbekend'}. "Verschil" = C3S-pot minus wat er op dat moment nog open staat voor Casa 3S — negatief betekent nog een tekort, positief betekent overschot. Zodra de huisbetaling heeft plaatsgevonden, laat deze kolom precies zien hoeveel maanden sparen nodig zijn om weer op €0 (schuldenvrij voor dit project) te komen.</div>`;
   })() : '';
   const facturenRows = C3S_FACTUREN.slice().sort((a,b)=>a.datum.localeCompare(b.datum)).map(f=>`
     <tr><td>${f.aannemer}${f.factuurnr?' · '+f.factuurnr:''}</td><td>${f.datum}</td><td style="text-align:right;">${fmt(f.bedrag)}</td><td>${f.betaald?(taal==='it'?'Pagata':'Betaald'):(taal==='it'?'Aperta':'Open')}</td></tr>
@@ -2689,34 +2688,43 @@ function reisPotjeWaarde(trip){
    Was voorheen een EIGEN, oudere kopie van de vermogenslogica die niet meegroeide met latere fixes
    (reservering-vs-echte-uitgave, 9-maanden-venster, Thailand-sluiting) — daardoor liep de PDF/Excel-export
    zichtbaar uit de pas met de rest van de app (Rob signaleerde dit 13-08-2026 n.a.v. een gegenereerde PDF).
-   Periode: vanaf nu (VERMOGEN_NU_LABEL) t/m 1/1/28. Bewust géén aflossingsscenario. */
+   Periode: vanaf nu (VERMOGEN_NU_LABEL) t/m 1/1/28. Bewust géén aflossingsscenario.
+   Herzien 13-08-2026 op Robs verzoek: dit is nu een C3S-POT-gerichte tabel, geen huishoud-Vermogen-tabel.
+   De C3S-pot wordt dus ALLEEN beïnvloed door (a) de maandelijkse spaarinleg (Rob/Lindy/Deurwaarder/positieve
+   Extra) en (b) de échte C3S-huisbetaling (feb 2027, live gekoppeld aan c3sTotaalOpenBedrag) — reisuitgaven
+   en heffingen tellen hier NIET meer mee ("betalingen voor reizen niet boeiend, we kijken niet naar
+   [huishoud-]vermogen hier"). Nieuwe kolom "verschil" = C3S-pot minus wat er op dat moment nog open staat
+   (dat bedrag valt naar €0 zodra de huisbetaling heeft plaatsgevonden) — laat precies zien hoe ver je van
+   "schuldenvrij voor dit project" af zit, en (na feb 2027) hoe snel de pot weer richting €0 klimt. */
 function c3sVermogenProjectie(){
   const kern = berekenVermogenProjectieCore(false);
-  const {slice, actiefGecorrigeerd, reisRegelsAlle, reisSluitIdxPerNaam, nietLopendeReizen,
-    reserveringStartIdxPerTripId, timingIdxPerTripId, RESERVERING_MAANDEN_VOORAF} = kern;
+  const {slice, reserveringStartIdxPerTripId, timingIdxPerTripId, RESERVERING_MAANDEN_VOORAF, nietLopendeReizen, c3sHuisbetalingIdx} = kern;
   const eindIdxExcl = slice.findIndex(r=>r.m==='januari 2028'); // alles t/m vlak vóór deze rij = "tot 1/1/28"
   const eindIdx = eindIdxExcl===-1 ? slice.length : eindIdxExcl;
   const c3s = berekenC3SGeschatSaldo();
+  const c3sNogTeBetalenNu = c3sTotaalOpenBedrag();
   let c3sCum = c3s ? c3s.geschat : 0;
   const rijen = [];
   for(let i=0; i<eindIdx; i++){
     const r = slice[i];
-    if(i>0) c3sCum += (actiefGecorrigeerd[i] - actiefGecorrigeerd[i-1]); // zelfde échte maandelijkse mutatie als vermogen, alleen ander startpunt
+    if(i>0){
+      c3sCum += (r.rob||0)+(r.lindy||0)+(r.heks||0)+(r.extra>0?r.extra:0); // alleen echte spaarinleg
+      if(i===c3sHuisbetalingIdx) c3sCum -= c3sNogTeBetalenNu; // de échte, eenmalige C3S-huisbetaling
+    }
     const notities = [];
+    if(i===c3sHuisbetalingIdx) notities.push(`Casa 3S — huisbetaling -${fmt(c3sNogTeBetalenNu)}`);
     nietLopendeReizen.forEach(t=>{
       if(reserveringStartIdxPerTripId[t.id]===i) notities.push(`${t.naam} — reservering gestart (${RESERVERING_MAANDEN_VOORAF} mnd vooraf)`);
-      if(timingIdxPerTripId[t.id]===i) notities.push(`${t.naam} — uitgegeven -${fmt(t.budget)}`);
     });
-    reisRegelsAlle.forEach(p=>{
-      if(reisSluitIdxPerNaam[p.naam]===i) notities.push(`${p.naam} — reis afgesloten`);
-    });
-    rijen.push({maand:r.m, rob:r.rob||0, lindy:r.lindy||0, deurwaarder:r.heks||0, extra:r.extra||0, notities, vermogen:actiefGecorrigeerd[i], c3sPot:c3sCum});
+    const nogTeBetalen = (c3sHuisbetalingIdx!==-1 && i>=c3sHuisbetalingIdx) ? 0 : c3sNogTeBetalenNu;
+    rijen.push({maand:r.m, rob:r.rob||0, lindy:r.lindy||0, deurwaarder:r.heks||0, notities, c3sPot:c3sCum, verschil:c3sCum-nogTeBetalen});
   }
-  const totaleUitgaven = nietLopendeReizen.reduce((s,t)=>{ const idx = timingIdxPerTripId[t.id]; return s + (idx!==-1 && idx<eindIdx ? t.budget : 0); }, 0);
-  const totaleHeffingen = rijen.reduce((s,r)=>s+(r.extra<0?-r.extra:0),0);
-  const totaleKosten = totaleUitgaven + totaleHeffingen;
-  const brutoInleg = rijen.reduce((s,r)=>s+(r.rob||0)+(r.lindy||0)+(r.deurwaarder||0)+(r.extra>0?r.extra:0),0);
-  return {rijen, startVermogen: vermogenNuBedragLive(), eindVermogen: rijen.length?rijen[rijen.length-1].vermogen:vermogenNuBedragLive(), totaleKosten, brutoInleg, rest: brutoInleg-totaleKosten, c3sStart: c3s?c3s.geschat:0, c3sPeildatum: c3s?c3s.laatsteBekend:null, eindC3sPot: rijen.length?rijen[rijen.length-1].c3sPot:(c3s?c3s.geschat:0)};
+  const brutoInleg = rijen.reduce((s,r)=>s+(r.rob||0)+(r.lindy||0)+(r.deurwaarder||0),0);
+  const eindC3sPot = rijen.length?rijen[rijen.length-1].c3sPot:(c3s?c3s.geschat:0);
+  const maandNulIdx = rijen.findIndex((r,i)=>i>0 && c3sHuisbetalingIdx!==-1 && i>c3sHuisbetalingIdx && r.c3sPot>=0);
+  return {rijen, brutoInleg, c3sStart: c3s?c3s.geschat:0, c3sPeildatum: c3s?c3s.laatsteBekend:null, eindC3sPot,
+    huisbetalingBedrag: c3sNogTeBetalenNu, huisbetalingMaand: c3sHuisbetalingIdx!==-1 ? slice[c3sHuisbetalingIdx].m : null,
+    weerOpNulMaand: maandNulIdx!==-1 ? rijen[maandNulIdx].maand : null};
 }
 function berekenKadoGeschatSaldo(){
   const anker = saldoCheck['KADO'];
