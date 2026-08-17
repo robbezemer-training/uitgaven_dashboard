@@ -3032,9 +3032,7 @@ function renderVolgendeMaandView(){
 
   // Na salaris: Rabo → ING — inkomen is al bekend (salaris viel al op 24 juli), maar vaste lasten die nog van Rabo
   // moeten afgaan zijn deels nog niet gebeurd — dus voorspellen we het Rabo-aandeel per categorie (uit juli-data),
-  // met een buffer omdat ook "vaste" lasten iets kunnen 
-
-  
+  // met een buffer omdat ook "vaste" lasten iets kunnen variëren.
   const inkomenRabo = LM_RABO_TX.filter(t=>JUL_INCOME_CATS.includes(t.category)).reduce((s,t)=>s+t.amount,0);
   const vastRaboVerwacht = Object.entries(VAST_COMPONENTEN).reduce((som,[cat,bedrag])=>som+bedrag*categorieRaboAandeel(cat), 0);
   const vastRaboVerwachtMetBuffer = vastRaboVerwacht * (1+VAST_LASTEN_BUFFER_PCT/100);
@@ -3716,12 +3714,26 @@ function potjesMaandelijksBedragIkv(jaar, maand){
   const verdiendDatum = `${vj}-${String(vm).padStart(2,'0')}-01`;
   const robPeriodes = berekenSalarisPeriodes(2036);
   const robP = robPeriodes.filter(p=>p.vanaf<=verdiendDatum).slice(-1)[0] || robPeriodes[0];
-  const robRatio = robP && robPeriodes[0] ? robP.salaris/robPeriodes[0].salaris : 1;
+  const robRatio = robP && robPeriodes[0] ? robP.salaris/robPeriodes[0].salaris : 1; // nog gebruikt voor de bonussen hieronder — zie kanttekening daar
   const lindyPeriodes = berekenLindyPeriodes(2036);
   const lindyP = lindyPeriodes.filter(p=>p.vanaf<=verdiendDatum).slice(-1)[0] || lindyPeriodes[0];
-  let rob = 2000*robRatio, lindy = lindyP ? lindyP.netto : 0, heks = 900;
-  if(maand===1){ rob += 8500*robRatio; heks += 850; } // Rob — 13e maand (verdiend in december)
-  if(maand===7){ rob += 8327*robRatio; heks += 850; } // Rob — vakantiegeld (verdiend in juni)
+  // Op Robs verzoek (17-08-2026): "inflatie moet wel degelijk de deeltijd aanpassing meenemen, daarom hebben
+  // we salaris gemaakt" — Robs reguliere spaarbijdrage komt nu uit zijn ECHTE netto salaris (robP.netto, mét
+  // deeltijdkorting) minus geïndexeerde uitgaven minus de privé-buffer — exact dezelfde formule als de
+  // breakdown in potjesTheoretischeRegelsIkv hieronder. Was voorheen een vast "€2.000 × robRatio" (robRatio =
+  // alleen cao-groei op BRUTO salaris, zonder deeltijd) — dat liet Inflatie fors uit de pas lopen met Nominaal,
+  // waar Rob de deeltijd-daling wél bewust had ingerekend (zie gesprek 17-08-2026).
+  const robNetto = robP ? robP.netto : 0;
+  const uitgavenGeindexeerd = liveUitgavenMaandAnchor(jaar, maand);
+  const priveGeindexeerd = IKV_PRIVE_BUFFER_MAAND_ANCHOR * ikv2pctIndex(jaar, maand);
+  let rob = robNetto - uitgavenGeindexeerd - priveGeindexeerd, lindy = lindyP ? lindyP.netto : 0, heks = 900;
+  // Op Robs verzoek (17-08-2026): "neem aan dat 13e en vak in salaris wel kloppen en dus koppelen met inflatie"
+  // — bonussen komen nu uit dezelfde salarisJaarOverzicht als de Salaris-tab (al deeltijd-gecorrigeerd), i.p.v.
+  // het oude "8.500/8.327 × robRatio" (bruto-cao-only, dus zonder deeltijd — zelfde fout als bij de reguliere
+  // bijdrage hierboven). Terugval op de oude schatting alleen als het jaar buiten bereik van de salarismotor valt.
+  const robJaarVerdiend = salarisJaarOverzicht(2036).find(y=>y.jaar===vj);
+  if(maand===1){ rob += (robJaarVerdiend && robJaarVerdiend.dertiende) ? robJaarVerdiend.dertiende : 8500*robRatio; heks += 850; } // Rob — 13e maand (verdiend in december)
+  if(maand===7){ rob += (robJaarVerdiend && robJaarVerdiend.vakantiegeld) ? robJaarVerdiend.vakantiegeld : 8327*robRatio; heks += 850; } // Rob — vakantiegeld (verdiend in juni)
   const lindyJaarVerdiend = lindySalarisJaarOverzicht(2036).find(y=>y.jaar===vj);
   if(lindyJaarVerdiend){
     if(vm===5) lindy += lindyJaarVerdiend.vakantietoeslag||0; // verdiend in mei → beschikbaar in juni
@@ -3766,6 +3778,50 @@ function potjesTheoretischeRegels(maandLabel){
   }
   return potjesTheoretischeRegelsAfsluiten(regels, maandLabel);
 }
+// Op Robs verzoek (17-08-2026): "jij hebt dat toch allemaal" — de vaste €8.700-aanname vervangen door een
+// live berekening. Eerste poging (som van alle "gewone" Aug-2026-transacties) gaf maar €5.607 — bleek een
+// ONDERSCHATTING omdat augustus nog een lopende, halfvolle maand is (transacties tot en met 14-08). Betere,
+// al bestaande methode: dezelfde optelling als Volgende maand gebruikt — vaste lasten (VAST_COMPONENTEN,
+// incl. Hypotheek €3.006,76 en Casa 3S, exact Robs "Rabobank"-regel) + dagelijkse uitgaven als gewogen
+// gemiddelde over de bekende maanden (voorspellingDagelijksPerCategorie, recentere maanden wegen zwaarder) —
+// dat komt uit op €8.299,99, veel dichter bij Robs eigen €8.677 (Rabo 4.715 + ING 3.962, Sparen niet meegeteld).
+// Op Robs verzoek (17-08-2026): "jij hebt dat toch allemaal" — de vaste €8.700-aanname vervangen door een
+// live berekening. Eerste poging (som van alle "gewone" Aug-2026-transacties) gaf maar €5.607 — bleek een
+// ONDERSCHATTING omdat augustus nog een lopende, halfvolle maand is (transacties tot en met 14-08). Betere,
+// al bestaande methode: dezelfde optelling als Volgende maand gebruikt — vaste lasten (VAST_COMPONENTEN,
+// incl. Hypotheek €3.006,76 en Casa 3S, exact Robs "Rabobank"-regel) + dagelijkse uitgaven als gewogen
+// gemiddelde over de bekende maanden (voorspellingDagelijksPerCategorie, recentere maanden wegen zwaarder) —
+// dat kwam uit op €8.299,99, veel dichter bij Robs eigen €8.677 (Rabo 4.715 + ING 3.962, Sparen niet meegeteld).
+// Vervolgcorrectie (17-08-2026, Robs terechte punt: "hypotheek heb je, dus had je kunnen doen"): de hypotheek
+// werd hierboven eenmalig vastgepind op aug-2026 en daarna met de vlakke 2%/jr meegetrokken — maar het ECHTE
+// hypotheekschema (HYPOTHEEK_MAANDEN/hypotheekVindMaand) is er al, per maand, en volgt geen 2%/jr (rentevaste
+// periodes, aflossing e.d.). Hypotheek pakt daarom nu altijd het echte bedrag van de opgevraagde maand zelf;
+// alleen het niet-hypotheek deel (overige vaste lasten + dagelijks, nog steeds aug-2026-basis) wordt met
+// 2%/jr geïndexeerd — dat blijft wél een aanname (zie ikv2pctIndex hieronder).
+function liveUitgavenMaandAnchor(jaar, maand){
+  const hypotheekMaand = hypotheekVindMaand(jaar, maand);
+  const hypotheekBedrag = hypotheekMaand ? hypotheekMaand.bruto : ((hypotheekVindMaand(2026,8)||{}).bruto || 2597.40);
+  const vastRestTotaal = 896.53 + (163.33+347.20) + (26.00+139.19) + 94.99 + (28.63+39.30+89.78)
+    + 2.00 + (4.65+4.53+20.00) + (415.28+61.00) + 25.60 + 0.00 + (325.00+143.18) + 117.45;
+  const dagelijks = voorspellingDagelijksPerCategorie(2026, 8).perCategorie;
+  const variabel = Object.values(dagelijks).reduce((a,b)=>a+b,0);
+  const ikvIndex = ikv2pctIndex(jaar, maand);
+  return Math.round((hypotheekBedrag + (vastRestTotaal+variabel)*ikvIndex)*100)/100;
+}
+// Op Robs verzoek (17-08-2026): "moeten we kijken naar verschil inkomen en uitgaven geïndexeerd, met ook doel
+// naast uitgaven ca 1000 per maand extra te hebben" — Robs eigen formule: Inkomen (Rob, echte netto uit de
+// salarismotor) − Uitgaven (geïndexeerd) − Privé-buffer (geïndexeerd) = Te sparen; de rest loopt door naar het
+// spaarpotje zoals al het geval was.
+const IKV_PRIVE_BUFFER_MAAND_ANCHOR = 1000; // Robs doel: ca. €1.000/mnd persoonlijke ruimte naast de vaste huishouduitgaven
+function ikv2pctIndex(jaar, maand){
+  // LET OP — dit is en blijft een aanname, geen zekerheid (Rob 17-08-2026: "geen idee of we op basis van 2%
+  // salarissen en uitgaven de goede aanname doen"). Zelfde vlakke 2%/jr die de rest van de Inflatie-tab ook
+  // gebruikt (Deurwaarder/Lasten/cao-plug) — niet apart onderbouwd voor uitgaven specifiek, puur consistent
+  // met de bestaande methode. Ankerpunt aug 2026. Kan op elk moment vervangen worden door een andere aanname
+  // (bv. per categorie een ander groeipercentage) als Rob dat liever heeft.
+  const jarenSindsAnker = (jaar-2026) + (maand-8)/12;
+  return Math.pow(1.02, jarenSindsAnker);
+}
 // Op Robs verzoek (14-08-2026): Inflatie-tegel werkt hetzelfde als Nominaal, maar de Rob/Lindy-posten komen
 // hier uit de precieze salarismotoren (potjesMaandelijksBedragIkv) i.p.v. de vaste VERMOGEN_MAANDEN-tabel.
 function potjesTheoretischeRegelsIkv(maandLabel){
@@ -3780,9 +3836,18 @@ function potjesTheoretischeRegelsIkv(maandLabel){
     const lindyPeriodes = berekenLindyPeriodes(2036);
     const lindyP = lindyPeriodes.filter(x=>x.vanaf<=verdiendDatum).slice(-1)[0] || lindyPeriodes[0];
     let heks = 900;
-    if(p.maand===1){ heks += 850; regels.push({naam:'Rob — 13e maand', bedrag:Math.round(8500*robRatio*100)/100}); }
-    if(p.maand===7){ heks += 850; regels.push({naam:'Rob — vakantiegeld', bedrag:Math.round(8327*robRatio*100)/100}); }
-    regels.push({naam:'Rob — sparen', bedrag:Math.round(2000*robRatio*100)/100});
+    const robJaarVerdiend = salarisJaarOverzicht(2036).find(y=>y.jaar===vj);
+    if(p.maand===1){ heks += 850; regels.push({naam:'Rob — 13e maand', bedrag:Math.round(((robJaarVerdiend && robJaarVerdiend.dertiende) ? robJaarVerdiend.dertiende : 8500*robRatio)*100)/100}); }
+    if(p.maand===7){ heks += 850; regels.push({naam:'Rob — vakantiegeld', bedrag:Math.round(((robJaarVerdiend && robJaarVerdiend.vakantiegeld) ? robJaarVerdiend.vakantiegeld : 8327*robRatio)*100)/100}); }
+    const ikvIndex = ikv2pctIndex(p.jaar, p.maand);
+    const uitgavenGeindexeerd = liveUitgavenMaandAnchor(p.jaar, p.maand);
+    const priveGeindexeerd = IKV_PRIVE_BUFFER_MAAND_ANCHOR * ikvIndex;
+    const robNetto = robP ? robP.netto : 0;
+    const teSparenRob = robNetto - uitgavenGeindexeerd - priveGeindexeerd;
+    regels.push({naam:'Rob — inkomen (netto)', bedrag:Math.round(robNetto*100)/100});
+    regels.push({naam:'Rob — uitgaven (geïndexeerd)', bedrag:-Math.round(uitgavenGeindexeerd*100)/100});
+    regels.push({naam:'Rob — privé (geïndexeerd)', bedrag:-Math.round(priveGeindexeerd*100)/100});
+    regels.push({naam:'Rob — te sparen', bedrag:Math.round(teSparenRob*100)/100});
     regels.push({naam:'Lindy — netto salaris', bedrag: lindyP ? Math.round(lindyP.netto*100)/100 : 0});
     const lindyJaarVerdiend = lindySalarisJaarOverzicht(2036).find(y=>y.jaar===vj);
     if(lindyJaarVerdiend){
@@ -4537,7 +4602,8 @@ function berekenSalarisPeriodes(totJaar){
     const zvw = salarisStapWaarde(SALARIS_ZVW_WN, datum);
     const netto = fiscaalBruto * SALARIS_NETTO_EFFECTIEF_PCT/100 + (zvw.val||0);
     const caoAanname = caoStap ? !!caoStap.aanname : (SALARIS_CAO_STAPPEN.filter(s=>s.vanaf<=datum).slice(-1)[0]||{}).aanname;
-    return {vanaf:datum, salaris,tod,wg,zk,apPremie,brutoTotaal,pensioenWN:wn.val,ikvKorting:ikv.val,fiscaalBruto,netto,
+    const deeltijdPct = salarisStapWaarde(SALARIS_DEELTIJD_STAPPEN, datum).val; // op Robs verzoek: percentage tonen naast Korting IKV, net als bij TOD/AP premie
+    return {vanaf:datum, salaris,tod,wg,zk,apPremie,brutoTotaal,pensioenWN:wn.val,ikvKorting:ikv.val,deeltijdPct,fiscaalBruto,netto,
       zvw: zvw.val||0, aannameZvw: !!zvw.aanname, aannameCao: !!caoAanname, aannamePensioenWN: !!wn.aanname};
   });
 }
@@ -4728,7 +4794,7 @@ function renderSalarisRobView(){
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>AP premie (0,33%)</span><span>${fmt(p.apPremie)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;font-weight:600;"><span>Bruto totaal</span><span>${fmt(p.brutoTotaal)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Pensioen WN${p.aannamePensioenWN?' *':''}</span><span>${fmt(p.pensioenWN)}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Korting IKV (deeltijd)</span><span>${fmt(p.ikvKorting)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Korting IKV (deeltijd ${p.deeltijdPct.toFixed(2).replace('.',',')}%)</span><span>${fmt(p.ikvKorting)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;font-weight:600;"><span>Fiscaal Bruto</span><span>${fmt(p.fiscaalBruto)}</span></div>
         ${p.zvw ? `<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>ZVW bijdrage WN${p.aannameZvw?' *':''}</span><span>${fmt(p.zvw)}</span></div>` : ''}
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Netto (effectief ${SALARIS_NETTO_EFFECTIEF_PCT.toFixed(1)}%)${p.aannameCao?' *':''}</span><span>${fmt(p.netto)}</span></div>
@@ -4739,9 +4805,6 @@ function renderSalarisRobView(){
     </div>`;
   }).join('');
   return `
-    <div class="note-card card">
-      Ankerpunt is de kolom 1-7-2026 uit je eigen sheet, geverifieerd tegen de echte Rabo-betaling van 24-7-2026. Vanaf daar rekenen we door met je CAO-, deeltijd- en pensioenschema — de periode vóór juli 2026 laten we los.
-    </div>
     ${rows}
     <footer>* = aanname, geen bevestigd cijfer: cao-groei vanaf juli 2027 is Rob's eigen inflatie-plug van 2%/jr (wordt overschreven zodra een nieuwe cao bekend is, zichtbaar per jaar hierboven); ZVW bijdrage WN vanaf 1-7-2027 gaat uit van het laatst bekende bedrag (2023: €302,96), vlak gehouden tot een echt cijfer bekend is. Vakantiegeld/13e maand vanaf 2027 zijn geschaald met dezelfde salarisgroei als de rest van dit model (geen los cijfer beschikbaar). Pensioentoezeggingen WG en Compensatie ZK worden jaarlijks per 1 januari vastgesteld (blijkt uit de salarisstrook van februari) — tot je die doorgeeft hou ik ze vlak op het laatst bekende bedrag. Pensioen WN vervalt vanaf 2030 (bevestigd; exacte maand nog aangenomen op januari). AOW/pensionering: bevestigd op 15-12-2034 (67 jaar + 3 maanden). Netto is een effectief tarief o.b.v. juli 2026 (${SALARIS_NETTO_EFFECTIEF_PCT.toFixed(2)}%), min de ZVW-plug vanaf 2027 — een benadering, geen exacte doorrekening van de belastingschijven.</footer>
   `;
