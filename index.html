@@ -3032,7 +3032,9 @@ function renderVolgendeMaandView(){
 
   // Na salaris: Rabo → ING — inkomen is al bekend (salaris viel al op 24 juli), maar vaste lasten die nog van Rabo
   // moeten afgaan zijn deels nog niet gebeurd — dus voorspellen we het Rabo-aandeel per categorie (uit juli-data),
-  // met een buffer omdat ook "vaste" lasten iets kunnen variëren.
+  // met een buffer omdat ook "vaste" lasten iets kunnen 
+
+  
   const inkomenRabo = LM_RABO_TX.filter(t=>JUL_INCOME_CATS.includes(t.category)).reduce((s,t)=>s+t.amount,0);
   const vastRaboVerwacht = Object.entries(VAST_COMPONENTEN).reduce((som,[cat,bedrag])=>som+bedrag*categorieRaboAandeel(cat), 0);
   const vastRaboVerwachtMetBuffer = vastRaboVerwacht * (1+VAST_LASTEN_BUFFER_PCT/100);
