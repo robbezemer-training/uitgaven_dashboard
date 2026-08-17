@@ -153,6 +153,10 @@
   }
   .c3s-sectie-tegel.active{ border-color:var(--brass); color:var(--paper); font-weight:600; }
   .back-btn{ background:none;border:1px solid var(--rule); color:var(--paper); border-radius:9px; width:40px;height:40px; display:flex;align-items:center;justify-content:center; cursor:pointer; flex-shrink:0; }
+  .scroll-fab-stack{ position:fixed; right:16px; bottom:24px; z-index:40; display:flex; flex-direction:column; gap:8px; }
+  .scroll-fab{ background:var(--panel); border:1px solid var(--rule); color:var(--paper); border-radius:50%; width:42px;height:42px; display:flex;align-items:center;justify-content:center; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,0.45); }
+  .scroll-fab:active{ background:#202632; border-color:var(--brass-dim); }
+  .scroll-fab svg{ width:18px;height:18px; }
   .back-btn:active{ background: rgba(255,255,255,0.07); }
   .back-btn svg{ width:20px; height:20px; }
   .detail-title{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:21px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -1266,6 +1270,25 @@ function scrollC3sNaarKop(selector){
     const headerH = header ? header.getBoundingClientRect().height : 0;
     const rect = el.getBoundingClientRect();
     const targetY = window.scrollY + rect.top - headerH - 8;
+    window.scrollTo({top: Math.max(0, targetY), behavior:'smooth'});
+  });
+}
+// Op Robs verzoek (17-08-2026): scrollToSelector gebruikte scrollIntoView(block:'start'), dat negeert de TWEE
+// sticky koppen boven de Vermogen-maandenlijst (.detail-header ÉN .vermogen-opties-grid, die zelf ook nog
+// sticky is) — de doelmaand (okt 2031) schoof daardoor onder beide stickies, waardoor pas december zichtbaar
+// leek. Deze variant trekt de hoogte van alle stapelende sticky-koppen binnen dezelfde detail-view eraf, zodat
+// de Nominaal/Inflatie/Aflos-keuzetegels bovenaan blijven staan én de doelmaand er direct onder verschijnt.
+function scrollMetStickyOffset(selector, extraSelectors){
+  requestAnimationFrame(()=>{
+    const el = document.querySelector(selector);
+    if(!el) return;
+    let offset = 8;
+    (extraSelectors||[]).forEach(s=>{
+      const sticky = document.querySelector(s);
+      if(sticky) offset += sticky.getBoundingClientRect().height;
+    });
+    const rect = el.getBoundingClientRect();
+    const targetY = window.scrollY + rect.top - offset;
     window.scrollTo({top: Math.max(0, targetY), behavior:'smooth'});
   });
 }
@@ -3428,6 +3451,9 @@ function renderJaarAccordion(periodes){
     </div>`;
   }).join('');
 }
+function slugifyMaandLabel(label){
+  return label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-');
+}
 function formatMaandLabel(label){
   const m = label.match(/^([A-Za-zëïöü&' ]+?)\s+(\d{4})$/);
   return m ? `${m[1]}<br>${m[2]}` : label;
@@ -3813,11 +3839,13 @@ function berekenPotjesMaanden(aantalMaanden, maandelijksBedragFn){
     // maar rente ÉN de wegvallende aflossingstermijn samen, al gecorrigeerd voor de lagere belastingteruggave
     // (hypotheekMetAflossing trekt precies het belastingvoordeel van de weggevallen rente van de aftrek af —
     // aflossing zelf is toch al niet fiscaal aftrekbaar, dus die correctie hoeft nergens anders vandaan).
+    let aflosBedragDezeMaand = null; // op de aflosmaand zelf (okt 2031): het eenmalige aflossingsbedrag, apart bewaard voor weergave in de maandtegel
     if(vermogenAflos==='ja' && hypotheekGekozenDelen.length){
       if(huidigeKey===HYPOTHEEK_RENTEVAST_EIND_TOTAAL_MND){
         const refR = hypotheekVindMaand(y,m);
         const payoff = refR ? hypotheekGekozenDelen.reduce((s,i)=>s+(refR.delen[i]?refR.delen[i][0]:0),0) : 0;
         c3sGroei -= payoff;
+        aflosBedragDezeMaand = payoff;
       } else if(huidigeKey>HYPOTHEEK_RENTEVAST_EIND_TOTAAL_MND){
         const hr = hypotheekVindMaand(y,m);
         if(hr){
@@ -3850,6 +3878,7 @@ function berekenPotjesMaanden(aantalMaanden, maandelijksBedragFn){
       vorigTripWaarde[id] = rij[id];
     });
     rij.label = label; rij.c3s = c3s; // c3s pas ná de eventuele reis-transfer(s) hierboven vastleggen
+    if(aflosBedragDezeMaand!=null) rij.aflosBedrag = aflosBedragDezeMaand;
     rijen.push(rij);
   }
   return rijen;
@@ -3988,19 +4017,20 @@ function renderPotjesView(maandelijksBedragFn, theorieFn){
         `).join('')}
       </div>
     </div>
-    <div class="card trend-card vermogen-trend-sticky">
+    ${vermogenAflosDetailOpen ? '' : `<div class="card trend-card vermogen-trend-sticky">
       <div class="card-label">Potjes — som over tijd, vanaf ${nuPotjes.label}</div>
       ${renderPotjesChart(potjesMaanden)}
-    </div>
+    </div>`}
     <div class="card-label" style="margin:18px 0 8px;">Per maand (tik voor de transacties)</div>
     ${potjesMaanden.slice(1).map(r=>{
       const isOpen = vermogenPotjesMaandExpand===r.label;
       const txs = isOpen ? potjesTransactiesVoorMaand(r.label) : [];
       const theorie = isOpen && !txs.length ? theorieFn(r.label) : [];
-      return `<div class="card" data-potjes-maand="${r.label}" style="cursor:pointer;margin-bottom:8px;">
+      return `<div class="card" id="potjes-maand-${slugifyMaandLabel(r.label)}" data-potjes-maand="${r.label}" style="cursor:pointer;margin-bottom:8px;${r.aflosBedrag!=null?'border-color:var(--brass);':''}">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper);">${r.label}${isOpen?' ▾':' ▸'}</span>
         </div>
+        ${r.aflosBedrag!=null ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;margin-top:4px;border-bottom:1px solid var(--rule);"><span style="font-size:13px;color:var(--brass);font-weight:600;">Aflossing hypotheek</span><span style="font-size:15px;color:var(--brass);font-weight:600;">−${fmt(r.aflosBedrag)}</span></div>` : ''}
         <div style="margin-top:8px;">
           ${potjesLijst.filter(p=>r[p.key]!=null && (p.key==='c3s' || r[p.key]!==0)).map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:13px;"><span style="display:flex;align-items:center;gap:6px;color:var(--paper-dim);"><span style="width:7px;height:7px;border-radius:50%;background:${potjesKleur(p.key,r[p.key],doelen[p.key])};display:inline-block;"></span>${p.naam}</span><span style="color:${potjesKleur(p.key,r[p.key],doelen[p.key])};font-weight:600;">${fmt(r[p.key])}</span></div>`).join('')}
         </div>
@@ -4054,8 +4084,10 @@ function renderVermogenView(){
       <button class="vermogen-optie-tegel ${vermogenAflos==='nee'?'active':''}" data-vermogen-aflos="nee">Geen aflossing</button>
       <button class="vermogen-optie-tegel ${vermogenAflos==='ja'?'active':''}" data-vermogen-aflos-tegel="1">Aflossen hypotheek${hypotheekGekozenDelen.length?` (${hypotheekGekozenDelen.length} ${hypotheekGekozenDelen.length===1?'deel':'delen'})`:''}${(vermogenAflos==='ja' && vermogenAflosDetailOpen)?' ▾':' ▸'}</button>
     </div>
-    ${(vermogenAflos==='ja' && !hypotheekGekozenDelen.length) ? `<div class="note-card" style="margin-bottom:16px;">Nog geen delen gekozen — tik hierboven op de tegel om ze direct hier te kiezen (of doe dat in de Hypotheek-tab). Dat scenario wordt hier automatisch gebruikt.</div>` : ''}
-    ${(vermogenAflos==='ja' && vermogenAflosDetailOpen) ? renderAflosDelenKeuzeCard({toonVermogenKnop:false}) : ''}
+    <div id="vermogen-aflos-keuze-blok">
+      ${(vermogenAflos==='ja' && !hypotheekGekozenDelen.length) ? `<div class="note-card" style="margin-bottom:16px;">Nog geen delen gekozen — tik hierboven op de tegel om ze direct hier te kiezen (of doe dat in de Hypotheek-tab). Dat scenario wordt hier automatisch gebruikt.</div>` : ''}
+      ${(vermogenAflos==='ja' && vermogenAflosDetailOpen) ? renderAflosDelenKeuzeCard({toonVermogenKnop:false}) : ''}
+    </div>
     ${body}
   `;
 }
@@ -4765,6 +4797,10 @@ function renderDetailShell(bodyHtml){
       ${quickSwitchOpen ? `<div class="switch-menu">${SECTIONS.map(s=>`<button data-goto-section="${s.id}" class="${s.id===view?'active':''}">${s.label}</button>`).join('')}</div>` : ''}
     </div>
     ${bodyHtml}
+    <div class="scroll-fab-stack">
+      <button class="scroll-fab" data-scroll-page-top="1" aria-label="Naar boven"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg></button>
+      <button class="scroll-fab" data-scroll-page-bottom="1" aria-label="Naar beneden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+    </div>
   `;
 }
 function renderBuildFooter(){
@@ -4833,13 +4869,33 @@ function render(){
   }));
   document.querySelectorAll('[data-goto-view]').forEach(el=>el.addEventListener('click',()=>{ view=el.dataset.gotoView; selectedFilter=null; render(); }));
   document.querySelectorAll('[data-scroll-to]').forEach(el=>el.addEventListener('click',()=>{ scrollToSelector('#'+el.dataset.scrollTo); }));
+  document.querySelectorAll('[data-scroll-page-top]').forEach(el=>el.addEventListener('click',()=>{ window.scrollTo({top:0, behavior:'smooth'}); }));
+  document.querySelectorAll('[data-scroll-page-bottom]').forEach(el=>el.addEventListener('click',()=>{ window.scrollTo({top: document.body.scrollHeight, behavior:'smooth'}); }));
   document.querySelectorAll('[data-expand]').forEach(el=>el.addEventListener('click',()=>{ volgendeExpand = (volgendeExpand===el.dataset.expand) ? null : el.dataset.expand; categoryExpand=null; render(); }));
   document.querySelectorAll('[data-cat-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); categoryExpand = (categoryExpand===el.dataset.catToggle) ? null : el.dataset.catToggle; bucketSelection.clear(); render(); }));
   document.querySelectorAll('[data-vermogen-inflatie]').forEach(el=>el.addEventListener('click',()=>{ vermogenInflatie = el.dataset.vermogenInflatie; render(); }));
   document.querySelectorAll('[data-vermogen-aflos]').forEach(el=>el.addEventListener('click',()=>{ vermogenAflos = el.dataset.vermogenAflos; render(); }));
   document.querySelectorAll('[data-vermogen-aflos-tegel]').forEach(el=>el.addEventListener('click',()=>{
-    if(vermogenAflos!=='ja'){ vermogenAflos='ja'; vermogenAflosDetailOpen=true; } else { vermogenAflosDetailOpen = !vermogenAflosDetailOpen; }
+    if(vermogenAflos!=='ja'){
+      vermogenAflos='ja';
+      // Op Robs verzoek (17-08-2026): als er al delen gekozen zijn, hoeft de keuzelijst niet opnieuw open te
+      // klappen bij het terugschakelen vanuit Geen aflossing/Nominaal/Inflatie — het scenario staat al vast,
+      // dus blijft gewoon dichtgeklapt (alleen de eerste keer, zonder gekozen delen, klapt hij vanzelf open).
+      vermogenAflosDetailOpen = !hypotheekGekozenDelen.length;
+    } else {
+      vermogenAflosDetailOpen = !vermogenAflosDetailOpen;
+    }
     render();
+    // Eerst het keuzescherm (welke delen aflossen) tonen als dat openklapt — niet er meteen voorbij scrollen
+    // naar okt 2031. Pas zodra de keuze weer is dichtgeklapt (en er al delen gekozen zijn) scrollt hij door
+    // naar okt 2031, waar het aflossingsbedrag nu staat en de grafiek (verborgen tijdens het kiezen) weer
+    // verschijnt — de grafiekkaart is zelf ook sticky (.vermogen-trend-sticky), dus die hoogte moet ook worden
+    // afgetrokken, anders overlapt hij de bovenste rijen van de okt-2031-tegel (C3S/India bleven zo verborgen).
+    if(vermogenAflosDetailOpen){
+      scrollMetStickyOffset('#vermogen-aflos-keuze-blok', ['.detail-header', '.vermogen-opties-grid']);
+    } else if(hypotheekGekozenDelen.length){
+      scrollMetStickyOffset('#potjes-maand-oktober-2031', ['.detail-header', '.vermogen-opties-grid', '.vermogen-trend-sticky']);
+    }
   }));
   document.querySelectorAll('[data-hyp-deel-toggle]').forEach(el=>el.addEventListener('click',()=>{
     const i = parseInt(el.dataset.hypDeelToggle,10);
