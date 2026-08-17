@@ -818,7 +818,7 @@ let reisBudgetEditOpen = null; // reis-id waarvan het budget nu bewerkt wordt, o
 let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 1 van "selecteren, dan verplaatsen"
 let overridesLoaded = false;
 let overridesSource = 'fallback'; // wordt 'live' zodra de Supabase-fetch is gelukt
-const DASHBOARD_VERSION = '2026-08-14z - Klein fix op Robs constatering: de reserveringsvenster/reis-voorbij-regels bij de theoretische regels per maand misten het jaartal (Italie i.p.v. Italie 2027) - inconsistent met de hoofdlijst erboven, die wel altijd naam+jaar toont. Nu ook naam+jaar, zelfde format overal.';
+const DASHBOARD_VERSION = '2026-08-14ac - Robs terechte vraag beantwoord (\'je bedoelt rente en aflos, en is belastingteruggave dan ook lager?\'): gecheckt in hypotheekMetAflossing() - de berekening zelf klopte al helemaal (verwijdert zowel aflossing als rente uit bruto, EN verlaagt de belastingaftrek precies met het belastingvoordeel van de weggevallen rente - aflossing was toch al niet aftrekbaar), dus de lagere belastingteruggave zat al automatisch in de cijfers. Alleen mijn eigen code-comment/uitleg was slordig (noemde het rentevoordeel terwijl het rente+aflossing samen is, netto voor teruggave) - comment gecorrigeerd, geen wijziging aan de daadwerkelijke rekenlogica nodig.';
 const DASHBOARD_VERSION_PREV_2026_08_14s = '2026-08-14r - Reispotjes pas zichtbaar binnen venster, x-as verkort - zie eerdere entry.';
 const DASHBOARD_VERSION_PREV_2026_08_14s2 = '2026-08-14r/s - Reispotjes pas binnen venster, Lindy-bedragen sept2026-dec2028 gecorrigeerd - zie eerdere entries.';
 const DASHBOARD_VERSION_PREV_2026_08_14t = '2026-08-14s - Lindy-bedragen sept2026-2035 gecorrigeerd o.b.v. Robs brontabel - zie eerdere entry.';
@@ -3139,13 +3139,16 @@ function renderVolgendeMaandView(){
       expandCard(label, map[expandKey], expandKey)
     );
     const pct = voortgang ? Math.min(100, Math.round(voortgang.uitgegeven/voortgang.verwacht*100)) : null;
+    // Op Robs verzoek (14-08-2026): de statische toelichtingszin (sub) niet meer op de gesloten tegel — die
+    // staat nu pas onderaan zodra uitgeklapt. De "van verwacht X (Y%)"-regel bij voortgang is LIVE data
+    // (voortgangsvergelijking), geen statische uitleg, en blijft daarom gewoon altijd zichtbaar.
     const figuur = voortgang
       ? `<div class="stat-figure ${cls}">${fmt(-voortgang.uitgegeven)}</div><div class="stat-sub">van verwacht ${fmt(-voortgang.verwacht)} (${pct}%)</div>`
-      : `<div class="stat-figure ${cls}">${bedrag}</div><div class="stat-sub">${sub}</div>`;
+      : `<div class="stat-figure ${cls}">${bedrag}</div>`;
     return `<div class="card" data-expand="${expandKey}" style="cursor:pointer;">
         <div class="card-label">${label}${isOpen?' ▾':' ▸'}</div>
         ${figuur}
-      </div>${detail}`;
+      </div>${detail}${isOpen && sub ? `<div style="font-size:11px;color:var(--muted);padding:6px 2px 0;">${sub}</div>` : ''}`;
   }
 
   return `
@@ -3224,8 +3227,7 @@ function renderVolgendeMaandView(){
         return `<div class="card" data-expand="besteding" style="cursor:pointer;">
           <div class="card-label">Bestedingsruimte${isOpen?' ▾':' ▸'}</div>
           <div class="stat-figure ${hoofd>=0?'pos':'neg'}">${fmt(hoofd)}</div>
-          <div class="stat-sub">${(vorigeMaandComponent!==0||reisAfwikkeling.length>0||(heeftSaldo && (Math.abs(saldoAfwijkingTotaal)>=0.01))||kaartReservering>0) ?'verwacht bij einde maand, incl. vorige maand/reis/saldo':'verwacht bij einde maand (systeem)'}</div>
-        </div>${detail}`;
+        </div>${detail}${isOpen?`<div style="font-size:11px;color:var(--muted);padding:6px 2px 0;">${(vorigeMaandComponent!==0||reisAfwikkeling.length>0||(heeftSaldo && (Math.abs(saldoAfwijkingTotaal)>=0.01))||kaartReservering>0) ?'verwacht bij einde maand, incl. vorige maand/reis/saldo':'verwacht bij einde maand (systeem)'}</div>`:''}`;
       })()}
     </div>
     <div class="card ledger-card">
@@ -3319,11 +3321,12 @@ function renderVolgendeMaandSepView(){
     const isOpen = volgendeExpand===expandKey;
     const map = {inkomen:INKOMEN_COMPONENTEN, vast:VAST_COMPONENTEN, dagelijks:DAGELIJKS_COMPONENTEN, sparen:SPAREN_COMPONENTEN};
     const detail = isOpen ? expandCard(label, map[expandKey], expandKey) : '';
+    // Op Robs verzoek (14-08-2026): de toelichtingszin (bv. "Rob + Lindy + belastingteruggave...") niet meer
+    // altijd tonen op de gesloten tegel — staat nu pas onderaan zodra de tegel is uitgeklapt.
     return `<div class="card" data-expand="${expandKey}" style="cursor:pointer;">
         <div class="card-label">${label}${isOpen?' ▾':' ▸'}</div>
         <div class="stat-figure ${cls}">${bedrag}</div>
-        <div class="stat-sub">${sub}</div>
-      </div>${detail}`;
+      </div>${detail}${isOpen && sub ? `<div style="font-size:11px;color:var(--muted);padding:6px 2px 0;">${sub}</div>` : ''}`;
   }
 
   return `
@@ -3335,7 +3338,6 @@ function renderVolgendeMaandSepView(){
       <div class="card">
         <div class="card-label">Bestedingsruimte</div>
         <div class="stat-figure ${netto>=0?'pos':'neg'}">${fmt(netto)}</div>
-        <div class="stat-sub">o.b.v. patroonherkenning uit 7-8 mnd data</div>
       </div>
     </div>
     <footer>Dagelijks is nu een <em>live</em> gewogen gemiddelde over alle afgesloten maanden met echte ING/AMEX/creditcard-data (recentere maanden wegen zwaarder) — dit groeit vanzelf mee zodra er weer een maand wordt afgesloten, geen vaste getallen meer die handmatig bijgewerkt moeten worden. Enel valt niet in september (alleen feb/apr/jun/aug/okt/dec); IMU ook niet (mei/november). Lindy's salaris komt nu live uit dezelfde berekening als de Salaris-tab (50% parttime vanaf 1 sept) — bijstellen zodra de eerste septemberstrook binnen is en er verschillen blijken.</footer>
@@ -3802,6 +3804,29 @@ function berekenPotjesMaanden(aantalMaanden, maandelijksBedragFn){
     // maandelijkse groei totdat het weer boven 0 uitkomt ("pas naar 0 als weer uit het rood").
     let c3sGroei = bedragFn(y,m);
     if(label==='februari 2027') c3sGroei -= c3sTotaalOpenBedrag();
+    // Op Robs verzoek (14-08-2026): de "Aflossen hypotheek"-toggle weer koppelen aan de nieuwe potjes-opzet
+    // (was losgekoppeld sinds de potjes-herbouw). Gebruikt precies de delen die in de Hypotheek-tab
+    // handmatig zijn aangevinkt (hypotheekGekozenDelen) — zelfde scenario, geen aparte aanname hier. Op het
+    // eerst mogelijke boetevrije moment (HYPOTHEEK_RENTEVAST_EIND_TOTAAL_MND) gaat het aflossingsbedrag er
+    // in één keer af; daarna komt elke maand het verschil erbij tussen de normale en de verlaagde NETTO
+    // hypotheeklast (hypotheekSchoon vs. hypotheekMetAflossing) — dat "voordeel" is dus niet alleen rente,
+    // maar rente ÉN de wegvallende aflossingstermijn samen, al gecorrigeerd voor de lagere belastingteruggave
+    // (hypotheekMetAflossing trekt precies het belastingvoordeel van de weggevallen rente van de aftrek af —
+    // aflossing zelf is toch al niet fiscaal aftrekbaar, dus die correctie hoeft nergens anders vandaan).
+    if(vermogenAflos==='ja' && hypotheekGekozenDelen.length){
+      if(huidigeKey===HYPOTHEEK_RENTEVAST_EIND_TOTAAL_MND){
+        const refR = hypotheekVindMaand(y,m);
+        const payoff = refR ? hypotheekGekozenDelen.reduce((s,i)=>s+(refR.delen[i]?refR.delen[i][0]:0),0) : 0;
+        c3sGroei -= payoff;
+      } else if(huidigeKey>HYPOTHEEK_RENTEVAST_EIND_TOTAAL_MND){
+        const hr = hypotheekVindMaand(y,m);
+        if(hr){
+          const schoon = hypotheekSchoon(hr);
+          const metA = hypotheekMetAflossing(hr, hypotheekGekozenDelen);
+          c3sGroei += Math.round((schoon.netto - metA.netto)*100)/100;
+        }
+      }
+    }
     c3s = Math.round((c3s + c3sGroei)*100)/100;
     const rij = {kado: saldi.kado}; // Kado heeft geen groeimodel — blijft vlak op het huidige, echte saldo
     POTJES_TRIP_IDS.forEach(id=>{
