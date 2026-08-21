@@ -768,73 +768,84 @@ const JUL_VASTE_LASTEN_CATS = ["Hypotheek","Auto","Verzekeringen","Zorgverzekeri
 // alle andere Paardrijden-vendors default dagelijks) — zie effectiveBucket(). Bevestigd door Rob 12-08-2026.
 const ALLE_CATEGORIEEN = ["Abonnementen", "Auto", "Autokosten", "Bankkosten", "Belastingafrekening", "Belastingteruggave", "Boodschappen", "Cadeaus", "Casa 3S", "Casa 3S (project)", "Eten & drinken", "Familie", "Goede doelen", "Hobby", "Hypotheek", "Kleding", "Medisch", "Muziek", "Nutsvoorzieningen", "Overig", "Overig inkomen", "Paardrijden", "Parkeren", "Reizen", "Salaris", "Shopping", "Sparen", "Sport", "Vakbond", "Verzekeringen", "Verzorging", "Wonen", "Zakelijk", "Zorgverzekering"];
 
-const ENERGIE_DATA = { // Bron: Robs eigen Energie.xlsx (tabs 2023-2026), 20-08-2026. Elke maand: gas/electra/opgewekt/stroomAuto in resp. m3/kWh/kWh/kWh, stroomBetalen/totaal in euro.
+const ENERGIE_DATA = { // Bron: Robs Energie.xlsx, herberekend 21-08-2026 met gecorrigeerde Stroom-formule (Electra x Tarief Stroom - Teruggeleverd x Productie stroom tarief, i.p.v. genette kWh x 1 tarief), samen met Rob gevonden en geverifieerd tegen echte facturen. Elke maand: gas/electra/opgewekt/stroomAuto in resp. m3/kWh/kWh/kWh, stroomBetalen/totaal in euro.
   "2023": [
     {m:1,gas:231.0,electra:1070.0,teruggeleverd:8.09,opgewekt:56.7,stroomBetalen:1061.91,tariefGas:2.012,tariefStroom:0.5196,totaal:834.01,stroomAuto:269.97},
-    {m:2,gas:185.0,electra:879.21,teruggeleverd:40.43,opgewekt:105.4,stroomBetalen:838.78,tariefGas:0.742,tariefStroom:0.2644,totaal:494.53,stroomAuto:280.26},
-    {m:3,gas:165.0,electra:1161.86,teruggeleverd:90.76,opgewekt:212.5,stroomBetalen:1071.1,tariefGas:0.658,tariefStroom:0.2402,totaal:514.87,stroomAuto:414.0},
-    {m:4,gas:108.0,electra:962.6,teruggeleverd:147.46,opgewekt:372.8,stroomBetalen:815.14,tariefGas:0.635,tariefStroom:0.2292,totaal:382.92,stroomAuto:325.37},
+    {m:2,gas:185.0,electra:879.21,teruggeleverd:40.43,opgewekt:105.4,stroomBetalen:838.78,tariefGas:0.742,tariefStroom:0.2644,totaal:507.46,stroomAuto:280.26},
+    {m:3,gas:165.0,electra:1161.86,teruggeleverd:90.76,opgewekt:212.5,stroomBetalen:1071.1,tariefGas:0.658,tariefStroom:0.2402,totaal:510.09,stroomAuto:414.0},
+    {m:4,gas:108.0,electra:962.6,teruggeleverd:147.46,opgewekt:372.8,stroomBetalen:815.14,tariefGas:0.635,tariefStroom:0.2292,totaal:366.02,stroomAuto:325.37},
     {m:5,gas:35.0,electra:843.54,teruggeleverd:275.9,opgewekt:568.8,stroomBetalen:567.64,tariefGas:0.534,tariefStroom:0.2122,totaal:225.24,stroomAuto:406.79},
     {m:6,gas:12.0,electra:631.05,teruggeleverd:371.71,opgewekt:646.1,stroomBetalen:259.34,tariefGas:0.519,tariefStroom:0.2299,totaal:161.25,stroomAuto:450.62},
     {m:7,gas:7.0,electra:436.2,teruggeleverd:324.57,opgewekt:503.3,stroomBetalen:111.63,tariefGas:0.514,tariefStroom:0.1709,totaal:89.04,stroomAuto:225.94},
     {m:8,gas:11.0,electra:546.75,teruggeleverd:270.81,opgewekt:445.4,stroomBetalen:275.94,tariefGas:0.536,tariefStroom:0.2335,totaal:166.66,stroomAuto:242.74},
     {m:9,gas:16.0,electra:815.94,teruggeleverd:152.24,opgewekt:319.4,stroomBetalen:663.7,tariefGas:0.581,tariefStroom:0.2239,totaal:264.53,stroomAuto:482.95},
     {m:10,gas:68.0,electra:1080.27,teruggeleverd:57.44,opgewekt:144.5,stroomBetalen:1022.83,tariefGas:0.677,tariefStroom:0.2179,totaal:397.58,stroomAuto:458.14},
-    {m:11,gas:165.42,electra:1250.87,teruggeleverd:15.92,opgewekt:64.9,stroomBetalen:1234.95,tariefGas:0.641,tariefStroom:0.2286,totaal:541.98,stroomAuto:491.52},
-    {m:12,gas:209.0,electra:1298.05,teruggeleverd:4.04,opgewekt:35.0,stroomBetalen:1294.01,tariefGas:0.569,tariefStroom:0.2149,totaal:551.74,stroomAuto:386.65}
+    {m:11,gas:165.42,electra:1250.87,teruggeleverd:15.92,opgewekt:64.9,stroomBetalen:1234.95,tariefGas:0.641,tariefStroom:0.2286,totaal:527.69,stroomAuto:491.52},
+    {m:12,gas:209.0,electra:1298.05,teruggeleverd:4.04,opgewekt:35.0,stroomBetalen:1294.01,tariefGas:0.569,tariefStroom:0.2149,totaal:550.36,stroomAuto:386.65}
   ],
   "2024": [
-    {m:1,gas:244.0,electra:1413.9,teruggeleverd:14.51,opgewekt:59.1,stroomBetalen:1399.39,tariefGas:0.511,tariefStroom:0.199,totaal:576.37,stroomAuto:446.08},
-    {m:2,gas:167.34,electra:1146.66,teruggeleverd:24.86,opgewekt:84.7,stroomBetalen:1121.8,tariefGas:0.469,tariefStroom:0.1893,totaal:441.6,stroomAuto:405.24},
-    {m:3,gas:134.66,electra:1291.4,teruggeleverd:85.7,opgewekt:215.4,stroomBetalen:1205.7,tariefGas:0.476,tariefStroom:0.1852,totaal:436.3,stroomAuto:540.9},
-    {m:4,gas:89.04,electra:990.16,teruggeleverd:173.05,opgewekt:364.4,stroomBetalen:817.11,tariefGas:0.504,tariefStroom:0.1787,totaal:322.1,stroomAuto:399.79},
-    {m:5,gas:18.1,electra:770.54,teruggeleverd:247.88,opgewekt:473.7,stroomBetalen:522.66,tariefGas:0.524,tariefStroom:0.1827,totaal:220.37,stroomAuto:329.11},
-    {m:6,gas:17.0,electra:765.48,teruggeleverd:271.96,opgewekt:521.4,stroomBetalen:493.52,tariefGas:0.551,tariefStroom:0.1795,totaal:209.65,stroomAuto:411.38},
-    {m:7,gas:6.74,electra:598.94,teruggeleverd:301.23,opgewekt:500.4,stroomBetalen:297.71,tariefGas:0.531,tariefStroom:0.162,totaal:153.24,stroomAuto:361.97},
-    {m:8,gas:9.41,electra:645.54,teruggeleverd:245.25,opgewekt:459.7,stroomBetalen:400.29,tariefGas:0.585,tariefStroom:0.1824,totaal:185.56,stroomAuto:367.6},
-    {m:9,gas:22.89,electra:858.59,teruggeleverd:131.84,opgewekt:271.4,stroomBetalen:726.75,tariefGas:0.572,tariefStroom:0.1948,totaal:279.43,stroomAuto:385.3},
-    {m:10,gas:65.42,electra:1130.06,teruggeleverd:47.19,opgewekt:147.5,stroomBetalen:1082.87,tariefGas:0.607,tariefStroom:0.2031,totaal:404.72,stroomAuto:507.7},
-    {m:11,gas:162.0,electra:1292.21,teruggeleverd:10.74,opgewekt:59.2,stroomBetalen:1281.47,tariefGas:0.632,tariefStroom:0.2366,totaal:581.87,stroomAuto:508.8},
+    {m:1,gas:244.0,electra:1413.9,teruggeleverd:14.51,opgewekt:59.1,stroomBetalen:1399.39,tariefGas:0.511,tariefStroom:0.199,totaal:576.38,stroomAuto:446.08},
+    {m:2,gas:167.34,electra:1146.66,teruggeleverd:24.86,opgewekt:84.7,stroomBetalen:1121.8,tariefGas:0.469,tariefStroom:0.1893,totaal:441.67,stroomAuto:405.24},
+    {m:3,gas:134.66,electra:1291.4,teruggeleverd:85.7,opgewekt:215.4,stroomBetalen:1205.7,tariefGas:0.476,tariefStroom:0.1852,totaal:437.75,stroomAuto:540.9},
+    {m:4,gas:89.04,electra:990.16,teruggeleverd:173.05,opgewekt:364.4,stroomBetalen:817.11,tariefGas:0.504,tariefStroom:0.1787,totaal:327.0,stroomAuto:399.79},
+    {m:5,gas:18.1,electra:770.54,teruggeleverd:247.88,opgewekt:473.7,stroomBetalen:522.66,tariefGas:0.524,tariefStroom:0.1827,totaal:232.57,stroomAuto:329.11},
+    {m:6,gas:17.0,electra:765.48,teruggeleverd:271.96,opgewekt:521.4,stroomBetalen:493.52,tariefGas:0.551,tariefStroom:0.1795,totaal:219.45,stroomAuto:411.38},
+    {m:7,gas:6.74,electra:598.94,teruggeleverd:301.23,opgewekt:500.4,stroomBetalen:297.71,tariefGas:0.531,tariefStroom:0.162,totaal:155.68,stroomAuto:361.97},
+    {m:8,gas:9.41,electra:645.54,teruggeleverd:245.25,opgewekt:459.7,stroomBetalen:400.29,tariefGas:0.585,tariefStroom:0.1824,totaal:190.99,stroomAuto:367.6},
+    {m:9,gas:22.89,electra:858.59,teruggeleverd:131.84,opgewekt:271.4,stroomBetalen:726.75,tariefGas:0.572,tariefStroom:0.1948,totaal:283.61,stroomAuto:385.3},
+    {m:10,gas:65.42,electra:1130.06,teruggeleverd:47.19,opgewekt:147.5,stroomBetalen:1082.87,tariefGas:0.607,tariefStroom:0.2031,totaal:405.75,stroomAuto:507.7},
+    {m:11,gas:162.0,electra:1292.21,teruggeleverd:10.74,opgewekt:59.2,stroomBetalen:1281.47,tariefGas:0.632,tariefStroom:0.2366,totaal:582.31,stroomAuto:508.8},
     {m:12,gas:203.51,electra:1125.64,teruggeleverd:2.57,opgewekt:27.8,stroomBetalen:1123.07,tariefGas:0.654,tariefStroom:0.2256,totaal:558.17,stroomAuto:319.2}
   ],
   "2025": [
-    {m:1,gas:241.0,electra:916.31,teruggeleverd:12.95,opgewekt:50.6,stroomBetalen:903.36,tariefGas:0.69,tariefStroom:0.2342,totaal:553.78,stroomAuto:200.3},
-    {m:2,gas:197.13,electra:1285.81,teruggeleverd:28.65,opgewekt:106.4,stroomBetalen:1257.16,tariefGas:0.723,tariefStroom:0.2366,totaal:626.21,stroomAuto:550.3},
-    {m:3,gas:140.57,electra:1154.78,teruggeleverd:122.54,opgewekt:300.9,stroomBetalen:1032.24,tariefGas:0.625,tariefStroom:0.2025,totaal:455.8,stroomAuto:507.0},
-    {m:4,gas:63.32,electra:903.55,teruggeleverd:236.08,opgewekt:464.5,stroomBetalen:667.47,tariefGas:0.567,tariefStroom:0.1894,totaal:293.41,stroomAuto:422.1},
-    {m:5,gas:21.25,electra:836.44,teruggeleverd:285.59,opgewekt:554.7,stroomBetalen:550.85,tariefGas:0.561,tariefStroom:0.1714,totaal:225.24,stroomAuto:410.4},
-    {m:6,gas:13.05,electra:548.6,teruggeleverd:311.17,opgewekt:551.9,stroomBetalen:237.43,tariefGas:0.568,tariefStroom:0.1768,totaal:157.23,stroomAuto:251.4},
-    {m:7,gas:6.81,electra:245.23,teruggeleverd:374.08,opgewekt:512.05,stroomBetalen:-128.85,tariefGas:0.543,tariefStroom:0.2246,totaal:66.03,stroomAuto:0.0},
-    {m:8,gas:8.38,electra:299.9,teruggeleverd:334.87,opgewekt:454.8,stroomBetalen:-34.97,tariefGas:0.526,tariefStroom:0.2152,totaal:92.83,stroomAuto:0.0},
-    {m:9,gas:24.35,electra:410.39,teruggeleverd:173.33,opgewekt:287.1,stroomBetalen:237.06,tariefGas:0.53,tariefStroom:0.2119,totaal:175.41,stroomAuto:0.0},
-    {m:10,gas:88.3,electra:563.86,teruggeleverd:51.59,opgewekt:126.3,stroomBetalen:512.27,tariefGas:0.529,tariefStroom:0.2091,totaal:280.86,stroomAuto:0.0},
-    {m:11,gas:156.58,electra:720.81,teruggeleverd:18.81,opgewekt:65.5,stroomBetalen:702.0,tariefGas:0.477,tariefStroom:0.2223,totaal:382.49,stroomAuto:0.0},
-    {m:12,gas:202.0,electra:795.87,teruggeleverd:4.38,opgewekt:42.5,stroomBetalen:791.49,tariefGas:0.477,tariefStroom:0.2104,totaal:420.94,stroomAuto:0.0}
+    {m:1,gas:241.0,electra:916.31,teruggeleverd:12.95,opgewekt:50.6,stroomBetalen:903.36,tariefGas:0.69,tariefStroom:0.2342,totaal:553.9,stroomAuto:200.3},
+    {m:2,gas:197.13,electra:1285.81,teruggeleverd:28.65,opgewekt:106.4,stroomBetalen:1257.16,tariefGas:0.723,tariefStroom:0.2366,totaal:626.48,stroomAuto:550.3},
+    {m:3,gas:140.57,electra:1154.78,teruggeleverd:122.54,opgewekt:300.9,stroomBetalen:1032.24,tariefGas:0.625,tariefStroom:0.2025,totaal:461.94,stroomAuto:507.0},
+    {m:4,gas:63.32,electra:903.55,teruggeleverd:236.08,opgewekt:464.5,stroomBetalen:667.47,tariefGas:0.567,tariefStroom:0.1894,totaal:310.1,stroomAuto:422.1},
+    {m:5,gas:21.25,electra:836.44,teruggeleverd:285.59,opgewekt:554.7,stroomBetalen:550.85,tariefGas:0.561,tariefStroom:0.1714,totaal:240.58,stroomAuto:410.4},
+    {m:6,gas:13.05,electra:548.6,teruggeleverd:311.17,opgewekt:551.9,stroomBetalen:237.43,tariefGas:0.568,tariefStroom:0.1768,totaal:171.46,stroomAuto:251.4},
+    {m:7,gas:6.81,electra:245.23,teruggeleverd:374.08,opgewekt:512.05,stroomBetalen:-128.85,tariefGas:0.543,tariefStroom:0.2246,totaal:87.8,stroomAuto:0.0},
+    {m:8,gas:8.38,electra:299.9,teruggeleverd:334.87,opgewekt:454.8,stroomBetalen:-34.97,tariefGas:0.526,tariefStroom:0.2152,totaal:119.58,stroomAuto:0.0},
+    {m:9,gas:24.35,electra:410.39,teruggeleverd:173.33,opgewekt:287.1,stroomBetalen:237.06,tariefGas:0.53,tariefStroom:0.2119,totaal:187.24,stroomAuto:0.0},
+    {m:10,gas:88.3,electra:563.86,teruggeleverd:51.59,opgewekt:126.3,stroomBetalen:512.27,tariefGas:0.529,tariefStroom:0.2091,totaal:282.56,stroomAuto:0.0},
+    {m:11,gas:156.58,electra:720.81,teruggeleverd:18.81,opgewekt:65.5,stroomBetalen:702.0,tariefGas:0.477,tariefStroom:0.2223,totaal:382.79,stroomAuto:0.0},
+    {m:12,gas:202.0,electra:795.87,teruggeleverd:4.38,opgewekt:42.5,stroomBetalen:791.49,tariefGas:0.477,tariefStroom:0.2104,totaal:420.98,stroomAuto:0.0}
   ],
   "2026": [
-    {m:1,gas:253.37,electra:1162.12,teruggeleverd:7.19,opgewekt:46.7,stroomBetalen:1154.93,tariefGas:0.477,tariefStroom:0.2172,totaal:552.34,stroomAuto:293.2},
-    {m:2,gas:181.14,electra:990.63,teruggeleverd:19.3,opgewekt:89.8,stroomBetalen:971.33,tariefGas:0.477,tariefStroom:0.2032,totaal:446.23,stroomAuto:205.4},
-    {m:3,gas:140.15,electra:933.7,teruggeleverd:111.32,opgewekt:272.5,stroomBetalen:822.38,tariefGas:0.718,tariefStroom:0.204,totaal:426.37,stroomAuto:299.5},
-    {m:4,gas:69.5,electra:680.14,teruggeleverd:266.66,opgewekt:482.3,stroomBetalen:413.48,tariefGas:0.567,tariefStroom:0.1962,totaal:248.15,stroomAuto:305.9},
-    {m:5,gas:37.9,electra:628.01,teruggeleverd:303.28,opgewekt:536.5,stroomBetalen:324.73,tariefGas:0.724,tariefStroom:0.2137,totaal:219.04,stroomAuto:208.9},
-    {m:6,gas:10.51,electra:526.33,teruggeleverd:311.17,opgewekt:526.3,stroomBetalen:215.16,tariefGas:0.66,tariefStroom:0.2133,totaal:166.99,stroomAuto:249.0},
-    {m:7,gas:7.44,electra:397.33,teruggeleverd:406.52,opgewekt:567.4,stroomBetalen:-9.19,tariefGas:0.543,tariefStroom:0.2246,totaal:105.03,stroomAuto:197.6,gridRewards:2.26},
-    {m:8,gas:8.38,electra:299.9,teruggeleverd:334.87,opgewekt:454.8,stroomBetalen:-34.97,tariefGas:0.526,tariefStroom:0.2152,totaal:98.13,stroomAuto:0.0},
-    {m:9,gas:24.35,electra:410.39,teruggeleverd:173.33,opgewekt:287.1,stroomBetalen:237.06,tariefGas:0.53,tariefStroom:0.2119,totaal:178.7,stroomAuto:0.0},
-    {m:10,gas:88.3,electra:563.86,teruggeleverd:51.59,opgewekt:126.3,stroomBetalen:512.27,tariefGas:0.529,tariefStroom:0.2091,totaal:284.15,stroomAuto:0.0},
-    {m:11,gas:156.58,electra:720.81,teruggeleverd:18.81,opgewekt:65.5,stroomBetalen:702.0,tariefGas:0.477,tariefStroom:0.2223,totaal:381.5,stroomAuto:0.0},
-    {m:12,gas:202.94,electra:795.87,teruggeleverd:4.38,opgewekt:42.5,stroomBetalen:791.49,tariefGas:0.477,tariefStroom:0.27,totaal:467.03,stroomAuto:0.0}
+    {m:1,gas:253.37,electra:1162.12,teruggeleverd:7.19,opgewekt:46.7,stroomBetalen:1154.93,tariefGas:0.477,tariefStroom:0.2172,totaal:552.54,stroomAuto:293.2},
+    {m:2,gas:181.14,electra:990.63,teruggeleverd:19.3,opgewekt:89.8,stroomBetalen:971.33,tariefGas:0.477,tariefStroom:0.2032,totaal:447.15,stroomAuto:205.4},
+    {m:3,gas:140.15,electra:933.7,teruggeleverd:111.32,opgewekt:272.5,stroomBetalen:822.38,tariefGas:0.718,tariefStroom:0.204,totaal:436.04,stroomAuto:299.5},
+    {m:4,gas:69.5,electra:680.14,teruggeleverd:266.66,opgewekt:482.3,stroomBetalen:413.48,tariefGas:0.567,tariefStroom:0.1962,totaal:283.7,stroomAuto:305.9},
+    {m:5,gas:37.9,electra:628.01,teruggeleverd:303.28,opgewekt:536.5,stroomBetalen:324.73,tariefGas:0.724,tariefStroom:0.2137,totaal:259.0,stroomAuto:208.9},
+    {m:6,gas:10.51,electra:526.33,teruggeleverd:311.17,opgewekt:526.3,stroomBetalen:215.16,tariefGas:0.66,tariefStroom:0.2133,totaal:192.26,stroomAuto:249.0},
+    {m:7,gas:7.44,electra:397.33,teruggeleverd:406.52,opgewekt:567.4,stroomBetalen:-9.19,tariefGas:0.718,tariefStroom:0.2133,totaal:143.05,stroomAuto:197.6,gridRewards:2.26},
+    {m:8,gas:8.38,electra:299.9,teruggeleverd:334.87,opgewekt:454.8,stroomBetalen:-34.97,tariefGas:0.526,tariefStroom:0.2152,totaal:124.88,stroomAuto:0.0},
+    {m:9,gas:24.35,electra:410.39,teruggeleverd:173.33,opgewekt:287.1,stroomBetalen:237.06,tariefGas:0.53,tariefStroom:0.2119,totaal:190.53,stroomAuto:0.0},
+    {m:10,gas:88.3,electra:563.86,teruggeleverd:51.59,opgewekt:126.3,stroomBetalen:512.27,tariefGas:0.529,tariefStroom:0.2091,totaal:285.85,stroomAuto:0.0},
+    {m:11,gas:156.58,electra:720.81,teruggeleverd:18.81,opgewekt:65.5,stroomBetalen:702.0,tariefGas:0.477,tariefStroom:0.2223,totaal:381.81,stroomAuto:0.0},
+    {m:12,gas:202.94,electra:795.87,teruggeleverd:4.38,opgewekt:42.5,stroomBetalen:791.49,tariefGas:0.477,tariefStroom:0.27,totaal:467.3,stroomAuto:0.0}
   ],
 };
-const ENERGIE_HUIDIGE_MAAND_2026 = 8; // t/m deze maand zijn 2026-cijfers werkelijk; erna staan Robs eigen prognose-cijfers uit de sheet
+const ENERGIE_HUIDIGE_MAAND_2026 = 8; // t/m deze maand zijn 2026-cijfers werkelijk; erna staan Robs eigen prognosecijfers uit de sheet
 function energieLaatsteJaarMaand(){
   // Aanname: het laatste jaar in ENERGIE_JAREN is het lopende jaar; pas ENERGIE_HUIDIGE_MAAND_2026 aan bij een jaarwissel.
   const jaar = ENERGIE_JAREN[ENERGIE_JAREN.length-1];
   const maandNr = jaar==='2026' ? ENERGIE_HUIDIGE_MAAND_2026 : 12;
   return {jaar, maandNr};
 }
-function energieHuidigTarief(veld){
+function energieLaatsteFactuurMaand(){
+  // De laatst WERKELIJK AFGEREKENDE maand — niet de lopende Excel-maand, niet een prognose/termijnfactuur-
+  // voorschot. Gas/stroom worden doorgaans een maand achteraf afgerekend (zie de Frank Energie-termijnfactuur:
+  // "werkelijke kosten" daarin slaat op de maand vóór de factuurmaand — "betaald voor" is een vooruitbetaling
+  // en telt niet als afgerekend tarief). Daarom: altijd één maand terug t.o.v. de lopende maand.
   const {jaar, maandNr} = energieLaatsteJaarMaand();
+  if(maandNr>1) return {jaar, maandNr: maandNr-1};
+  const idx = ENERGIE_JAREN.indexOf(jaar)-1;
+  if(idx<0) return {jaar, maandNr:1};
+  return {jaar: ENERGIE_JAREN[idx], maandNr:12};
+}
+function energieHuidigTarief(veld){
+  const {jaar, maandNr} = energieLaatsteFactuurMaand();
   return ENERGIE_DATA[jaar][maandNr-1][veld];
 }
 function energieFixedRest(jaar, maandNr){
@@ -844,6 +855,26 @@ function energieFixedRest(jaar, maandNr){
   const varGas = r.gas * r.tariefGas;
   const varStroom = r.stroomBetalen * r.tariefStroom;
   return r.totaal - varGas - varStroom;
+}
+const ENERGIE_LEVERANCIER_PROGNOSE_GAS = {
+  '2026-9': 0.782, // Frank Energie termijnfactuur 26513013 (11-08-2026): "Verwachte kosten sep", 30 m³ à €0,782/m³ excl. BTW
+};
+function energieMaandBedragPrognose(jaar, maandNr){
+  // Betere prognose voor een individuele toekomstige maand (i.p.v. Robs Excel-placeholder, die voor sep-dec
+  // gewoon een kopie van dezelfde kalendermaand vorig jaar is). Zelfde aanpak als energiePrognoseMaand():
+  // 3-jaars gemiddeld verbruik x tarief + 3-jaars gemiddelde vaste/overige kosten. Verschil: voor gas gebruiken
+  // we, wanneer een leverancier al een concrete voorschot-/termijnprognose heeft gepubliceerd (bv. Frank
+  // Energie's "verwachte kosten sep" op de factuur), dat specifieke tarief — dat is voor een toekomstige maand
+  // een preciezere bron dan simpelweg het laatst-gefactureerde (voorbije) tarief laten doorlopen.
+  const jaren3 = ENERGIE_JAREN.slice(-3);
+  const gasAvg = jaren3.reduce((s,j)=>s+ENERGIE_DATA[j][maandNr-1].gas,0)/jaren3.length;
+  const stroomAvg = jaren3.reduce((s,j)=>s+ENERGIE_DATA[j][maandNr-1].stroomBetalen,0)/jaren3.length;
+  const fixedAvg = jaren3.reduce((s,j)=>s+energieFixedRest(j,maandNr),0)/jaren3.length;
+  const sleutel = jaar+'-'+maandNr;
+  const tGas = ENERGIE_LEVERANCIER_PROGNOSE_GAS[sleutel] !== undefined ? ENERGIE_LEVERANCIER_PROGNOSE_GAS[sleutel] : energieHuidigTarief('tariefGas');
+  const tStroom = energieHuidigTarief('tariefStroom');
+  const gasBron = ENERGIE_LEVERANCIER_PROGNOSE_GAS[sleutel] !== undefined ? 'leverancier' : 'laatste factuur';
+  return { bedrag: fixedAvg + gasAvg*tGas + stroomAvg*tStroom, tGas, tStroom, gasBron };
 }
 function energiePrognoseMaand(maandNr){
   // Vervangt het oude platte 3-jaars gemiddelde van de TOTAALKOSTEN (dat oude, inmiddels achterhaalde tarieven
@@ -916,7 +947,12 @@ let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 
 let overridesLoaded = false;
 let overridesSource = 'fallback'; // wordt 'live' zodra de Supabase-fetch is gelukt
 let laatsteLiveTxDatum = null; // meest recente datum uit live tx_rabo/tx_ing-rijen in Supabase (null = nog geen live tx geladen)
-const DASHBOARD_VERSION = '2026-08-20h - Jaartegels in Energie-tab herbouwd op Robs precisering (screenshot): (1) De 3 statkaarten bovenaan (Totaal/Gemiddelde/T.o.v. vorig jaar) tonen nu ALTIJD het lopende jaar en veranderen niet meer mee met een getikte jaartegel — nieuwe helper energieWerkelijkTM(jaar) + expliciete huidigJaar-variabele losgetrokken van de "actieve" jaar-variabele. (2) Jaartegels tonen dichtgeklapt alleen het jaartal (geen Totaal/Gem-mnd meer zichtbaar zonder te tikken). (3) Tikken opent de tegel als accordion mét volledige jaargegevens: totaal, gem/mnd, gas-, electra-, opgewekt-, teruggeleverd- en auto-verbruik-totalen, gemiddeld tarief gas/stroom, en Grid Rewards indien aanwezig. (4) De getikte jaartegel bepaalt nu ook welk jaar de grafiek ("Verloop per maand") en de maanddetail-lijst eronder tonen — nogmaals tikken op dezelfde tegel sluit hem en valt terug op het lopende jaar (energieJaarSelectie=null), precies zoals gevraagd.';
+const DASHBOARD_VERSION = '2026-08-21a - GROTE correctie in de Energie-tab: samen met Rob (via zijn Excel-formulebalk, meerdere screenshots) de daadwerkelijke bug in "Variabelen kosten stroom" gevonden. Excel netterde eerst Electra min Teruggeleverd stroom in kWh en vermenigvuldigde dat pas met één Tarief Stroom — waardoor teruggeleverde stroom impliciet tegen het dure inkooptarief werd gecrediteerd i.p.v. het echte (lagere) productietarief. Juiste formule: Electra x Tarief Stroom − Teruggeleverd stroom x Productie stroom tarief (twee aparte bruto stromen, elk tegen zijn eigen tarief, dan pas verrekenen). ALLE 4 jaren (2023-2026) in ENERGIE_DATA herberekend met deze formule rechtstreeks uit Robs Energie.xlsx-brondata (Gas.1-formule voor gas bleek al wel correct en is ongewijzigd; alleen Stroom/Totaal aangepast). Juli 2026 extra gecorrigeerd met de al eerder vastgestelde echte factuurtarieven (0,718 gas / 0,2133 stroom, i.p.v. Excels stale kopie van juli 2025) plus Grid Rewards (€2,26). Concrete verschillen 2026: jun €166,99→€192,26, jul €105,03→€143,05 (met tariefcorrectie), aug €98,13→€124,88. Nutsvoorzieningen-prognose (energiePrognoseMaand, via energieHuidigTarief/energieFixedRest) verschuift daardoor mee: aug €131,16→€150,81, sep €220,05→€229,33. Rob past dezelfde formule ook zelf in zijn eigen Excel aan.';
+const DASHBOARD_VERSION_PREV_2026_08_20l = '2026-08-20l - Betere maand-prognose in de Energie-tab (op Robs verzoek, i.p.v. Excels naïeve "kopie van vorig jaar"). Nieuwe energieMaandBedragPrognose(jaar,maandNr): 3-jaars gemiddeld verbruik x tarief (zelfde aanpak als energiePrognoseMaand), met als toevoeging ENERGIE_LEVERANCIER_PROGNOSE_GAS — voor sep 2026 gebruiken we Frank Energie eigen "verwachte kosten sep" (€0,782/m³, uit de termijnfactuur) i.p.v. het laatst-gefactureerde tarief, want dat is voor een toekomstige maand een preciezere bron. Resultaat sep: €221,58 (Excel-kopie van sep 2025 was €178,70 — een flink verschil, vooral door de sindsdien gestegen gastarieven). Prognosemaanden tonen nu in de tegel duidelijk "Schatting — niet de kopie van de maand vorig jaar" plus in het uitgeklapte deel een uitlegblok met de gebruikte tarieven en de bron (leverancier vs. laatste factuur); tegelrand is dashed voor prognosemaanden. Ook Robs reconciliatie-vraag beantwoord: electra (Tibber, juli) reken ik volledig na — €25,86 excl. afrondingsverschil, klopt met de €25,87 op de factuur. Gas kan ik niet volledig natellen: de Frank Energie-termijnfactuur toont alleen julis variabele gaskosten en septembers vaste kosten, nooit beide voor dezelfde maand — dus geen volledige juli-gasfactuur beschikbaar om Excels totaal tegen af te zetten.';
+const DASHBOARD_VERSION_PREV_2026_08_20k = '2026-08-20k - Op Robs verzoek: grafieken in de Energie-tab tonen voortaan uitsluitend echte, afgesloten maanden — nooit Robs eigen prognosecijfers. Nieuwe helper energieWerkelijkeSerie(jaar, veld) kapt een jaarreeks af bij energieWerkelijkTM(jaar) i.p.v. altijd 12 maanden te nemen; energieAlleTariefSeries() gebruikt die helper nu ook. Toegepast op: de "Verloop per maand"-grafiek (voorheen incl. sep-dec-prognose voor 2026, nu alleen t/m aug), de 2-lijns vergelijkingsgrafiek (beide series afgekapt op de kortste van de twee, dus altijd uitgelijnd zonder prognose), en de tarief-trendgrafieken (de decembersprong naar €0,27/kWh — Robs eigen prognosecijfer — is nu weg). Maandtegels/-lijst blijven wel alle 12 maanden tonen met het "(prognose)"-label, want dat is expliciet gemarkeerd; alleen de grafieklijnen zelf verbergen prognose nu volledig.';
+const DASHBOARD_VERSION_PREV_2026_08_20j = '2026-08-20j - Tarief gas/stroom voor juli 2026 in ENERGIE_DATA gecorrigeerd op basis van de daadwerkelijke facturen (Frank Energie 26513013 + Tibber 1328774), na Robs vraag "wat zijn de tarieven voor juli" — bleek dat Excel een afwijkende waarde had. Gas: "Werkelijke kosten jul" 7 m³ à €0,718/m³ excl. BTW (was 0,543 — Excel week hier ~32% van af). Stroom: opgeteld uit de 3 variabele-kosten-regels van de Tibber-specificatie (stroomverbruik 10,12 + inkoopvergoeding 2,05 + energiebelasting 9,16 ct/kWh = €0,2133/kWh excl. BTW; was 0,2246 — Grid Rewards/teruglevering bewust NIET meegeteld, dat zijn geen verbruikstarieven). Effect: omdat energieHuidigTarief() voor de Nutsvoorzieningen-prognose precies dit laatst-gefactureerde tarief (juli) gebruikt, zijn aug/sep opnieuw licht bijgesteld: aug €131,16 (was €129,70), sep €220,05 (was €220,40). Rob kan zijn Excel-kolom "Tarief Gas/Stroom" voor juli nakijken — de factuur is nu leidend, niet de sheet.';
+const DASHBOARD_VERSION_PREV_2026_08_20i = '2026-08-20i - "Laatste tarief" gecorrigeerd op Robs aanwijzing (n.a.v. de Frank Energie-termijnfactuur): dit moet de laatst WERKELIJK AFGEREKENDE maand zijn, niet de lopende Excel-maand (die deels nog een inschatting kan zijn) en zeker niet een termijnfactuur-prognose of vooruitbetaling. Nieuwe functie energieLaatsteFactuurMaand() pakt altijd één maand terug t.o.v. de lopende maand (gas/stroom worden doorgaans een maand achteraf afgerekend — de factuur zelf toont dit expliciet: "werkelijke kosten jul" vs "verwachte kosten sep" vs "betaald voor jul"). Toegepast op zowel de "Tarief gas/stroom"-tegels (label nu "laatste factuur, jul" i.p.v. "laatst bekend") als op energieHuidigTarief(), die de Nutsvoorzieningen-prognose voedt — dus energiePrognoseMaand() gebruikt nu ook het echte laatst-afgerekende tarief i.p.v. de lopende-maand-waarde. Sep-prognose daardoor licht bijgesteld: €220,40 (was €216,23).';
+const DASHBOARD_VERSION_PREV_2026_08_20h = '2026-08-20h - Jaartegels in Energie-tab herbouwd op Robs precisering (screenshot): (1) De 3 statkaarten bovenaan (Totaal/Gemiddelde/T.o.v. vorig jaar) tonen nu ALTIJD het lopende jaar en veranderen niet meer mee met een getikte jaartegel — nieuwe helper energieWerkelijkTM(jaar) + expliciete huidigJaar-variabele losgetrokken van de "actieve" jaar-variabele. (2) Jaartegels tonen dichtgeklapt alleen het jaartal (geen Totaal/Gem-mnd meer zichtbaar zonder te tikken). (3) Tikken opent de tegel als accordion mét volledige jaargegevens: totaal, gem/mnd, gas-, electra-, opgewekt-, teruggeleverd- en auto-verbruik-totalen, gemiddeld tarief gas/stroom, en Grid Rewards indien aanwezig. (4) De getikte jaartegel bepaalt nu ook welk jaar de grafiek ("Verloop per maand") en de maanddetail-lijst eronder tonen — nogmaals tikken op dezelfde tegel sluit hem en valt terug op het lopende jaar (energieJaarSelectie=null), precies zoals gevraagd.';
 const DASHBOARD_VERSION_PREV_2026_08_20g = '2026-08-20g - Op Robs verzoek écht gebouwd: Nutsvoorzieningen-prognose in Volgende/Lopende maand gebruikt niet langer een bevroren 3-jaars gemiddelde van de totaalkosten, maar een nieuwe dynamische functie energiePrognoseMaand(maandNr). Model: (1) splits per historische maand de kosten in een tariefgevoelig deel (gas m³ x tariefGas, netto stroom kWh x tariefStroom via de "Totaal Stroom betalen"-kolom) en een resterend, relatief stabiel deel (netbeheer/vaste levering/vast energiebelastingdeel — energieFixedRest()); (2) neem het 3-jaars gemiddelde (laatste 3 jaar in ENERGIE_JAREN) van gasverbruik, netto stroomverbruik en dat vaste restbedrag voor de betreffende kalendermaand; (3) prijs het verbruiksdeel tegen het HUIDIGE tarief (energieHuidigTarief(), laatst bekende maand) i.p.v. het historische gemiddelde tarief. Reden: energie is een "grote" vaste-lastenpost en de prijs beweegt momenteel veel, dus dit reageert automatisch mee zodra ENERGIE_DATA een nieuw tarief krijgt — geen handmatige herberekening meer nodig zoals eerder deze week. Geverifieerd (Node, losstaand van de UI): aug 129,70 (was 125,51 met het oude model), sep 216,23 (was 211,18) — vergelijkbare orde van grootte, maar nu tariefbewust. Energie-tab-footer bijgewerkt: de oude "geen invloed op de rest van het dashboard"-disclaimer is verwijderd, klopt niet meer.';
 const DASHBOARD_VERSION_PREV_2026_08_20f = '2026-08-20f - UI-fixes in Energie-tab op Robs feedback (screenshots): (1) Tarief-tegels overflowden op mobiel — bleek dat mijn inline style="grid-template-columns:1fr 1fr" op de hero-wrapper de responsieve @media-regel overschreef (inline wint altijd van een media-query op dezelfde class), dus de tegels bleven geforceerd naast elkaar staan i.p.v. onder elkaar op smalle schermen. Inline override weggehaald (gewoon class="hero", zelfde als de rest van de app). Cijfers zelf ook kleiner gezet (20px i.p.v. de standaard 30px stat-figure) zodat "€0,215/kWh" nooit meer afkapt. (2) Tarief-tegels zijn nu net als de maandtegels tik-om-te-tonen: de trendgrafiek verschijnt pas na tikken op de tegel (energieTariefExpand), niet meer altijd zichtbaar. (3) Trendgrafiek beperkt tot de laatste 2 jaar (2025-2026) i.p.v. alle 4 — duidelijker voor Robs eigenlijke doel (contractkeuzes maken o.b.v. het recente verloop). (4) Nieuwe jaartegels (tik om te selecteren) vervangen de oude jaartotalen-bar-list + aparte tab-rij: elke tegel toont het jaar, totaal en gemiddelde prijs per maand, en fungeert tegelijk als de jaarselector (dezelfde data-energie-jaar-click-handler hergebruikt).';
 const DASHBOARD_VERSION_PREV_2026_08_20e = '2026-08-20e - 3 dingen op Robs verzoek in de Energie-tab. (1) "Stroom auto" bleek al gewoon in de Excel te staan (kolom bestaat sinds 2023, heette dat jaar nog "Auto") — ENERGIE_DATA uitgebreid met stroomAuto per maand voor alle 4 jaren, rechtstreeks uit de sheet. Het handmatige invulveld van vorige sessie is niet weggehaald maar omgezet naar wat het hoort te zijn: een correctie/aanvulling voor maanden waar de sheet nog 0/leeg toont (bv. 2025 jul-dec en 2026 sep-dec), niet de primaire bron. (2) Maandenlijst herbouwd van een altijd-volledig-uitgeklapte bar-list naar echte tegels zoals de rest van de app (data-energie-maand-toggle, single-open accordion via energieMaandExpand) — dichtgeklapt toont alleen maand+totaal, tikken klapt alle details (gas/electra/opgewekt/teruggeleverd/tarieven/Grid Rewards/auto verbruik) onder elkaar open. (3) Nieuwe "Prijs per eenheid"-kaarten: 2 statcijfers (laatst bekende tarief gas €/m³ en stroom €/kWh) plus 2 losse trendgrafieken over alle 48 maanden (2023-2026) van tariefGas en tariefStroom apart (niet gecombineerd i.v.m. sterk verschillende schaal) — op Robs verzoek met het oog op toekomstige energiecontract-keuzes.';
@@ -5048,11 +5084,17 @@ function renderTweeLijnenChart(seriesA, seriesB, labelA, labelB){
     </g>
   </svg>`;
 }
-function energieAlleTariefSeries(veld, jaren){
-  return (jaren||ENERGIE_JAREN).flatMap(j => ENERGIE_DATA[j].map(r=>r[veld]));
-}
 function energieWerkelijkTM(jaar){
   return jaar===ENERGIE_JAREN[ENERGIE_JAREN.length-1] ? ENERGIE_HUIDIGE_MAAND_2026 : 12;
+}
+function energieWerkelijkeSerie(jaar, veld){
+  // Alleen echte, afgesloten maanden — nooit Robs eigen prognosecijfers voor de nog niet verstreken maanden.
+  const tm = energieWerkelijkTM(jaar);
+  return ENERGIE_DATA[jaar].slice(0, tm).map(r=>r[veld]);
+}
+function energieAlleTariefSeries(veld, jaren){
+  // Alleen echte cijfers — voor het lopende jaar wordt afgekapt bij de laatst afgesloten maand, geen prognose.
+  return (jaren||ENERGIE_JAREN).flatMap(j => energieWerkelijkeSerie(j, veld));
 }
 function renderEnergieView(){
   const huidigJaar = ENERGIE_JAREN[ENERGIE_JAREN.length-1]; // "lopende jaar" — bepaalt altijd de bovenste statkaarten, ongeacht welke jaartegel is getikt
@@ -5071,13 +5113,20 @@ function renderEnergieView(){
   const vsVorigJaarPct = (vsVorigJaar!=null && energieJaarTotaal(ENERGIE_JAREN[vorigeIndexHuidig], werkelijkTMHuidig)>0)
     ? (vsVorigJaar / energieJaarTotaal(ENERGIE_JAREN[vorigeIndexHuidig], werkelijkTMHuidig) * 100) : null;
 
-  const seriesTotaal = recs.map(r=>r.totaal);
+  const seriesTotaal = energieWerkelijkeSerie(jaar, 'totaal'); // alleen echte maanden, geen prognose in de grafiek
   const vergelijkJaar = energieVergelijkJaar;
-  const chart = vergelijkJaar
-    ? renderTweeLijnenChart(seriesTotaal, ENERGIE_DATA[vergelijkJaar].map(r=>r.totaal), jaar, vergelijkJaar)
-    : renderVermogenChart(seriesTotaal, 'vGradEnergie'+jaar);
+  let chart, chartMaandLabels;
+  if(vergelijkJaar){
+    const seriesVergelijk = energieWerkelijkeSerie(vergelijkJaar, 'totaal');
+    const minLen = Math.min(seriesTotaal.length, seriesVergelijk.length); // beide alleen echte maanden, uitgelijnd op de kortste
+    chart = renderTweeLijnenChart(seriesTotaal.slice(0,minLen), seriesVergelijk.slice(0,minLen), jaar, vergelijkJaar);
+    chartMaandLabels = MAAND_KORT_NL.slice(0,minLen);
+  } else {
+    chart = renderVermogenChart(seriesTotaal, 'vGradEnergie'+jaar);
+    chartMaandLabels = MAAND_KORT_NL.slice(0, seriesTotaal.length);
+  }
   const maandAsHtml = `<div style="display:flex;justify-content:space-between;margin-top:2px;">
-    ${MAAND_KORT_NL.map((m,i)=>`<span style="font-size:10px;color:var(--muted);${(isHuidigJaar && i>=werkelijkTM)?'font-style:italic;':''}">${m}</span>`).join('')}
+    ${chartMaandLabels.map(m=>`<span style="font-size:10px;color:var(--muted);">${m}</span>`).join('')}
   </div>`;
   const vergelijkTabsHtml = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
     <span style="font-size:12px;color:var(--muted);align-self:center;">Vergelijk met:</span>
@@ -5090,8 +5139,9 @@ function renderEnergieView(){
   const tariefJaren = ENERGIE_JAREN.slice(-2);
   const tariefGasSeries = energieAlleTariefSeries('tariefGas', tariefJaren);
   const tariefStroomSeries = energieAlleTariefSeries('tariefStroom', tariefJaren);
-  const laatsteTariefGas = ENERGIE_DATA[huidigJaar][werkelijkTMHuidig-1].tariefGas;
-  const laatsteTariefStroom = ENERGIE_DATA[huidigJaar][werkelijkTMHuidig-1].tariefStroom;
+  const laatsteFactuur = energieLaatsteFactuurMaand();
+  const laatsteTariefGas = ENERGIE_DATA[laatsteFactuur.jaar][laatsteFactuur.maandNr-1].tariefGas;
+  const laatsteTariefStroom = ENERGIE_DATA[laatsteFactuur.jaar][laatsteFactuur.maandNr-1].tariefStroom;
   const tariefAsHtml = `<div style="display:flex;justify-content:space-between;margin-top:2px;">
     ${tariefJaren.map(j=>`<span style="font-size:10px;color:var(--muted);">${j}</span>`).join('')}
   </div>`;
@@ -5145,19 +5195,26 @@ function renderEnergieView(){
     const autoIsOverride = energieAutoOverrides[jm] != null;
     const autoWaarde = autoIsOverride ? energieAutoOverrides[jm] : r.stroomAuto;
     const autoEditing = energieAutoEditOpen === jm;
+    const verbeterd = prognose ? energieMaandBedragPrognose(jaar, i+1) : null;
+    const weergaveBedrag = prognose ? verbeterd.bedrag : r.totaal;
     const detailRegel = (label, val) => `<div style="display:flex;justify-content:space-between;"><span>${label}</span><span>${val}</span></div>`;
-    return `<div class="card" data-energie-maand-toggle="${jm}" style="cursor:pointer;margin-bottom:8px;">
+    return `<div class="card" data-energie-maand-toggle="${jm}" style="cursor:pointer;margin-bottom:8px;${prognose?'border-style:dashed;':''}">
       <div style="display:flex;justify-content:space-between;align-items:baseline;">
-        <span style="font-weight:600;">${MAAND_KORT_NL[i]}${prognose?' <span style="color:var(--muted);font-size:11px;">(prognose)</span>':''}</span>
-        <span style="display:flex;align-items:center;gap:8px;"><span class="bar-amt">${fmt(r.totaal)}</span><span style="color:var(--muted);font-size:12px;">${expanded?'▾':'▸'}</span></span>
+        <span style="font-weight:600;">${MAAND_KORT_NL[i]}${prognose?' <span style="color:var(--brass);font-size:11px;">(prognose)</span>':''}</span>
+        <span style="display:flex;align-items:center;gap:8px;"><span class="bar-amt">${fmt(weergaveBedrag)}</span><span style="color:var(--muted);font-size:12px;">${expanded?'▾':'▸'}</span></span>
       </div>
+      ${prognose ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">Schatting — niet de kopie van ${MAAND_KORT_NL[i]} vorig jaar die in je Excel staat (${fmt(r.totaal)})</div>` : ''}
       ${expanded ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);">
-        ${detailRegel('Gas', r.gas.toLocaleString('nl-NL')+' m³')}
-        ${detailRegel('Electra verbruikt', r.electra.toLocaleString('nl-NL')+' kWh')}
-        ${detailRegel('Opgewekt', r.opgewekt.toLocaleString('nl-NL')+' kWh')}
-        ${detailRegel('Teruggeleverd', r.teruggeleverd.toLocaleString('nl-NL')+' kWh')}
-        ${detailRegel('Tarief gas', '€'+r.tariefGas.toFixed(3)+'/m³')}
-        ${detailRegel('Tarief stroom', '€'+r.tariefStroom.toFixed(3)+'/kWh')}
+        ${prognose ? `<div style="background:rgba(201,162,39,0.08);border:1px solid var(--brass-dim);border-radius:8px;padding:8px;margin-bottom:2px;">
+          <div style="color:var(--brass);font-weight:600;margin-bottom:4px;">Prognose — hoe dit bedrag tot stand komt</div>
+          <div>Dit is géén kopie van ${MAAND_KORT_NL[i]} ${Number(jaar)-1} (dat stond in je Excel: ${fmt(r.totaal)}). In plaats daarvan: 3-jaars gemiddeld verbruik voor deze kalendermaand, geprijsd tegen ${verbeterd.gasBron==='leverancier'?'de expliciete leveranciersprognose':'het laatst-gefactureerde tarief'} voor gas (€${verbeterd.tGas.toFixed(3)}/m³) en het laatst-gefactureerde tarief voor stroom (€${verbeterd.tStroom.toFixed(3)}/kWh).</div>
+        </div>` : ''}
+        ${detailRegel('Gas'+(prognose?' (3-jaars gem.)':''), r.gas.toLocaleString('nl-NL')+' m³')}
+        ${detailRegel('Electra verbruikt'+(prognose?' (3-jaars gem.)':''), r.electra.toLocaleString('nl-NL')+' kWh')}
+        ${detailRegel('Opgewekt'+(prognose?' (3-jaars gem.)':''), r.opgewekt.toLocaleString('nl-NL')+' kWh')}
+        ${detailRegel('Teruggeleverd'+(prognose?' (3-jaars gem.)':''), r.teruggeleverd.toLocaleString('nl-NL')+' kWh')}
+        ${detailRegel('Tarief gas'+(prognose?' (gebruikt in prognose)':''), '€'+(prognose?verbeterd.tGas:r.tariefGas).toFixed(3)+'/m³')}
+        ${detailRegel('Tarief stroom'+(prognose?' (gebruikt in prognose)':''), '€'+(prognose?verbeterd.tStroom:r.tariefStroom).toFixed(3)+'/kWh')}
         ${r.gridRewards ? `<div style="display:flex;justify-content:space-between;color:var(--dot-ok);"><span>Grid Rewards ontvangen</span><span>${fmt(r.gridRewards)}</span></div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span>Auto verbruik (stroom)${autoIsOverride?' <span style="font-size:11px;">(handmatig)</span>':''}</span>
@@ -5203,7 +5260,7 @@ function renderEnergieView(){
     <div class="hero" style="margin-top:16px;">
       <div class="card" data-energie-tarief-toggle="gas" style="cursor:pointer;">
         <div style="display:flex;justify-content:space-between;align-items:baseline;">
-          <div class="card-label">Tarief gas (laatst bekend)</div>
+          <div class="card-label">Tarief gas (laatste factuur, ${MAAND_KORT_NL[laatsteFactuur.maandNr-1]})</div>
           <span style="color:var(--muted);font-size:12px;">${energieTariefExpand.gas?'▾':'▸'}</span>
         </div>
         <div class="stat-figure" style="font-size:20px;">€${laatsteTariefGas.toFixed(3)}/m³</div>
@@ -5215,7 +5272,7 @@ function renderEnergieView(){
       </div>
       <div class="card" data-energie-tarief-toggle="stroom" style="cursor:pointer;">
         <div style="display:flex;justify-content:space-between;align-items:baseline;">
-          <div class="card-label">Tarief stroom (laatst bekend)</div>
+          <div class="card-label">Tarief stroom (laatste factuur, ${MAAND_KORT_NL[laatsteFactuur.maandNr-1]})</div>
           <span style="color:var(--muted);font-size:12px;">${energieTariefExpand.stroom?'▾':'▸'}</span>
         </div>
         <div class="stat-figure" style="font-size:20px;">€${laatsteTariefStroom.toFixed(3)}/kWh</div>
@@ -5232,7 +5289,7 @@ function renderEnergieView(){
       ${rows}
     </div>
 
-    <footer>Bron: je eigen Energie.xlsx (tabs 2023–2026), verwerkt 20-08-2026. "Totaal" is de volledige energiekosten die maand (gas + stroom, na teruggeleverd/opgewekt-verrekening) — dit blijft los van Auto verbruik. ${isHuidigJaar?`2026 t/m ${MAAND_KORT_NL[werkelijkTM-1]} is werkelijk; sep–dec staat op jouw eigen prognosecijfers uit de sheet.`:''} De statkaarten bovenaan tonen altijd het lopende jaar (${huidigJaar}), ongeacht welke jaartegel is opengeklapt. Grid Rewards staat als losse groene regel bij de maand waarin hij voorkomt — telt al mee in het "Totaal" (zat al verrekend in de Tibber-nota), dus geen dubbeltelling. Auto verbruik (kWh, stroom via thuisladen) komt uit de "Stroom auto"-kolom in je Excel; het invulveld is puur een handmatige correctie/aanvulling voor maanden waar de sheet nog 0 of leeg toont — telt niet mee in "Totaal". Tarief gas/stroom komt rechtstreeks uit dezelfde sheet, per maand; de trendgrafiek toont de laatste 2 jaar. Deze tarieven voeden nu ook de Nutsvoorzieningen-prognose in Volgende/Lopende maand (energiePrognoseMaand()): seizoensgebonden verbruik x huidig tarief, i.p.v. het oude platte 3-jaars kostengemiddelde.</footer>
+    <footer>Bron: je eigen Energie.xlsx (tabs 2023–2026), verwerkt 20-08-2026. "Totaal" is de volledige energiekosten die maand (gas + stroom, na teruggeleverd/opgewekt-verrekening) — dit blijft los van Auto verbruik. ${isHuidigJaar?`2026 t/m ${MAAND_KORT_NL[werkelijkTM-1]} is werkelijk; sep–dec staat op jouw eigen prognosecijfers uit de sheet (wel zichtbaar in de maandtegels hieronder, NIET in de grafieken).`:''} Alle grafieken op deze tab tonen uitsluitend echte, afgesloten maanden — Robs eigen prognosecijfers voor de nog niet verstreken maanden worden er nooit in meegenomen. De statkaarten bovenaan tonen altijd het lopende jaar (${huidigJaar}), ongeacht welke jaartegel is opengeklapt. Grid Rewards staat als losse groene regel bij de maand waarin hij voorkomt — telt al mee in het "Totaal" (zat al verrekend in de Tibber-nota), dus geen dubbeltelling. Auto verbruik (kWh, stroom via thuisladen) komt uit de "Stroom auto"-kolom in je Excel; het invulveld is puur een handmatige correctie/aanvulling voor maanden waar de sheet nog 0 of leeg toont — telt niet mee in "Totaal". Tarief gas/stroom komt rechtstreeks uit dezelfde sheet, per maand; de trendgrafiek toont de laatste 2 jaar (alleen echte maanden). Deze tarieven voeden nu ook de Nutsvoorzieningen-prognose in Volgende/Lopende maand (energiePrognoseMaand()): seizoensgebonden verbruik x huidig tarief, i.p.v. het oude platte 3-jaars kostengemiddelde.</footer>
   `;
 }
 
