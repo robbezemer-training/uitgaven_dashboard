@@ -947,7 +947,9 @@ let bucketSelection = new Set(); // tijdelijke selectie (niet bewaard) — stap 
 let overridesLoaded = false;
 let overridesSource = 'fallback'; // wordt 'live' zodra de Supabase-fetch is gelukt
 let laatsteLiveTxDatum = null; // meest recente datum uit live tx_rabo/tx_ing-rijen in Supabase (null = nog geen live tx geladen)
-const DASHBOARD_VERSION = '2026-08-21a - GROTE correctie in de Energie-tab: samen met Rob (via zijn Excel-formulebalk, meerdere screenshots) de daadwerkelijke bug in "Variabelen kosten stroom" gevonden. Excel netterde eerst Electra min Teruggeleverd stroom in kWh en vermenigvuldigde dat pas met één Tarief Stroom — waardoor teruggeleverde stroom impliciet tegen het dure inkooptarief werd gecrediteerd i.p.v. het echte (lagere) productietarief. Juiste formule: Electra x Tarief Stroom − Teruggeleverd stroom x Productie stroom tarief (twee aparte bruto stromen, elk tegen zijn eigen tarief, dan pas verrekenen). ALLE 4 jaren (2023-2026) in ENERGIE_DATA herberekend met deze formule rechtstreeks uit Robs Energie.xlsx-brondata (Gas.1-formule voor gas bleek al wel correct en is ongewijzigd; alleen Stroom/Totaal aangepast). Juli 2026 extra gecorrigeerd met de al eerder vastgestelde echte factuurtarieven (0,718 gas / 0,2133 stroom, i.p.v. Excels stale kopie van juli 2025) plus Grid Rewards (€2,26). Concrete verschillen 2026: jun €166,99→€192,26, jul €105,03→€143,05 (met tariefcorrectie), aug €98,13→€124,88. Nutsvoorzieningen-prognose (energiePrognoseMaand, via energieHuidigTarief/energieFixedRest) verschuift daardoor mee: aug €131,16→€150,81, sep €220,05→€229,33. Rob past dezelfde formule ook zelf in zijn eigen Excel aan.';
+const DASHBOARD_VERSION = '2026-08-21c - Twee dingen op Robs verzoek. (1) Energie-tab: tarief gas/stroom-tegels zijn nu écht single-open accordion (energieTariefExpand: was een object met 2 losse booleans, nu 1 waarde \'gas\'/\'stroom\'/null) — openen van de een sluit de ander automatisch, was voorheen los van elkaar. (2) Homescreen-tegels herschikt naar een logische 5/5-indeling (kon nu gelijk met de nieuwe Energie-tegel): Lopende maand en Casa 3S (de twee belangrijkste, Robs eigen prioriteit) staan allebei bovenaan hun kolom zodat ze naast elkaar in de top-rij staan; Vermogen en Reizen erna. Links: Lopende maand, Vermogen, Salaris, Hypotheek, Volgende maand. Rechts: Casa 3S, Reizen, Te bevestigen, Vorige maand, Energie.';
+const DASHBOARD_VERSION_PREV_2026_08_21b = '2026-08-21b - Op Robs verzoek: "Verloop per maand"-grafiek is nu ook een tik-om-te-tonen tegel (energieChartExpand), consistent met de tarief-tegels en maandtegels — alle grafieken in de Energie-tab werken nu hetzelfde. Overbodige tekst weggehaald: de vaste prognose-uitlegregel die altijd onder een dichtgeklapte maandtegel stond is weg (staat nu alleen nog, sterk verkort, in de opengeklapte tegel); het uitgebreide "hoe dit bedrag tot stand komt"-blok is teruggebracht tot één regel; herhaalde suffixen als "(3-jaars gem.)" en "(gebruikt in prognose)" zijn weg; de lange footer-paragraaf is teruggebracht tot één korte zin.';
+const DASHBOARD_VERSION_PREV_2026_08_21a = '2026-08-21a - GROTE correctie in de Energie-tab: samen met Rob (via zijn Excel-formulebalk, meerdere screenshots) de daadwerkelijke bug in "Variabelen kosten stroom" gevonden. Excel netterde eerst Electra min Teruggeleverd stroom in kWh en vermenigvuldigde dat pas met één Tarief Stroom — waardoor teruggeleverde stroom impliciet tegen het dure inkooptarief werd gecrediteerd i.p.v. het echte (lagere) productietarief. Juiste formule: Electra x Tarief Stroom − Teruggeleverd stroom x Productie stroom tarief (twee aparte bruto stromen, elk tegen zijn eigen tarief, dan pas verrekenen). ALLE 4 jaren (2023-2026) in ENERGIE_DATA herberekend met deze formule rechtstreeks uit Robs Energie.xlsx-brondata (Gas.1-formule voor gas bleek al wel correct en is ongewijzigd; alleen Stroom/Totaal aangepast). Juli 2026 extra gecorrigeerd met de al eerder vastgestelde echte factuurtarieven (0,718 gas / 0,2133 stroom, i.p.v. Excels stale kopie van juli 2025) plus Grid Rewards (€2,26). Concrete verschillen 2026: jun €166,99→€192,26, jul €105,03→€143,05 (met tariefcorrectie), aug €98,13→€124,88. Nutsvoorzieningen-prognose (energiePrognoseMaand, via energieHuidigTarief/energieFixedRest) verschuift daardoor mee: aug €131,16→€150,81, sep €220,05→€229,33. Rob past dezelfde formule ook zelf in zijn eigen Excel aan.';
 const DASHBOARD_VERSION_PREV_2026_08_20l = '2026-08-20l - Betere maand-prognose in de Energie-tab (op Robs verzoek, i.p.v. Excels naïeve "kopie van vorig jaar"). Nieuwe energieMaandBedragPrognose(jaar,maandNr): 3-jaars gemiddeld verbruik x tarief (zelfde aanpak als energiePrognoseMaand), met als toevoeging ENERGIE_LEVERANCIER_PROGNOSE_GAS — voor sep 2026 gebruiken we Frank Energie eigen "verwachte kosten sep" (€0,782/m³, uit de termijnfactuur) i.p.v. het laatst-gefactureerde tarief, want dat is voor een toekomstige maand een preciezere bron. Resultaat sep: €221,58 (Excel-kopie van sep 2025 was €178,70 — een flink verschil, vooral door de sindsdien gestegen gastarieven). Prognosemaanden tonen nu in de tegel duidelijk "Schatting — niet de kopie van de maand vorig jaar" plus in het uitgeklapte deel een uitlegblok met de gebruikte tarieven en de bron (leverancier vs. laatste factuur); tegelrand is dashed voor prognosemaanden. Ook Robs reconciliatie-vraag beantwoord: electra (Tibber, juli) reken ik volledig na — €25,86 excl. afrondingsverschil, klopt met de €25,87 op de factuur. Gas kan ik niet volledig natellen: de Frank Energie-termijnfactuur toont alleen julis variabele gaskosten en septembers vaste kosten, nooit beide voor dezelfde maand — dus geen volledige juli-gasfactuur beschikbaar om Excels totaal tegen af te zetten.';
 const DASHBOARD_VERSION_PREV_2026_08_20k = '2026-08-20k - Op Robs verzoek: grafieken in de Energie-tab tonen voortaan uitsluitend echte, afgesloten maanden — nooit Robs eigen prognosecijfers. Nieuwe helper energieWerkelijkeSerie(jaar, veld) kapt een jaarreeks af bij energieWerkelijkTM(jaar) i.p.v. altijd 12 maanden te nemen; energieAlleTariefSeries() gebruikt die helper nu ook. Toegepast op: de "Verloop per maand"-grafiek (voorheen incl. sep-dec-prognose voor 2026, nu alleen t/m aug), de 2-lijns vergelijkingsgrafiek (beide series afgekapt op de kortste van de twee, dus altijd uitgelijnd zonder prognose), en de tarief-trendgrafieken (de decembersprong naar €0,27/kWh — Robs eigen prognosecijfer — is nu weg). Maandtegels/-lijst blijven wel alle 12 maanden tonen met het "(prognose)"-label, want dat is expliciet gemarkeerd; alleen de grafieklijnen zelf verbergen prognose nu volledig.';
 const DASHBOARD_VERSION_PREV_2026_08_20j = '2026-08-20j - Tarief gas/stroom voor juli 2026 in ENERGIE_DATA gecorrigeerd op basis van de daadwerkelijke facturen (Frank Energie 26513013 + Tibber 1328774), na Robs vraag "wat zijn de tarieven voor juli" — bleek dat Excel een afwijkende waarde had. Gas: "Werkelijke kosten jul" 7 m³ à €0,718/m³ excl. BTW (was 0,543 — Excel week hier ~32% van af). Stroom: opgeteld uit de 3 variabele-kosten-regels van de Tibber-specificatie (stroomverbruik 10,12 + inkoopvergoeding 2,05 + energiebelasting 9,16 ct/kWh = €0,2133/kWh excl. BTW; was 0,2246 — Grid Rewards/teruglevering bewust NIET meegeteld, dat zijn geen verbruikstarieven). Effect: omdat energieHuidigTarief() voor de Nutsvoorzieningen-prognose precies dit laatst-gefactureerde tarief (juli) gebruikt, zijn aug/sep opnieuw licht bijgesteld: aug €131,16 (was €129,70), sep €220,05 (was €220,40). Rob kan zijn Excel-kolom "Tarief Gas/Stroom" voor juli nakijken — de factuur is nu leidend, niet de sheet.';
@@ -2166,7 +2168,8 @@ let energieAutoOverrides = {}; // "YYYY-MM" -> kWh, handmatige CORRECTIE/aanvull
 let energieAutoEditOpen = null; // "YYYY-MM" van de maand die nu bewerkt wordt, of null
 let energieVergelijkJaar = null; // jaar waarmee de trendgrafiek wordt vergeleken (overlay), of null = geen vergelijking
 let energieMaandExpand = null; // "YYYY-MM" van de opengeklapte maandtegel in de Energie-tab, of null (single-open accordion, zoals de rest van de app)
-let energieTariefExpand = {gas:false, stroom:false}; // toont de trendgrafiek pas na tikken op de tarief-tegel zelf
+let energieTariefExpand = null; // 'gas' | 'stroom' | null — single-open accordion, tikken op de ander sluit de eerste
+let energieChartExpand = false; // toont "Verloop per maand"-grafiek pas na tikken op die tegel
 let salarisJaarExpand = null; // welke jaar-tegel in Salaris (Rob) is uitgeklapt, of null
 let hypotheekGekozenDelen = []; // array van DELEN_META-indices die de gebruiker handmatig heeft aangevinkt om vervroegd af te lossen (alleen de 7 niet-aflossingsvrije delen komen in aanmerking)
 let hypotheekJaarExpand = null; // welke jaar-tegel in Hypotheek is uitgeklapt, of null
@@ -4681,8 +4684,8 @@ const SECTIONS = [
   {id:'energie', label:'Energie', icon:'energie', accent:'var(--c-nuts)'},
 ];
 const HOME_TILE_COLUMNS = {
-  left: ['salaris','hypotheek','volgende','vorige'],
-  right: ['tebevestigen','afgelopen','vermogen','casaproject','reizen','energie'],
+  left: ['afgelopen','vermogen','salaris','hypotheek','volgende'],
+  right: ['casaproject','reizen','tebevestigen','vorige','energie'],
 };
 function sectionIcon(key){
   const svgOpen = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
@@ -5203,18 +5206,14 @@ function renderEnergieView(){
         <span style="font-weight:600;">${MAAND_KORT_NL[i]}${prognose?' <span style="color:var(--brass);font-size:11px;">(prognose)</span>':''}</span>
         <span style="display:flex;align-items:center;gap:8px;"><span class="bar-amt">${fmt(weergaveBedrag)}</span><span style="color:var(--muted);font-size:12px;">${expanded?'▾':'▸'}</span></span>
       </div>
-      ${prognose ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">Schatting — niet de kopie van ${MAAND_KORT_NL[i]} vorig jaar die in je Excel staat (${fmt(r.totaal)})</div>` : ''}
       ${expanded ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);">
-        ${prognose ? `<div style="background:rgba(201,162,39,0.08);border:1px solid var(--brass-dim);border-radius:8px;padding:8px;margin-bottom:2px;">
-          <div style="color:var(--brass);font-weight:600;margin-bottom:4px;">Prognose — hoe dit bedrag tot stand komt</div>
-          <div>Dit is géén kopie van ${MAAND_KORT_NL[i]} ${Number(jaar)-1} (dat stond in je Excel: ${fmt(r.totaal)}). In plaats daarvan: 3-jaars gemiddeld verbruik voor deze kalendermaand, geprijsd tegen ${verbeterd.gasBron==='leverancier'?'de expliciete leveranciersprognose':'het laatst-gefactureerde tarief'} voor gas (€${verbeterd.tGas.toFixed(3)}/m³) en het laatst-gefactureerde tarief voor stroom (€${verbeterd.tStroom.toFixed(3)}/kWh).</div>
-        </div>` : ''}
-        ${detailRegel('Gas'+(prognose?' (3-jaars gem.)':''), r.gas.toLocaleString('nl-NL')+' m³')}
-        ${detailRegel('Electra verbruikt'+(prognose?' (3-jaars gem.)':''), r.electra.toLocaleString('nl-NL')+' kWh')}
-        ${detailRegel('Opgewekt'+(prognose?' (3-jaars gem.)':''), r.opgewekt.toLocaleString('nl-NL')+' kWh')}
-        ${detailRegel('Teruggeleverd'+(prognose?' (3-jaars gem.)':''), r.teruggeleverd.toLocaleString('nl-NL')+' kWh')}
-        ${detailRegel('Tarief gas'+(prognose?' (gebruikt in prognose)':''), '€'+(prognose?verbeterd.tGas:r.tariefGas).toFixed(3)+'/m³')}
-        ${detailRegel('Tarief stroom'+(prognose?' (gebruikt in prognose)':''), '€'+(prognose?verbeterd.tStroom:r.tariefStroom).toFixed(3)+'/kWh')}
+        ${prognose ? `<div style="font-size:12px;color:var(--brass);">Schatting (niet Excels kopie van vorig jaar: ${fmt(r.totaal)}) — 3-jaars gem. verbruik x ${verbeterd.gasBron==='leverancier'?'leveranciersprognose':'laatste factuur'} gas €${verbeterd.tGas.toFixed(3)}/m³, stroom €${verbeterd.tStroom.toFixed(3)}/kWh.</div>` : ''}
+        ${detailRegel('Gas', r.gas.toLocaleString('nl-NL')+' m³')}
+        ${detailRegel('Electra verbruikt', r.electra.toLocaleString('nl-NL')+' kWh')}
+        ${detailRegel('Opgewekt', r.opgewekt.toLocaleString('nl-NL')+' kWh')}
+        ${detailRegel('Teruggeleverd', r.teruggeleverd.toLocaleString('nl-NL')+' kWh')}
+        ${detailRegel('Tarief gas', '€'+(prognose?verbeterd.tGas:r.tariefGas).toFixed(3)+'/m³')}
+        ${detailRegel('Tarief stroom', '€'+(prognose?verbeterd.tStroom:r.tariefStroom).toFixed(3)+'/kWh')}
         ${r.gridRewards ? `<div style="display:flex;justify-content:space-between;color:var(--dot-ok);"><span>Grid Rewards ontvangen</span><span>${fmt(r.gridRewards)}</span></div>` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span>Auto verbruik (stroom)${autoIsOverride?' <span style="font-size:11px;">(handmatig)</span>':''}</span>
@@ -5250,21 +5249,26 @@ function renderEnergieView(){
     <div class="card-label" style="margin:16px 0 8px;">Jaren — tik voor details (bepaalt ook de grafiek/maanddetail hieronder)</div>
     <div style="display:flex;flex-direction:column;gap:8px;">${jaarTegelsHtml}</div>
 
-    <div class="card" style="margin-top:16px;">
-      <div class="card-label">Verloop per maand — ${jaar}${energieJaarSelectie?'':' (lopend jaar)'}</div>
-      ${chart}
-      ${maandAsHtml}
-      ${vergelijkTabsHtml}
+    <div class="card" data-energie-chart-toggle="1" style="cursor:pointer;margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <div class="card-label">Verloop per maand — ${jaar}${energieJaarSelectie?'':' (lopend jaar)'}</div>
+        <span style="color:var(--muted);font-size:12px;">${energieChartExpand?'▾':'▸'}</span>
+      </div>
+      ${energieChartExpand ? `<div style="margin-top:10px;" onclick="event.stopPropagation()">
+        ${chart}
+        ${maandAsHtml}
+        ${vergelijkTabsHtml}
+      </div>` : ''}
     </div>
 
     <div class="hero" style="margin-top:16px;">
       <div class="card" data-energie-tarief-toggle="gas" style="cursor:pointer;">
         <div style="display:flex;justify-content:space-between;align-items:baseline;">
           <div class="card-label">Tarief gas (laatste factuur, ${MAAND_KORT_NL[laatsteFactuur.maandNr-1]})</div>
-          <span style="color:var(--muted);font-size:12px;">${energieTariefExpand.gas?'▾':'▸'}</span>
+          <span style="color:var(--muted);font-size:12px;">${energieTariefExpand==='gas'?'▾':'▸'}</span>
         </div>
         <div class="stat-figure" style="font-size:20px;">€${laatsteTariefGas.toFixed(3)}/m³</div>
-        ${energieTariefExpand.gas ? `<div style="margin-top:10px;">
+        ${energieTariefExpand==='gas' ? `<div style="margin-top:10px;">
           <div class="card-label" style="margin-bottom:4px;">Verloop ${tariefJaren.join('–')}</div>
           ${renderVermogenChart(tariefGasSeries, 'vGradTariefGas')}
           ${tariefAsHtml}
@@ -5273,10 +5277,10 @@ function renderEnergieView(){
       <div class="card" data-energie-tarief-toggle="stroom" style="cursor:pointer;">
         <div style="display:flex;justify-content:space-between;align-items:baseline;">
           <div class="card-label">Tarief stroom (laatste factuur, ${MAAND_KORT_NL[laatsteFactuur.maandNr-1]})</div>
-          <span style="color:var(--muted);font-size:12px;">${energieTariefExpand.stroom?'▾':'▸'}</span>
+          <span style="color:var(--muted);font-size:12px;">${energieTariefExpand==='stroom'?'▾':'▸'}</span>
         </div>
         <div class="stat-figure" style="font-size:20px;">€${laatsteTariefStroom.toFixed(3)}/kWh</div>
-        ${energieTariefExpand.stroom ? `<div style="margin-top:10px;">
+        ${energieTariefExpand==='stroom' ? `<div style="margin-top:10px;">
           <div class="card-label" style="margin-bottom:4px;">Verloop ${tariefJaren.join('–')}</div>
           ${renderVermogenChart(tariefStroomSeries, 'vGradTariefStroom')}
           ${tariefAsHtml}
@@ -5289,7 +5293,7 @@ function renderEnergieView(){
       ${rows}
     </div>
 
-    <footer>Bron: je eigen Energie.xlsx (tabs 2023–2026), verwerkt 20-08-2026. "Totaal" is de volledige energiekosten die maand (gas + stroom, na teruggeleverd/opgewekt-verrekening) — dit blijft los van Auto verbruik. ${isHuidigJaar?`2026 t/m ${MAAND_KORT_NL[werkelijkTM-1]} is werkelijk; sep–dec staat op jouw eigen prognosecijfers uit de sheet (wel zichtbaar in de maandtegels hieronder, NIET in de grafieken).`:''} Alle grafieken op deze tab tonen uitsluitend echte, afgesloten maanden — Robs eigen prognosecijfers voor de nog niet verstreken maanden worden er nooit in meegenomen. De statkaarten bovenaan tonen altijd het lopende jaar (${huidigJaar}), ongeacht welke jaartegel is opengeklapt. Grid Rewards staat als losse groene regel bij de maand waarin hij voorkomt — telt al mee in het "Totaal" (zat al verrekend in de Tibber-nota), dus geen dubbeltelling. Auto verbruik (kWh, stroom via thuisladen) komt uit de "Stroom auto"-kolom in je Excel; het invulveld is puur een handmatige correctie/aanvulling voor maanden waar de sheet nog 0 of leeg toont — telt niet mee in "Totaal". Tarief gas/stroom komt rechtstreeks uit dezelfde sheet, per maand; de trendgrafiek toont de laatste 2 jaar (alleen echte maanden). Deze tarieven voeden nu ook de Nutsvoorzieningen-prognose in Volgende/Lopende maand (energiePrognoseMaand()): seizoensgebonden verbruik x huidig tarief, i.p.v. het oude platte 3-jaars kostengemiddelde.</footer>
+    <footer>Bron: Energie.xlsx, bijgewerkt 21-08-2026. Grafieken tonen alleen echte maanden, nooit prognose. Statkaarten bovenaan volgen altijd het lopende jaar. Tarief gas/stroom komt uit dezelfde sheet en voedt ook de Nutsvoorzieningen-prognose elders in het dashboard.</footer>
   `;
 }
 
@@ -5367,7 +5371,11 @@ function render(){
   }));
   document.querySelectorAll('[data-energie-tarief-toggle]').forEach(el=>el.addEventListener('click',()=>{
     const which = el.dataset.energieTariefToggle;
-    energieTariefExpand[which] = !energieTariefExpand[which];
+    energieTariefExpand = (energieTariefExpand===which) ? null : which;
+    render();
+  }));
+  document.querySelectorAll('[data-energie-chart-toggle]').forEach(el=>el.addEventListener('click',()=>{
+    energieChartExpand = !energieChartExpand;
     render();
   }));
   document.querySelectorAll('[data-save-energie-auto]').forEach(el=>el.addEventListener('click',(e)=>{
