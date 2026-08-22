@@ -965,7 +965,9 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {confirmedKind:'tx_ingcc',  pendingKind:'tx_pending_ingcc',  getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {confirmedKind:'tx_amex',   pendingKind:'tx_pending_amex',   getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-08-22d - Op Robs verzoek: homescreen-tegels herschikt. Rechter kolom: Te bevestigen, Lopende maand, Casa 3S, Vorige maand, Volgende maand. Linker kolom: Vermogen, Reizen, Salaris, Hypotheek, Energie. HOME_TILE_COLUMNS aangepast, verder niets functioneels gewijzigd.';
+const DASHBOARD_VERSION = '2026-08-22f - BUGFIX (Rob screenshot, Italië-afwikkeling): de "Bevestig, is definitief"-knop bij een afgeronde reis verscheen ook als de reis al eerder bevestigd was (italie-2026 stond al sinds 15-08 op afgewikkeld:true in Supabase — geverifieerd, correct) — reisAfwikkelingVoorMaand() geeft die reis terecht nog één keer terug in de bevestigingsmaand zelf (zodat het bedrag in Dagelijks kan meetellen), maar de render-code toonde daarbij altijd de vraag+knop, ongeacht of ov.afgewikkeld al true was. Gefixt: nu een check op reisPlanOverrides[r.trip.id].afgewikkeld — als die al true is, een simpele "✓ al bevestigd — telt deze maand mee, verdwijnt daarna vanzelf"-kaart zonder knop; anders (nog niet bevestigd) ongewijzigd de oude vraag+knop. Geen datawijziging nodig, puur een weergavefout die suggereerde dat er nog iets open stond terwijl dat niet zo was.';
+const DASHBOARD_VERSION_PREV_2026_08_22e = '2026-08-22e - Rob snapte de Bestedingsruimte-samenstelling niet: de "Lopende maand"-regel daarin gebruikte de oorspronkelijke (historisch-gemiddelde) volledige-maand-verwachting voor Dagelijks, ook al was Dagelijks toen al lang over die verwachting heen (werkelijk €5.605,10 vs. verwacht €2.319,49) — het Bestedingsruimte-totaal was daardoor te optimistisch. Op Robs gekozen aanpak: zodra werkelijk-uitgegeven Dagelijks de oorspronkelijke verwachting voorbijstreeft, wordt de "Lopende maand"-regel voortaan bijgesteld op basis van de rest van de maand — uitgegeven tot nu toe + (gemiddelde per dag tot nu toe × resterende dagen in de maand) — i.p.v. de inmiddels achterhaalde statische verwachting. Zolang Dagelijks nog onder de verwachting zit, blijft de normale verwachting gewoon staan (voorkomt een onbetrouwbare doortrekking vroeg in de maand op basis van één toevallige grote aankoop). netto (var → let) wordt na het berekenen van dagelijksUitgegevenTotaal eventueel herberekend met dagelijksBijgesteld i.p.v. variabel. Alleen deze Bestedingsruimte-regel is geraakt — de Dagelijks-hero-tegel zelf blijft bewust "werkelijk vs. oorspronkelijke verwachting" tonen (nuttig voortgangssignaal, dus niet aangepast). Nieuwe transparantieregel toegevoegd onder "Lopende maand" in de uitgeklapte samenstelling, die expliciet toont dat en waarom is bijgesteld, zodat dit niet nogmaals onduidelijk is. Ook: homescreen-tegels herschikt op Robs verzoek (zie vorige changelog-regel).';
+const DASHBOARD_VERSION_PREV_2026_08_22d = '2026-08-22d - Op Robs verzoek: homescreen-tegels herschikt. Rechter kolom: Te bevestigen, Lopende maand, Casa 3S, Vorige maand, Volgende maand. Linker kolom: Vermogen, Reizen, Salaris, Hypotheek, Energie. HOME_TILE_COLUMNS aangepast, verder niets functioneels gewijzigd.';
 const DASHBOARD_VERSION_PREV_2026_08_22c = '2026-08-22c - Op Robs aanvulling: de nieuwe pending-flow (zie vorige changelog-regel) werkte alleen voor Rabo/ING; ING Creditcard en AMEX komen er ook nog bij. Uitgebreid: 4 Supabase-kinds erbij (tx_ingcc, tx_amex, tx_pending_ingcc, tx_pending_amex; CHECK-constraint aangepast), confirmed live tx_ingcc/tx_amex mergen net als tx_rabo/tx_ing automatisch in resp. INGCC_TX_JUL/AMEX_TX_JUL. Logica generiek gemaakt via één TX_SOURCE_CONFIG-lookup (per bron: confirmed-kind, pending-kind, welk ledger-array, welke pending-store) i.p.v. 4x losse if/else — pendingTxLijst()/confirmPendingTx()/rejectPendingTx() werken nu voor alle 4 bronnen. Let op sign-conventie: AMEX_TX_JUL slaat aankopen als POSITIEF bedrag op (tegenovergesteld aan Rabo/ING/ING CC) — pendingTxLijst() normaliseert dit alleen voor de weergave (negatief-is-uitgave, consistent met de rest van de app); bij Bevestigen wordt teruggelezen uit de ongewijzigde pending-store, dus de opslag zelf blijft in AMEX_TX_JUL\'s eigen conventie en de merge-logica hoeft niet te weten dat er genormaliseerd is. Bij toekomstige verwerking van een ING Creditcard- of AMEX-afschrift: zelfde aanpak als Rabo/ING (categoriseren o.b.v. bestaande overrides/vendor-patroon, dan als tx_pending_ingcc/tx_pending_amex in Supabase zetten) — voor AMEX het bedrag in de eigen (positief-is-aankoop) conventie aanhouden, net als de bestaande AMEX_TX_JUL-data.';
 const DASHBOARD_VERSION_PREV_2026_08_22b = '2026-08-22b - Structurele wijziging op Robs verzoek: nieuwe bank-CSV/PDF-verwerking hoeft voortaan geen nieuwe index.html + git push meer, mét controle voor Rob vooraf. Nieuw: 2 Supabase-kinds tx_pending_rabo/tx_pending_ing (CHECK-constraint uitgebreid), value = JSON {date,vendor,amount,category}. Bij het verwerken van een nieuwe upload zet ik nieuwe regels voortaan direct in Supabase als pending (met voorgestelde categorie o.b.v. dezelfde overrides/vendor-patroon-logica als altijd) — geen bestandswijziging nodig. In de "Te bevestigen"-tegel (nu ook uitgebreid, niet meer alleen "Nader te bepalen") verschijnt een nieuw blok "Nieuw verwerkt, ter controle": elke regel met bewerkbare categorie-dropdown, een ✓ Bevestigen-knop (per regel of in bulk via "Bevestig alles") en een Verwijderen-knop (voor per ongeluk dubbel verwerkte regels). Bij Bevestigen verhuist de regel naar de echte ledger (tx_rabo/tx_ing) — en als Rob de voorgestelde categorie heeft aangepast, wordt dat meteen als leverancier-regel geleerd (vendorOverrides), zodat dezelfde leverancier de volgende keer meteen goed wordt voorgesteld. Nieuwe functies: pendingTxLijst(), pendingTxRow2Html(), confirmPendingTx(), rejectPendingTx(), confirmAllPendingTx(). Homescreen-badge op de tegel telt nu pending + nader-te-bepalen samen. Saldo-anchors (RABO/ING) blijven bewust ook via Supabase-only bijgewerkt (geen HTML-fallback-refresh meer bij routinematige verwerking) — dat gebeurt voortaan alleen nog bij een bewuste periodieke opfrissessie van de offline-fallback, niet bij elke upload.';
 const DASHBOARD_VERSION_PREV_2026_08_21c = '2026-08-21c - Twee dingen op Robs verzoek. (1) Energie-tab: tarief gas/stroom-tegels zijn nu écht single-open accordion (energieTariefExpand: was een object met 2 losse booleans, nu 1 waarde \'gas\'/\'stroom\'/null) — openen van de een sluit de ander automatisch, was voorheen los van elkaar. (2) Homescreen-tegels herschikt naar een logische 5/5-indeling (kon nu gelijk met de nieuwe Energie-tegel): Lopende maand en Casa 3S (de twee belangrijkste, Robs eigen prioriteit) staan allebei bovenaan hun kolom zodat ze naast elkaar in de top-rij staan; Vermogen en Reizen erna. Links: Lopende maand, Vermogen, Salaris, Hypotheek, Volgende maand. Rechts: Casa 3S, Reizen, Te bevestigen, Vorige maand, Energie.';
@@ -3317,7 +3319,7 @@ function renderVolgendeMaandView(){
   const variabel = Object.values(DAGELIJKS_COMPONENTEN).reduce((a,b)=>a+b,0);
   const inkomenTotaal = Object.values(INKOMEN_COMPONENTEN).reduce((a,b)=>a+b,0);
   const sparenBasis = ROB_SPAREN+LINDY;
-  const netto = inkomenTotaal - sparenBasis - vastTotaal - variabel;
+  let netto = inkomenTotaal - sparenBasis - vastTotaal - variabel;
 
   // Uitgegeven-tot-nu-toe vs. Verwacht (volledige maand) — op basis van de werkelijke bucket (incl. handmatige
   // vast/dagelijks-verplaatsingen via bucketOverrides), niet op een vaste categorielijst. Zo blijven het bovenste
@@ -3341,6 +3343,27 @@ function renderVolgendeMaandView(){
   const vastUitgegevenTotaal = vastRowsActueel.reduce((s,r)=>s+Math.abs(r.amount),0);
   const dagelijksUitgegevenTotaal = dagelijksRowsActueel.reduce((s,r)=>s+Math.abs(r.amount),0) - reisAfwikkelingOverschot;
   const lopendeBestedingsruimte = inkomenTotaal - sparenBasis - vastUitgegevenTotaal - dagelijksUitgegevenTotaal;
+
+  // Op Robs verzoek (22-08-2026): zodra Dagelijks nu al meer heeft opgeslokt dan de oorspronkelijke
+  // (historisch-gemiddelde) verwachting voor de HELE maand, is die verwachting aantoonbaar te laag gebleken —
+  // dan de "Lopende maand"-regel in Bestedingsruimte bijstellen op basis van de rest van de maand: wat er tot
+  // nu toe echt is uitgegeven + het gemiddelde per dag tot nu toe, doorgetrokken over de resterende dagen.
+  // Zolang de werkelijke uitgaven nog ONDER de verwachting zitten, blijft de normale verwachting gewoon staan
+  // (vroeg in de maand is één grote aankoop anders een onbetrouwbare doortrekking). Raakt alleen deze
+  // Bestedingsruimte-regel — de Dagelijks-tegel zelf blijft "werkelijk vs. oorspronkelijke verwachting" tonen,
+  // dat blijft nuttig als voortgangssignaal.
+  let dagelijksIsBijgesteld = false, dagelijksBijgesteld = variabel;
+  if(dagelijksUitgegevenTotaal > variabel){
+    const vandaagLM = new Date();
+    const dagenInMaand = new Date(LM_JAAR, LM_MAAND, 0).getDate();
+    const dagVandaag = (vandaagLM.getFullYear()===LM_JAAR && (vandaagLM.getMonth()+1)===LM_MAAND) ? vandaagLM.getDate() : dagenInMaand;
+    const dagenTotNu = Math.max(1, Math.min(dagVandaag, dagenInMaand));
+    const dagenResterend = Math.max(0, dagenInMaand - dagenTotNu);
+    const gemiddeldPerDag = dagelijksUitgegevenTotaal / dagenTotNu;
+    dagelijksBijgesteld = dagelijksUitgegevenTotaal + gemiddeldPerDag * dagenResterend;
+    dagelijksIsBijgesteld = true;
+    netto = inkomenTotaal - sparenBasis - vastTotaal - dagelijksBijgesteld;
+  }
 
   // Na salaris: Rabo → ING — inkomen is al bekend (salaris viel al op 24 juli), maar vaste lasten die nog van Rabo
   // moeten afgaan zijn deels nog niet gebeurd — dus voorspellen we het Rabo-aandeel per categorie (uit juli-data),
@@ -3524,13 +3547,26 @@ function renderVolgendeMaandView(){
         <div class="stat-sub">nog vrij van €${r.budget!=null?Math.round(r.budget):'?'} reisbudget</div>
       </div>`;
     }).join('')}
-    ${reisAfwikkeling.map(r=>`<div class="card" style="margin-top:10px;border-color:${r.rest<0?'var(--dot-over)':'var(--dot-ok)'};">
+    ${reisAfwikkeling.map(r=>{
+      const ovBevestigd = !!(reisPlanOverrides[r.trip.id] && reisPlanOverrides[r.trip.id].afgewikkeld);
+      if(ovBevestigd){
+        // Al eerder bevestigd — dit bedrag telt nu precies deze ene maand mee in Dagelijks (zie
+        // reisAfwikkelingVoorMaand), maar de knop hoort dan niet meer opnieuw te verschijnen: dat zag
+        // eruit als een nog-openstaande actie terwijl er niets meer te bevestigen valt.
+        return `<div class="card" style="margin-top:10px;border-color:var(--rule);opacity:0.75;">
+          <div class="card-label">${r.trip.naam} is afgelopen — ${r.rest<0?'tekort':'overschot'} verwerkt in Dagelijks</div>
+          <div class="stat-figure ${r.rest<0?'neg':'pos'}">${fmt(r.rest)}</div>
+          <div class="stat-sub">✓ al bevestigd — telt deze maand mee, verdwijnt daarna vanzelf</div>
+        </div>`;
+      }
+      return `<div class="card" style="margin-top:10px;border-color:${r.rest<0?'var(--dot-over)':'var(--dot-ok)'};">
       <div class="card-label">${r.trip.naam} is afgelopen — ${r.rest<0?'tekort':'overschot'} verwerkt in Dagelijks</div>
       <div class="stat-figure ${r.rest<0?'neg':'pos'}">${fmt(r.rest)}</div>
       <div class="stat-sub">Klopt dit bedrag (staat alle Amex al in${r.trip.borg?`, en is de €${r.trip.borg.bedrag} borg (${r.trip.borg.vendor}) al terug of hier al voor gecorrigeerd`:''})? Bevestig dan, anders telt dit elke maand opnieuw mee totdat het klopt.</div>
       <div class="cdt-divider"></div>
       <span data-bevestig-afwikkeling="${r.trip.id}" data-bevestig-bedrag="${r.rest}" style="cursor:pointer;display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--dot-ok);border:1px solid var(--dot-ok);border-radius:20px;padding:6px 14px;">✓ Bevestig, is definitief</span>
-    </div>`).join('')}
+    </div>`;
+    }).join('')}
     <div class="hero4">
       ${tile('Inkomen', fmt(inkomenTotaal), 'Rob + Lindy + belastingteruggave + deurwaarder (€0)', 'inkomen', 'pos')}
       ${tile('Vaste lasten', null, null, 'vast', 'neg', {uitgegeven:vastUitgegevenTotaal, verwacht:vastTotaal})}
@@ -3552,6 +3588,7 @@ function renderVolgendeMaandView(){
             ${vorigeMaandComponent!==0 ? row('Vorige maand (juli)', vorigeMaandComponent) : ''}
             ${reisRegels.map(r=>row(`Reis — ${r.naam}`, r.bedrag)).join('')}
             ${row('Lopende maand', netto)}
+            ${dagelijksIsBijgesteld ? `<div style="font-size:11px; color:var(--dot-afwijking); padding:2px 0 0;">Dagelijks bijgesteld naar ${fmt(-dagelijksBijgesteld)} (doorgetrokken o.b.v. gemiddelde per dag tot nu toe) — oorspronkelijke verwachting van ${fmt(-variabel)} was al voorbijgestreefd.</div>` : ''}
             ${heeftSaldo && Math.abs(saldoAfwijkingTotaal)>=0.01 ? row('Saldo-afwijking (bank)', saldoAfwijkingTotaal, 'var(--dot-afwijking)') : ''}
             ${kaartReservering>0 ? row('Openstaand AMEX/CC', -kaartReservering, 'var(--dot-afwijking)') : ''}
             <div style="display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--paper-dim);margin-top:2px;">
