@@ -979,7 +979,12 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {confirmedKind:'tx_ingcc',  pendingKind:'tx_pending_ingcc',  getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {confirmedKind:'tx_amex',   pendingKind:'tx_pending_amex',   getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-08-24a - Vier dingen n.a.v. Robs live-check. (1) "(basis)" weggehaald uit het Rob-salarislabel (was Rob — LVNL (basis), nu Rob — LVNL) op beide plekken (Lopende maand + Volgende maand). (2) Enel Energia (C3S-huis in Italie, -62,55) stond op Nutsvoorzieningen (NL-nuts) - hoort bij Casa 3S, net als de ENEL_MAANDEN-logica elders in de code al aanneemt voor het C3S-budget. Category-override + nieuwe vendor-regel enel energia naar Casa 3S toegevoegd. (3) Vorige maand (juli)-label was hardcoded - nu dynamisch (MAAND_NAMEN_NL o.b.v. PERIODE_START_SALARISDATUM), toont voortaan altijd de echt afgesloten maand. (4) GROTE BUGFIX, zelfde soort als de reisafwikkeling-dubbeltelling van eerder: Openstaand AMEX/CC (kaartReservering, live saldoCheck AMEX+CC) werd nog een keer afgetrokken in nettoSaldoGecorrigeerd, terwijl dat bedrag al volledig verwerkt zit in de definitieve maand-afsluiting-berekening (rabo+ing-amexOpenstaand-ccOpenstaand). Rob: zit dat niet al in die 1.200 tekort vorige maand - klopte, dubbeltelling van 1.117,31. Fix: kaartReservering is nu 0 zodra vorigeMaandSparen.definitief true is; blijft ongewijzigd zolang Vorige maand nog op de oude geschatte formule draait. Bijvangst: dubbele berekenVorigeMaandSamenvatting()-aanroep opgeschoond naar een. Effect: Totaal Bestedingsruimte van -2.481,11 naar circa -1.363,80.';
+const DASHBOARD_VERSION = '2026-08-24f - Zes dingen n.a.v. Robs screenshots. (1) "na salaris: Rabo → ING"-zinnetje weg. (2) "verwacht bij einde maand, incl. vorige maand/reis/saldo"-zinnetje weg. (3) Vorige-maand-kaart deed niets bij uitklappen (▾ draaide om maar toonde geen inhoud) — nu een echte samenstelling (Rabo/ING/Openstaand AMEX/Openstaand ING CC/Correctie/Totaal) zodra de maand definitief is afgesloten; berekenVorigeMaandSamenvatting() geeft het ruwe afsluiting-object nu ook terug i.p.v. alleen het eindbedrag. (4) donutFor() liet categorieën met waarde 0 verdwijnen (filter was v>0.001) — nu v>-0.001, dus standaardposten (Belastingteruggave, Deurwaarder) blijven zichtbaar op €0 i.p.v. te verdwijnen. Deurwaarder als expliciete regel (€0) toegevoegd aan INKOMEN_COMPONENTEN. (5) Zelfde probleem in actueelDetail() (Vaste lasten/Dagelijks-uitklap): nu wordt perCat eerst gevuld met alle categorieën uit VAST_COMPONENTEN resp. DAGELIJKS_COMPONENTEN op €0, vóórdat de werkelijke transacties worden opgeteld — Rob: "de vaste posten uit de verwachting neerzetten, waarde op 0, maar bij openklap het verwachte bedrag". Elke vaste-lastenpost (en dagelijks-categorie) staat dus altijd in de lijst, ook zonder transacties tot nu toe; tikken erop toont nog steeds het begrote bedrag (via de bestaande budgetMapAug-koppeling). (6) Salaris — uitsplitsing (Rob/Lindy) heeft nu een kleurbolletje (showDot+budgetFor, referentie €11.378,36 / €2.500) dat aangeeft of het bedrag rond de gebruikelijke verwachting zit.';
+const DASHBOARD_VERSION_PREV_2026_08_24e = '2026-08-24e - Op Robs verzoek: Belastingteruggave (hypotheekrenteaftrek) in Lopende maand toonde €0 zolang de échte transactie deze periode nog niet was geland, terwijl de rest van Lopende maand (Vaste lasten, Dagelijks) al wel een verwachting gebruikt zodra het werkelijke cijfer nog ontbreekt. Rob: "aangezien te besteden een verwachting is, houd daar dan ook rekening mee". Fix: BELASTING gebruikt nu het werkelijke bedrag als dat er al is (belastingActueel>0), anders dezelfde voorspelling als Volgende maand — hypotheekSchoon(hypotheekLM).belastingAftrek (dezelfde renteaftrek-berekening, nu ook al eerder in de functie beschikbaar gemaakt i.p.v. pas later gedefinieerd).';
+const DASHBOARD_VERSION_PREV_2026_08_24d = '2026-08-24d - BUGFIX n.a.v. Rob ("je wist dat Enel om de maand kwam, waarom hier geen rekening mee gehouden"): een salarisperiode beslaat vaak delen van TWEE kalendermaanden (nu: 24-aug t/m 25-sep), maar de ENEL/IMU/Muziek-seizoenslogica (die per kalendermaand factureert) checkte alleen de "label"-maand van de periode (LM_MAAND_KORT=sep) — Enel (bi-maandelijks, o.a. augustus) werd zo gemist omdat de rekening al binnen de eerste kalendermaand van de periode viel, terwijl het label "september" zei. Trof zowel de per-categorie "begroot"-regel in de Vaste Lasten-uitklap (toonde €415,28 i.p.v. €476,28 voor Casa 3S) als, bleek bij het narekenen, ook al de top-level "verwacht €6.038,65"-tegel (die had toevallig al €415,28+61,00 hardcoded staan, dus toonde toen wel het juiste bedrag maar niet via een robuuste/herhaalbare berekening — zou bij een volgende periode zonder Enel-raakvlak alsnog fout gaan staan). Fix: nieuwe maandenInDezePeriode (Set met de kalendermaand-afkorting van zowel PERIODE_START_SALARISDATUM als PERIODE_EINDE_SALARISDATUM), ENEL/IMU/Muziek checken nu of ÉÉN van die twee maanden matcht i.p.v. alleen LM_MAAND_KORT. Toegepast op zowel VAST_COMPONENTEN (top-level verwachting) als casa3sBudgetAug/muziekBudgetAug (detail-uitklap) — beide gebruiken nu dezelfde herbruikbare berekening, kunnen dus niet meer uit elkaar lopen. Cijfer voor deze periode blijft toevallig ongewijzigd (€476,28, want augustus zat sowieso al goed) — maar de berekening is nu correct en herhaalbaar voor elke toekomstige periode, niet meer afhankelijk van een toevallig kloppende hardcoded waarde.';
+const DASHBOARD_VERSION_PREV_2026_08_24c = '2026-08-24c - Verder opgeschoond op Robs herhaalde instructie (geen toelichtende zinnen, nergens): sub-tekstjes bij Inkomen/Vaste lasten/Dagelijks/Sparen (bv. "Rob + Lindy + belastingteruggave + deurwaarder", "incl. Casa 3S (structureel)", "gem. 7-8 mnd echte data") overal leeggemaakt, op alle drie de plekken waar deze tegels voorkomen (renderLopendeMaandView-accordion, renderVolgendeMaandView, renderVolgendeMaandSepView). Cijfers en categorie-uitsplitsingen (bij het uitklappen) blijven ongewijzigd zichtbaar — alleen de verklarende zin erboven is weg.';
+const DASHBOARD_VERSION_PREV_2026_08_24b = '2026-08-24b - Op Robs herhaalde, expliciete instructie (geen toelichtende zinnen, nergens): de "-€500 buffer (Kleding...)"-uitlegregel en de "geen overboeking naar Oranje Spaarrekening gevonden..."-regel uit de Vorige-maand-kaart gehaald. De correctie zelf (-€500) blijft gewoon verwerkt in het getoonde bedrag — alleen de verklarende zin erbij is weg, precies zoals gevraagd: het cijfer zegt iets over het saldo, meer niet.';
+const DASHBOARD_VERSION_PREV_2026_08_24a = '2026-08-24a - Vier dingen n.a.v. Robs live-check. (1) "(basis)" weggehaald uit het Rob-salarislabel (was Rob — LVNL (basis), nu Rob — LVNL) op beide plekken (Lopende maand + Volgende maand). (2) Enel Energia (C3S-huis in Italie, -62,55) stond op Nutsvoorzieningen (NL-nuts) - hoort bij Casa 3S, net als de ENEL_MAANDEN-logica elders in de code al aanneemt voor het C3S-budget. Category-override + nieuwe vendor-regel enel energia naar Casa 3S toegevoegd. (3) Vorige maand (juli)-label was hardcoded - nu dynamisch (MAAND_NAMEN_NL o.b.v. PERIODE_START_SALARISDATUM), toont voortaan altijd de echt afgesloten maand. (4) GROTE BUGFIX, zelfde soort als de reisafwikkeling-dubbeltelling van eerder: Openstaand AMEX/CC (kaartReservering, live saldoCheck AMEX+CC) werd nog een keer afgetrokken in nettoSaldoGecorrigeerd, terwijl dat bedrag al volledig verwerkt zit in de definitieve maand-afsluiting-berekening (rabo+ing-amexOpenstaand-ccOpenstaand). Rob: zit dat niet al in die 1.200 tekort vorige maand - klopte, dubbeltelling van 1.117,31. Fix: kaartReservering is nu 0 zodra vorigeMaandSparen.definitief true is; blijft ongewijzigd zolang Vorige maand nog op de oude geschatte formule draait. Bijvangst: dubbele berekenVorigeMaandSamenvatting()-aanroep opgeschoond naar een. Effect: Totaal Bestedingsruimte van -2.481,11 naar circa -1.363,80.';
 const DASHBOARD_VERSION_PREV_2026_08_22u = '2026-08-22u - VOLLEDIGE MAANDOVERSTAP uitgevoerd op Robs verzoek (24-08-2026: "ga verder", "alle data tot 23-08 is al binnen, wachten op de eerste september-transactie is zinloos"). September is nu Lopende maand, augustus is Vorige maand (met het definitieve -€1.291,27-anker uit de vorige changelog-regel), oktober is Volgende maand. Concreet, op alle geraakte plekken (bleek uiteindelijk meer dan de 2 gedocumenteerde "ÉÉN plek om over te schakelen"-comments): (1) Nieuwe lege RABO_TX_SEP/ING_TX_SEP toegevoegd. (2) Live tx_rabo/tx_ing-merge routeert nu op datum (>=PERIODE_START_SALARISDATUM → SEP-arrays, anders AUG-arrays) i.p.v. blind naar één hardcoded doel — anders waren de al-bevestigde augustus-transacties abusievelijk in september beland. (3) PERIODE_START_SALARISDATUM→24-08, PERIODE_EINDE_SALARISDATUM→25-09. (4) renderVolgendeMaandView (="Lopende maand" in de UI, verwarrende functienaam): LM_JAAR/LM_MAAND/LM_MAAND_KORT/LM_RABO_TX/LM_ING_TX → september/RABO_TX_SEP/ING_TX_SEP; energiePrognoseMaand(8)→energiePrognoseMaand(LM_MAAND) (was hardcoded, brak stilzwijgend bij elke overstap). (5) renderLopendeMaandView (="Vorige maand" in de UI): nieuwe buildCombinedAug() naast de bestaande buildCombinedJul() (die laatste blijft ongewijzigd, wordt nog gebruikt door buildCombinedAlles voor de cumulatieve historie) — periodeBronnen or de datumherkenning nu RABO_TX_AUG/ING_TX_AUG i.p.v. AMEX_TX_JUL erbij te mengen (AMEX_TX_JUL groeit eeuwig door met alle live-bevestigde AMEX-tx, dat vervuilde periodeStart/periodeEind met een veel te vroege datum). (6) buildCombinedAlles (Reizen/Casa 3S, cumulatief): RABO_TX_SEP/ING_TX_SEP toegevoegd, exact volgens de documented pattern in de eigen comment. (7) alleBekendeTransacties() + nieuweTeBevestigenTransacties(): RABO_TX_SEP/ING_TX_SEP aan de pools toegevoegd. (8) berekenKadoGeschatSaldo(): idem, anders stopt live Kado-tracking bij de maandgrens. (9) categorieRaboAandeel() (Rabo→ING-transfer-voorspelling voor Volgende maand): basis verschoven van RABO_TX_JUL naar RABO_TX_AUG (meest recente afgesloten periode). (10) renderVolgendeMaandSepView (="Volgende maand" in de UI, ook verwarrende naam): VM_JAAR/VM_MAAND van september naar oktober; energiePrognoseMaand(9)→energiePrognoseMaand(VM_MAAND) (zelfde hardcoded-bug als bij Lopende maand); Muziek van vast €0 naar MUZIEK_MAANDEN.has(\'okt\') ? 182.73 : 0 (oktober valt NIET meer in de zomerstop jul/aug/sep, was nog hardcoded op de septemberwaarde). Niet aangepast, bewust: berekenVorigeMaandSamenvatting()\'s eigen RABO_TX_JUL-gebaseerde formule (regel ~2166) blijft als generieke fallback staan voor toekomstige periodes zonder maand_afsluiting-anker — wordt voor de huidige overgang toch niet gebruikt dankzij het definitieve anker. Risico dat hiermee blootgelegd is voor toekomstige maandovergangen: dit bleek een veel groter, verspreider mechanisme dan de code zelf documenteerde — bij de volgende overstap (sep→okt) hier opnieuw goed naar kijken i.p.v. blind op de 2 bekende commentaarregels vertrouwen.';
 const DASHBOARD_VERSION_PREV_2026_08_22t = '2026-08-22t - Augustus afgesloten op Robs verzoek (23-08-2026): definitieve maand_afsluiting-anker vastgelegd (key 2026-08-24, de startdatum van de volgende periode) met de échte eindstanden — Rabo €168,44, ING €157,60, AMEX openstaand €1.030,47 (was €6,98 op 7-08, + de €1.023,49 net verwerkte AMEX-uitgaven 11-21 aug waaronder de €723,05 Paardrijden-post, geen tussentijdse aflossing gezien), ING Creditcard openstaand €86,84 (ongewijzigd, Rob bevestigde geen nieuw CC-afschrift). Op Robs correctie: de €500 Kleding-bufferstorting (23-08, moet terug naar Oranje Spaarrekening, geen echt beschikbaar geld) telt niet mee — nieuw veld correctie (+ correctieReden, getoond in de UI) toegevoegd aan het maand_afsluiting-record en de blijftOver-formule. Definitief bedrag: 168,44+157,60−1.030,47−86,84−500 = **-€1.291,27**. BELANGRIJK, nog NIET zichtbaar in de app: PERIODE_START_SALARISDATUM/PERIODE_EINDE_SALARISDATUM zijn bewust NIET verschoven — de onderliggende Lopende-maand-data (LM_RABO_TX/LM_ING_TX = RABO_TX_AUG/ING_TX_AUG) beslaat nog steeds juli24–aug23, dus de periodegrenzen vervroegen zonder de data mee te verschuiven had de dagelijks-doortrek-berekening in de war gestuurd (dagenTotNu zou negatief worden, dagenResterend kunstmatig oplopen naar 31). Dit anker wordt pas echt zichtbaar in "Vorige maand" zodra er september-transacties zijn en LM_JAAR/LM_MAAND/LM_RABO_TX/LM_ING_TX + deze twee periodegrenzen sámen worden overgezet (de al bestaande "ÉÉN plek om over te schakelen"-aanpak in renderVolgendeMaandView) — dat gebeurt in de eerstvolgende sessie waarin Rob september-data aanlevert.';
 const DASHBOARD_VERSION_PREV_2026_08_22s = '2026-08-22s - Nieuw mechanisme "maand afsluiten" op Robs verzoek: "Vorige maand" was een GESCHATTE formule (inkomen−vaste lasten−dagelijks−spaardoel, berekenVorigeMaandSamenvatting) die niet spoorde met wat er echt op de rekeningen stond (Rob had dit al eerder gemeld, nu concreet met een screenshot: 1.233,35 i.p.v. verwacht ~1.733). Robs oplossing: als hij "maand afsluiten" zegt en de laatste transactie vóór salarisdag geeft, leggen we het ECHTE eindsaldo vast (Rabo+ING, min openstaand AMEX/ING Creditcard) als definitieve "Vorige maand"-waarde voor de nieuwe periode. Nieuw: Supabase-kind maand_afsluiting (CHECK-constraint uitgebreid), key = startdatum nieuwe periode, value = {rabo,ing,amexOpenstaand,ccOpenstaand,afgeslotenOp}. berekenVorigeMaandSamenvatting() checkt eerst op zo\'n anker voor PERIODE_START_SALARISDATUM (nu globaal gemaakt, was lokaal in renderVolgendeMaandView) — is die er, dan wint het echte saldo (definitief:true, getoond in de UI) van de schatting. UI-label past zich aan: "definitief (maand afgesloten, DATUM)" vs. "geschat, nog niet overgemaakt naar sparen". WORKFLOW VOOR VOLGENDE KEER: zodra Rob de laatste pre-salaris-transactie geeft — (1) Rabo/ING-eindsaldo van dat moment bepalen, (2) actuele AMEX/CC-openstaand-ankers erbij pakken, (3) INSERT in overrides met kind=maand_afsluiting, key=nieuwe-PERIODE_START_SALARISDATUM, (4) PERIODE_START_SALARISDATUM en PERIODE_EINDE_SALARISDATUM (beide nu bovenin het bestand, was in renderVolgendeMaandView) handmatig doorschuiven naar de nieuwe periode — dat laatste stapje is nog niet geautomatiseerd, blijft een bewuste handmatige aanpassing per maandwissel. Voor de huidige overgang (aug→sep) nog niet uitgevoerd: Rob had nog geen exacte sluitingstransactie/-standen gegeven op het moment van deze fix.';
@@ -2163,7 +2168,7 @@ function berekenVorigeMaandSamenvatting(){
   const afsluiting = maandAfsluitingOverrides[PERIODE_START_SALARISDATUM];
   if(afsluiting){
     const blijftOver = (afsluiting.rabo||0) + (afsluiting.ing||0) - (afsluiting.amexOpenstaand||0) - (afsluiting.ccOpenstaand||0) + (afsluiting.correctie||0);
-    return {blijftOver, sparenGedaan: false, hangendeReis: [], definitief: true, afgeslotenOp: afsluiting.afgeslotenOp, correctieReden: afsluiting.correctieReden};
+    return {blijftOver, sparenGedaan: false, hangendeReis: [], definitief: true, afgeslotenOp: afsluiting.afgeslotenOp, correctieReden: afsluiting.correctieReden, afsluiting};
   }
   const periodeBronnen = [...RABO_TX_JUL, ...ING_TX_JUL, ...AMEX_TX_JUL];
   const periodeStart = periodeBronnen.reduce((min,r)=>r.date<min?r.date:min, periodeBronnen[0].date);
@@ -2394,10 +2399,10 @@ function renderLopendeMaandView(){
       <div class="stat-sub" style="margin-top:10px;color:var(--muted);font-size:11px;">Ter controle: ING zelf staat deze periode tot nu toe op ${ingTekort>0?'een tekort van '+fmt(-ingTekort).replace('-',''):(ingOverschot>0?'een overschot van '+fmt(ingOverschot):'precies in balans')} t.o.v. wat er al binnen/uit is — verschil met bovenstaand "rest" komt doordat dit de tot-nu-toe-stand is, niet de volledige maand vooruit (incl. nog te reserveren AMEX-afschrijving ~5 augustus).</div>
     </div>
     <div class="hero4">
-      ${accordionTile('Inkomen', fmt(incomeTotal), 'Salaris (24 juni) + belastingteruggave + vergoeding', 'inkomen', 'pos', incomeDonut, income)}
-      ${accordionTile('Vaste lasten', fmt(vastTotaal), 'incl. Casa 3S (structureel)', 'vast', 'neg', vastDonut, vast, vastBudget)}
-      ${accordionTile('Dagelijks', fmt(dagelijksTotaal), 'excl. reizen &amp; Casa 3S-project', 'dagelijks', 'neg', dagDonut, dagelijks, dagelijksBudget)}
-      ${accordionTile('Sparen', fmt(sparenStructureel), 'vast doel: Rob + Lindy + deurwaarder (nu €0)', 'sparen', 'pos', sparenDonut, sparenRegels)}
+      ${accordionTile('Inkomen', fmt(incomeTotal), '', 'inkomen', 'pos', incomeDonut, income)}
+      ${accordionTile('Vaste lasten', fmt(vastTotaal), '', 'vast', 'neg', vastDonut, vast, vastBudget)}
+      ${accordionTile('Dagelijks', fmt(dagelijksTotaal), '', 'dagelijks', 'neg', dagDonut, dagelijks, dagelijksBudget)}
+      ${accordionTile('Sparen', fmt(sparenStructureel), '', 'sparen', 'pos', sparenDonut, sparenRegels)}
       <div class="card">
         <div class="card-label">Blijft over</div>
         <div class="stat-figure ${netto>=0?'pos':'neg'}">${fmt(netto)}</div>
@@ -3446,23 +3451,40 @@ function renderVolgendeMaandView(){
   const ROB_ACTUEEL = LM_RABO_TX.filter(t=>t.vendor.includes('Luchtverkeersleiding')).reduce((s,t)=>s+t.amount, 0);
   const LINDY = LM_RABO_TX.filter(t=>t.vendor.includes('SARO (salaris')).reduce((s,t)=>s+t.amount, 0);
   const OVERIG_INKOMEN_TOTAAL = [...LM_RABO_TX, ...LM_ING_TX].filter(t=>t.category==='Overig inkomen').reduce((s,t)=>s+t.amount, 0);
-  const BELASTING = [...LM_RABO_TX, ...LM_ING_TX].filter(t=>t.category==='Belastingteruggave').reduce((s,t)=>s+t.amount, 0);
+  // Belastingteruggave (hypotheekrenteaftrek) komt elke periode als vast, voorspelbaar bedrag binnen — zolang
+  // de échte transactie deze periode nog niet is geland, gebruiken we daarom dezelfde voorspelling als bij
+  // Volgende maand (hypotheekSchoon) i.p.v. €0 te tonen (Rob, 24-08-2026: "aangezien te besteden een
+  // verwachting is, houd daar dan ook rekening mee").
+  const hypotheekLM = hypotheekVindMaand(LM_JAAR, LM_MAAND);
+  const hypotheekSchoonLM = hypotheekLM ? hypotheekSchoon(hypotheekLM) : null;
+  const belastingActueel = [...LM_RABO_TX, ...LM_ING_TX].filter(t=>t.category==='Belastingteruggave').reduce((s,t)=>s+t.amount, 0);
+  const BELASTING = belastingActueel>0 ? belastingActueel : (hypotheekSchoonLM ? hypotheekSchoonLM.belastingAftrek : 313.00);
   const ROB_SPAREN=2000.00;
-  const INKOMEN_COMPONENTEN = {"Salaris": ROB_ACTUEEL+LINDY, "Belastingteruggave": BELASTING, "Overig inkomen": OVERIG_INKOMEN_TOTAAL};
+  const INKOMEN_COMPONENTEN = {"Salaris": ROB_ACTUEEL+LINDY, "Belastingteruggave": BELASTING, "Overig inkomen": OVERIG_INKOMEN_TOTAAL, "Deurwaarder": 0};
   const SALARIS_SUBCOMPONENTEN = {"Rob — LVNL": ROB_ACTUEEL, "Lindy — SARO": LINDY};
   const OVERIG_INKOMEN_SUBCOMPONENTEN = {};
   [...LM_RABO_TX, ...LM_ING_TX].filter(t=>t.category==='Overig inkomen').forEach(t=>{
     OVERIG_INKOMEN_SUBCOMPONENTEN[t.vendor] = (OVERIG_INKOMEN_SUBCOMPONENTEN[t.vendor]||0) + t.amount;
   });
   const SPAREN_COMPONENTEN = {"Rob — vast": ROB_SPAREN, "Lindy — volledig salaris": LINDY, "Deurwaarder (Velthoven)": 0};
-  const hypotheekLM = hypotheekVindMaand(LM_JAAR, LM_MAAND);
   const hypotheekBegrootLM = hypotheekLM ? hypotheekLM.bruto : 2597.40; // fallback als maand ontbreekt
   const voorspellingLM = voorspellingDagelijksPerCategorie(LM_JAAR, LM_MAAND);
+  // Een salarisperiode beslaat vaak delen van TWEE kalendermaanden (bv. 24-aug t/m 25-sep) — de seizoens-
+  // logica (ENEL/IMU/Muziek, die per kalendermaand factureert) moet dus BEIDE aangeraakte maanden checken,
+  // niet alleen de "label"-maand (LM_MAAND_KORT) van de periode. Zonder dit mist een rekening die al in de
+  // eerste (kalender)maand van de periode viel (Rob: "je wist dat Enel om de maand kwam").
+  const DUTCH_MAAND3 = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+  const maandenInDezePeriode = new Set([
+    DUTCH_MAAND3[new Date(PERIODE_START_SALARISDATUM).getUTCMonth()],
+    DUTCH_MAAND3[new Date(PERIODE_EINDE_SALARISDATUM).getUTCMonth()],
+  ]);
+  const casa3sSeizoen = ([...maandenInDezePeriode].some(m=>ENEL_MAANDEN.has(m))?ENEL_BEDRAG:0) + ([...maandenInDezePeriode].some(m=>IMU_MAANDEN.has(m))?IMU_BEDRAG:0);
+  const muziekSeizoen = [...maandenInDezePeriode].some(m=>MUZIEK_MAANDEN.has(m)) ? MUZIEK_BEDRAG : 0;
   const VAST_COMPONENTEN = {
     "Hypotheek": hypotheekBegrootLM, "Auto": 896.53, "Verzekeringen": 163.33, "Zorgverzekering": 347.20,
     "Nutsvoorzieningen": 26.00+energiePrognoseMaand(LM_MAAND), "Telecom": 94.99, "Abonnementen": 28.63+39.30+89.78,
-    "Goede doelen": 2.00, "Bankkosten": 4.65+4.53+20.00, "Casa 3S": 415.28+61.00,
-    "Vakbond": 25.60, "Muziek": 0.00, "Paardrijden": 325.00+143.18, "Zakelijk": 117.45,
+    "Goede doelen": 2.00, "Bankkosten": 4.65+4.53+20.00, "Casa 3S": CASA_LENING+casa3sSeizoen,
+    "Vakbond": 25.60, "Muziek": muziekSeizoen, "Paardrijden": 325.00+143.18, "Zakelijk": 117.45,
     /* Muziek (CultuurLocaal) op €0: 25 jul-24 aug valt volledig in de bevestigde zomerstop (geen incasso's jul/aug/sep).
        Actieve maanden (jan-jun, okt-dec): €182,73/mnd — nieuw tarief sinds okt, zie vendor_patronen in Supabase.
        Medisch staat hier bewust niet bij (Robs bevestiging 18-08): de zorgverzekeringspremie (VGZ, €347,20/mnd)
@@ -3597,7 +3619,7 @@ function renderVolgendeMaandView(){
   const nettoSaldoGecorrigeerd = netto + vorigeMaandComponent + reisAfwikkelingComponent + reisOnderwegComponent + saldoAfwijkingTotaal - kaartReservering;
 
   function donutFor(componenten){
-    const sorted = Object.entries(componenten).filter(([,v])=>v>0.001).sort((a,b)=>b[1]-a[1]);
+    const sorted = Object.entries(componenten).filter(([,v])=>v>-0.001).sort((a,b)=>b[1]-a[1]);
     const total = sorted.reduce((s,[,v])=>s+v,0);
     return {sorted, total};
   }
@@ -3619,9 +3641,10 @@ function renderVolgendeMaandView(){
         const sub = SUB_COMPONENTEN_MAP[catName];
         if(!sub) return '';
         const sd = donutFor(sub);
+        const salarisVerwacht = {"Rob — LVNL": 11378.36, "Lindy — SARO": 2500.00};
         return `<div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--rule);">
           <div class="card-label">${catName} — uitsplitsing</div>
-          ${renderBarList(sd.sorted, sd.total, {})}
+          ${renderBarList(sd.sorted, sd.total, catName==='Salaris' ? {showDot:true, budgetFor:(name)=>salarisVerwacht[name]} : {})}
         </div>`;
       })()}
     </div>`;
@@ -3631,13 +3654,21 @@ function renderVolgendeMaandView(){
   // (LM_RABO_TX + LM_ING_TX, met effectiveCategory + effectiveBucket), niet de voorspelling — die staat al
   // in het bovenste cijfer. Budget-bolletje moet altijd een kleur hebben: val terug op de eigen voorspelling/
   // vaste-lastenbedrag als er geen Excel-budget bekend is voor die categorie.
-  const casa3sBudgetAug = CASA_LENING + (ENEL_MAANDEN.has(LM_MAAND_KORT)?ENEL_BEDRAG:0) + (IMU_MAANDEN.has(LM_MAAND_KORT)?IMU_BEDRAG:0);
-  const muziekBudgetAug = MUZIEK_MAANDEN.has(LM_MAAND_KORT) ? MUZIEK_BEDRAG : 0;
+  // Een salarisperiode beslaat vaak delen van TWEE kalendermaanden (bv. 24-aug t/m 25-sep) — de seizoens-
+  // logica (ENEL/IMU/Muziek, die per kalendermaand factureert) moet dus BEIDE aangeraakte maanden checken,
+  // niet alleen de "label"-maand (LM_MAAND_KORT) van de periode. Zonder dit mist een rekening die al in de
+  // eerste (kalender)maand van de periode viel (Rob: "je wist dat Enel om de maand kwam").
+  const casa3sBudgetAug = CASA_LENING + casa3sSeizoen;
+  const muziekBudgetAug = muziekSeizoen;
   const budgetMapAug = {...VAST_COMPONENTEN, ...DAGELIJKS_COMPONENTEN, ...BUDGET_CATEGORIE_MAP, 'Casa 3S': casa3sBudgetAug, 'Muziek': muziekBudgetAug};
   function actueelDetail(titel, rowsActueel, expandKey){
     const perCat = {};
+    // Vaste posten uit de verwachting altijd tonen (op €0 als er nog niets voor is uitgegeven) — Rob, 24-08-2026:
+    // "de vaste posten uit de verwachting neerzetten, waarde op 0, maar bij openklap het verwachte bedrag".
+    const verwachtingCats = expandKey==='vast' ? VAST_COMPONENTEN : DAGELIJKS_COMPONENTEN;
+    Object.keys(verwachtingCats).forEach(cat=>{ perCat[cat] = 0; });
     rowsActueel.forEach(r=>{ perCat[r.category] = (perCat[r.category]||0) - r.amount; });
-    const sorted = Object.entries(perCat).filter(([,v])=>v>0.001).sort((a,b)=>b[1]-a[1]);
+    const sorted = Object.entries(perCat).filter(([,v])=>v>-0.001).sort((a,b)=>b[1]-a[1]);
     const total = sorted.reduce((s,[,v])=>s+v,0);
     const targetBucket = (expandKey==='vast') ? 'dagelijks' : 'vast';
     const barHtml = renderBarList(sorted, total, {
@@ -3704,7 +3735,6 @@ function renderVolgendeMaandView(){
       return `<div class="card" data-expand="na-salaris" style="cursor:pointer;border-color:${kleur};">
         <div class="card-label">Overmaken naar ING${isOpen?' ▾':' ▸'}</div>
         <div class="stat-figure" style="color:${kleur};">${fmt(restNaarIng)}</div>
-        <div class="stat-sub">na salaris: Rabo → ING</div>
         ${isOpen?`<div class="cdt-divider"></div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px;">
           <div style="display:flex;justify-content:space-between;"><span>Salaris (Rabo)</span><span style="color:var(--paper);">${fmt(inkomenRabo)}</span></div>
@@ -3722,8 +3752,21 @@ function renderVolgendeMaandView(){
         <div class="card-label">Vorige maand — sparen${isOpen?' ▾':' ▸'}</div>
         <div class="stat-figure" style="color:${kleur};">${fmt(vorigeMaandSparen.blijftOver)}</div>
         <div class="stat-sub">${vorigeMaandSparen.definitief ? `definitief (maand afgesloten${vorigeMaandSparen.afgeslotenOp?', '+vorigeMaandSparen.afgeslotenOp:''})` : 'geschat, nog niet overgemaakt naar sparen'}</div>
-        ${vorigeMaandSparen.definitief && vorigeMaandSparen.correctieReden ? `<div class="stat-sub" style="margin-top:6px;">${vorigeMaandSparen.correctieReden}</div>` : ''}
-        ${isOpen && !vorigeMaandSparen.definitief ?`<div class="stat-sub" style="margin-top:6px;">geen overboeking naar Oranje Spaarrekening gevonden in juli — dit bedrag telt mee bij de eerstvolgende keer sparen (samen met wat deze maand overblijft)</div>`:''}
+        ${isOpen && vorigeMaandSparen.definitief ? (()=>{
+          const a = vorigeMaandSparen.afsluiting;
+          const rij = (label, bedrag) => `<div style="display:flex;justify-content:space-between;"><span>${label}</span><span style="color:var(--paper);">${fmt(bedrag)}</span></div>`;
+          return `<div class="cdt-divider"></div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px;">
+          ${rij('Rabo', a.rabo||0)}
+          ${rij('ING', a.ing||0)}
+          ${rij('Openstaand AMEX', -(a.amexOpenstaand||0))}
+          ${rij('Openstaand ING CC', -(a.ccOpenstaand||0))}
+          ${a.correctie ? rij('Correctie', a.correctie) : ''}
+          <div class="cdt-divider"></div>
+          <div style="display:flex;justify-content:space-between;font-weight:600;"><span>Totaal</span><span style="color:${kleur};">${fmt(vorigeMaandSparen.blijftOver)}</span></div>
+        </div>`;
+        })() : ''}
+
         ${hangend.length?`<div class="stat-sub" style="margin-top:6px;color:var(--dot-over);">⚠ ${hangend.map(p=>p.naam).join(', ')} is voorbij maar nog niet bevestigd/afgesloten (zie Dagelijks) — wacht met dit bedrag doorsparen tot dat rond is, het staat nu nog niet vast.</div>`:''}
       </div>`;
     })() : ''}
@@ -3756,10 +3799,10 @@ function renderVolgendeMaandView(){
     </div>`;
     }).join('')}
     <div class="hero4">
-      ${tile('Inkomen', fmt(inkomenTotaal), 'Rob + Lindy + belastingteruggave + deurwaarder (€0)', 'inkomen', 'pos')}
+      ${tile('Inkomen', fmt(inkomenTotaal), '', 'inkomen', 'pos')}
       ${tile('Vaste lasten', null, null, 'vast', 'neg', {uitgegeven:vastUitgegevenTotaal, verwacht:vastTotaal})}
       ${tile('Dagelijks', null, null, 'dagelijks', 'neg', {uitgegeven:dagelijksUitgegevenTotaal, verwacht:variabel})}
-      ${tile('Sparen', fmt(sparenBasis), 'Rob €2.000 + Lindy volledig — vaste eerste afspraak', 'sparen', 'pos')}
+      ${tile('Sparen', fmt(sparenBasis), '', 'sparen', 'pos')}
       ${(()=>{
         const isOpen = volgendeExpand==='besteding';
         const hoofd = nettoSaldoGecorrigeerd;
@@ -3786,7 +3829,7 @@ function renderVolgendeMaandView(){
         return `<div class="card" data-expand="besteding" style="cursor:pointer;">
           <div class="card-label">Bestedingsruimte${isOpen?' ▾':' ▸'}</div>
           <div class="stat-figure ${hoofd>=0?'pos':'neg'}">${fmt(hoofd)}</div>
-        </div>${detail}${isOpen?`<div style="font-size:11px;color:var(--muted);padding:6px 2px 0;">${(vorigeMaandComponent!==0||reisAfwikkeling.length>0||(heeftSaldo && (Math.abs(saldoAfwijkingTotaal)>=0.01))||kaartReservering>0) ?'verwacht bij einde maand, incl. vorige maand/reis/saldo':'verwacht bij einde maand (systeem)'}</div>`:''}`;
+        </div>${detail}`;
       })()}
     </div>
     <div class="card ledger-card">
@@ -3819,7 +3862,7 @@ function renderVolgendeMaandSepView(){
   const BELASTING = hypotheekSchoonVM ? hypotheekSchoonVM.belastingAftrek : 313.00; // fallback als maand ontbreekt
   const HYPOTHEEK_BEGROOT = hypotheekVM ? hypotheekVM.bruto : 2597.40;
   const ROB_SPAREN=2000.00;
-  const INKOMEN_COMPONENTEN = {"Salaris": ROB_BASIS+LINDY, "Belastingteruggave": BELASTING, "Overig inkomen": LINDY_TOESLAGEN};
+  const INKOMEN_COMPONENTEN = {"Salaris": ROB_BASIS+LINDY, "Belastingteruggave": BELASTING, "Overig inkomen": LINDY_TOESLAGEN, "Deurwaarder": 0};
   const SALARIS_SUBCOMPONENTEN = {"Rob — LVNL": ROB_BASIS, "Lindy — SARO": LINDY};
   const SPAREN_COMPONENTEN = {"Rob — vast": ROB_SPAREN, "Lindy — volledig salaris": LINDY, "Deurwaarder (Velthoven)": 0};
   const VAST_COMPONENTEN = {
@@ -3852,7 +3895,7 @@ function renderVolgendeMaandSepView(){
   const netto = inkomenTotaal - sparenBasis - vastTotaal - variabel;
 
   function donutFor(componenten){
-    const sorted = Object.entries(componenten).filter(([,v])=>v>0.001).sort((a,b)=>b[1]-a[1]);
+    const sorted = Object.entries(componenten).filter(([,v])=>v>-0.001).sort((a,b)=>b[1]-a[1]);
     const total = sorted.reduce((s,[,v])=>s+v,0);
     return {sorted, total};
   }
@@ -3873,9 +3916,10 @@ function renderVolgendeMaandSepView(){
         const sub = SUB_COMPONENTEN_MAP[catName];
         if(!sub) return '';
         const sd = donutFor(sub);
+        const salarisVerwacht = {"Rob — LVNL": 11378.36, "Lindy — SARO": 2500.00};
         return `<div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--rule);">
           <div class="card-label">${catName} — uitsplitsing</div>
-          ${renderBarList(sd.sorted, sd.total, {})}
+          ${renderBarList(sd.sorted, sd.total, catName==='Salaris' ? {showDot:true, budgetFor:(name)=>salarisVerwacht[name]} : {})}
         </div>`;
       })()}
     </div>`;
@@ -3895,10 +3939,10 @@ function renderVolgendeMaandSepView(){
 
   return `
     <div class="hero4">
-      ${tile('Inkomen', fmt(inkomenTotaal), 'Rob + Lindy + belastingteruggave + deurwaarder (€0)', 'inkomen', 'pos')}
-      ${tile('Vaste lasten', fmt(-vastTotaal), 'Bakkersparkweg + Casa 3S + ING + AMEX', 'vast', 'neg')}
-      ${tile('Dagelijks', fmt(-variabel), 'gem. 7-8 mnd echte data', 'dagelijks', 'neg')}
-      ${tile('Sparen', fmt(sparenBasis), 'Rob €2.000 + Lindy volledig — vaste eerste afspraak', 'sparen', 'pos')}
+      ${tile('Inkomen', fmt(inkomenTotaal), '', 'inkomen', 'pos')}
+      ${tile('Vaste lasten', fmt(-vastTotaal), '', 'vast', 'neg')}
+      ${tile('Dagelijks', fmt(-variabel), '', 'dagelijks', 'neg')}
+      ${tile('Sparen', fmt(sparenBasis), '', 'sparen', 'pos')}
       <div class="card">
         <div class="card-label">Bestedingsruimte</div>
         <div class="stat-figure ${netto>=0?'pos':'neg'}">${fmt(netto)}</div>
