@@ -501,15 +501,31 @@ function renderBarList(sorted, total, opts={}){
   const showDot = opts.showDot || false; // toon een grijs/groen/rood bolletje vóór de naam
   const detailFor = opts.detailFor || (()=>''); // (name) => HTML, direct onder deze rij getoond (bv. uitgeklapte details)
   const verwachtBijRood = opts.verwachtBijRood || false; // toon "verwacht €X" alleen als het bolletje rood is (geen budget elders te zien)
+  const matchMode = opts.matchMode || false; // Rob, 24-08-2026: voor Inkomen is "meer dan verwacht" niet per se goed — hier telt of het bedrag ONGEVEER overeenkomt (beide kanten), niet alleen "onder budget = groen"
   const limit = opts.limit || sorted.length;
+  // Marge (Rob, 24-08-2026): 1% met een vloer van €25, overal dezelfde — "binnen marge = geen kleur", kleur
+  // verschijnt alleen als er écht iets afwijkt, niet als bevestiging dat alles klopt.
+  const margeVoor = (budget) => Math.max(25, budget*0.01);
   const rows = sorted.slice(0, limit).map(([name,val],i)=>{
     let dot = '', isOver = false;
     const budget = budgetFor(name);
     if(showDot){
-      const magnitude = Math.abs(val);
-      isOver = budget!=null && budget>0 && magnitude>budget;
-      const dotColor = budget!=null && budget>0 ? (isOver?"var(--dot-over)":"var(--dot-ok)") : 'var(--rule)';
-      dot = `<span class="cat-dot" style="background:${dotColor};"></span>`;
+      if(budget==null || (!matchMode && budget<=0)){
+        dot = `<span class="cat-dot" style="background:var(--rule);"></span>`; // geen budget bekend — neutraal
+      } else {
+        const magnitude = Math.abs(val);
+        const marge = margeVoor(budget);
+        const diff = magnitude - budget; // >0 = meer dan verwacht, <0 = minder
+        const binnenMarge = Math.abs(diff) <= marge;
+        // Inkomen (matchMode): MEER dan verwacht is prima/goed (extra inkomen) — alleen MINDER dan verwacht
+        // is een probleem (Rob, 24-08-2026: "bij salaris ook groen als er meer is"). Vaste lasten/Dagelijks:
+        // omgekeerd, MEER dan begroot is het probleem, MINDER is prima.
+        const teVeelIsSlecht = !matchMode;
+        isOver = teVeelIsSlecht ? diff > marge : diff < -marge;
+        const dotColor = binnenMarge ? 'var(--rule)' : (isOver ? 'var(--dot-over)' : 'var(--dot-ok)');
+        dot = `<span class="cat-dot" style="background:${dotColor};"></span>`;
+        isOver = !binnenMarge && isOver; // "isOver" hier = "buiten marge aan de kant die aandacht verdient, toon verwacht"
+      }
     }
     return `<li class="bar-row"${rowAttrs(name,i)}>
       <div class="bar-row-top"><span class="bar-name">${dot}${name}${indicator(name)}</span><span class="bar-amt">${formatAmt(val,name)}</span></div>
@@ -600,7 +616,7 @@ function renderAmexView(){
 /* Bron voor deze en toekomstige vaste-lasten-patronen: Supabase-tabel 'vendor_patronen'
    (project apleozatyqmqtzofxbky). Nieuwe/bijgestelde patronen (bv. Muziek-zomerstop, tariefswijzigingen)
    worden daar eerst bevestigd met Rob voordat ze hier hardcoded worden. */
-const ENEL_MAANDEN = new Set(["feb","apr","jun","aug","okt","dec"]);
+const ENEL_MAANDEN = new Set(["jan","mrt","mei","jul","sep","nov"]); // gecorrigeerd 24-08-2026 (Rob): rekening van 24-08 telt als september, dus volgende in november
 const IMU_MAANDEN = new Set(["mei","nov"]);
 const MUZIEK_MAANDEN = new Set(["jan","feb","mrt","apr","mei","jun","okt","nov","dec"]); // zomerstop jul/aug/sep
 const MUZIEK_BEDRAG = 182.73; // nieuw tarief sinds okt (was €77,88/89)
@@ -982,7 +998,14 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {confirmedKind:'tx_ingcc',  pendingKind:'tx_pending_ingcc',  getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {confirmedKind:'tx_amex',   pendingKind:'tx_pending_amex',   getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-08-24i - Nieuwe methodiek "stabiele vaste post" op Robs bevestiging ("ja, gewoon overnemen als het één bedrag steeds terugkeert"). Nieuwe functie stabielePostBedrag(cat, jaar, maand, minMaanden=3): checkt of een vaste-lastencategorie de laatste 3 afgesloten periodes op rij precies hetzelfde bedrag laat zien (o.b.v. alleBekendeTransacties(), exclusief de huidige/lopende periode) — zo ja, dat waargenomen bedrag gebruiken i.p.v. de handmatige schatting in VAST_COMPONENTEN; zo nee, terugvallen op de bestaande hardcoded waarde. Toegepast op alle "losse" posten die nog geen eigen engine hebben (Auto, Verzekeringen, Zorgverzekering, Telecom, Abonnementen, Goede doelen, Bankkosten, Vakbond, Paardrijden, Zakelijk) — Hypotheek/Nutsvoorzieningen/Casa 3S/Muziek blijven ongemoeid want die hebben al een eigen dynamische berekening. Nu nog geen zichtbaar effect: er zijn pas 2 volledig afgesloten periodes met granulaire data (juni, juli) — de regel heeft minimaal 3 nodig en activeert dus vanzelf zodra er meer maanden bijkomen, zonder dat Rob het per categorie hoeft aan te geven.';
+const DASHBOARD_VERSION = '2026-08-24p - Correctie op Robs correctie: parttime-overgang is toch echt 1 september (mijn vorige wijziging naar 1 oktober was fout) — Rob: "het komt pas in de oktober-strook terug, maar dat is verwerkingstijd, hoort niet bij de ingangsdatum in de Salaris-tab". LINDY_PARTTIME_STAPPEN, jaartelling en beide teksten teruggezet naar 1-9. Cao-datum (1-11) blijft ongewijzigd, was al goed. Twee structurele wijzigingen op Lindys tab, gelijkgetrokken met Rob: (1) het note-card bovenaan (uitleg over anker/parttime/cao) volledig verwijderd — Rob: "heel die tegel met tekst wil ik niet, bij Rob staat het goed" (Robs tab heeft geen note-card). (2) Berekening en weergave tonen nu eerst het volledige (100%) brutoloon, dan een aparte "Parttime korting"-regel (negatief), dan pas het feitelijke (parttime-)brutoloon als subtotaal — exact dezelfde opbouw als Robs "Bruto totaal → Korting IKV → Fiscaal Bruto". berekenLindyPeriodes() geeft nu basisVoltijd en parttimeKorting apart terug i.p.v. alleen het al-verrekende bruto.';
+const DASHBOARD_VERSION_PREV_2026_08_24o = '2026-08-24o - Correctie op Robs terugkoppeling: Lindys parttime-overgang (60%→50%) is 1 oktober 2026, niet 1 september zoals eerder aangenomen. LINDY_PARTTIME_STAPPEN, de jaartelling in renderSalarisLindyView (juli-sep op 60% = 3 mnd, okt-dec op 50% = 3 mnd, was 2/4) en beide note-cards bijgewerkt. Overige punten uit Robs bericht (schoolvakantie-patroon in de vergoeding, cao-uitbetaling met een maand vertraging in december, of het jaaroverzicht fijnmaziger dan 1x/jaar moet) nog niet doorgevoerd — te veel open ontwerpvragen om nu blind te verwerken, terug voorgelegd aan Rob in de chat.';
+const DASHBOARD_VERSION_PREV_2026_08_24n = '2026-08-24n - Salaris-Lindy-tab op Robs verzoek gelijkgetrokken met Rob-tab: per jaar nu ook de korte inline toelichting "Cao-groei november JJJJ: +X% (bevestigd/aanname — inflatie-plug)" — zelfde patroon als bij Rob (die had het al, gebaseerd op juli-datum; bij Lindy is dat november, cao onderwijs). lindySalarisJaarOverzicht() geeft caoStapDitJaar nu ook terug (LINDY_CAO_STAPPEN.find o.b.v. novDatum), had Rob al via SALARIS_CAO_STAPPEN o.b.v. julDatum. Het bestaande note-card bovenaan (cao/inflatie-uitleg) bleef al staan, dat was al gelijk aan Rob. Km/parkeer-vergoeding (variabel, LINDY_TOESLAGEN_ANCHOR) blijft bewust wél in de jaaroverzicht-breakdown (as-is, apart gespecificeerd) maar hoort NIET thuis in een losse "verwacht/volgende maand"-schatting — dat blijft een open aandachtspunt voor Claude bij het handmatig bijwerken van die cijfers, geen losstaande code-wijziging hier. Open vraag (nog niet besloten, aan Rob): of de vergoeding op de lange termijn (Vermogen-tab, inflatie-projectie) wel of niet moet meetellen.';
+const DASHBOARD_VERSION_PREV_2026_08_24m = '2026-08-24m - Kleurlogica gecorrigeerd op Robs verzoek: bij Inkomen (matchMode) is MEER dan verwacht juist goed (extra inkomen) — alleen MINDER dan verwacht is een probleem. Was per ongeluk symmetrisch (beide kanten rood); nu asymmetrisch net als Vaste lasten/Dagelijks, maar in de tegenovergestelde richting (daar is meer-dan-begroot het probleem, hier minder-dan-verwacht). Afgesproken werkwijze (niet in de UI, want geen toelichtende tekst): als Robs inkomen ooit fors boven verwacht uitkomt, vraagt Claude in de chat na of het "verwacht"-referentiecijfer nog wel klopt, i.p.v. dat stilzwijgend te laten staan.';
+const DASHBOARD_VERSION_PREV_2026_08_24l = '2026-08-24l - Bolletjes-logica algemeen herzien op Robs vraag ("3% vind ik veel" + "geldt dit ook voor vaste lasten/dagelijks, marge aanhouden?"). Eén margeformule overal: max(€25, 1% van het verwachte bedrag) — was 3%/min €50, alleen voor Inkomen. Nieuw, uniform gedrag: binnen de marge = GEEN kleur (grijs/neutraal), niet meer standaard groen — kleur verschijnt alleen als er écht iets afwijkt. Voor Inkomen (matchMode): buiten de marge = rood, ongeacht richting (te veel of te weinig is allebei een afwijking). Voor Vaste lasten/Dagelijks (budget-modus): buiten de marge aan de dure kant = rood, buiten de marge aan de goedkope kant = groen (ruim onder budget blijft een positief signaal, geen neutrale non-info). De losse forceRoodTot-optie (was alleen voor Deurwaarder, vorige changelog-regel) is nu overbodig en verwijderd — Deurwaarder loopt via dezelfde margeformule als Rob/Lindy.';
+const DASHBOARD_VERSION_PREV_2026_08_24k = '2026-08-24k - Deurwaarder-logica vereenvoudigd op Robs terugkoppeling ("marge aanhouden" is algemeen logischer dan een harde grens). De aparte forceRoodTot-regel (rood zolang er niets binnenkomt, hard bij 1 cent) is vervangen door dezelfde marge-gebaseerde matchMode als Rob/Lindy — Deurwaarder krijgt nu een verwachte waarde (€900/mnd, uit Robs spaar-Excel) en wordt net als de andere twee vergeleken met een marge (max(€50, 3%)). Bij €0 werkelijk vs €900 verwacht is het verschil ruim boven de marge, dus rood — hetzelfde eindresultaat als eerst, maar nu via dezelfde, consistente logica i.p.v. een losse speciale regel.';
+const DASHBOARD_VERSION_PREV_2026_08_24j = '2026-08-24j - Vijf dingen n.a.v. Robs terugkoppeling. (1) ECHTE BUG: Paardrijden toonde exact hetzelfde bedrag bij Vast én Dagelijks — getUitschieterGrenzen() en voorspellingDagelijksPerCategorie() filterden alleen op categorienaam (isDagelijksCategorie), niet op de daadwerkelijke bucket van de transactie. Omdat "Paardrijden" zelf niet in de vaste-categorieën-lijst staat, maar individuele leveranciers (De Flemming) via een vendor_bucket-regel wél naar "vast" gaan, telden ALLE Paardrijden-transacties dubbel mee in de Dagelijks-historie. Fix: beide functies checken nu ook effectiveBucket(r)===\'dagelijks\'. (2) Inkomen-bolletjes: Rob/Lindy gebruikten "over budget = rood"-logica (bedoeld voor uitgaven), maar voor salaris is "minder dan verwacht" net zo\'n afwijking als "meer". Nieuwe matchMode in renderBarList: rood bij >3% (min. €50) afwijking, ongeacht richting. Referenties gecorrigeerd: Rob €11.378,36 (vast contractbedrag), Lindy €2.606 (Robs eigen begroting, niet het toevallige laatste bedrag) — Lindy staat nu terecht rood (werkelijk €2.505,83). (3) Deurwaarder: nieuwe forceRoodTot-optie — rood zolang er niets is binnengekomen (Rob: "zolang er niets binnen is"), niet de oude "verwacht €0 = groen"-logica. Overig inkomen blijft bewust bolletje-loos (geen budgetFor-entry, per Robs "krijgt nooit een gekleurd bolletje"). (4) Footer-tekst in Dagelijks helemaal verwijderd (niet meer ingekort — Rob: "helemaal weg"). (5) ENEL_MAANDEN gecorrigeerd: de Enel-rekening van 24-08 telt volgens Rob als september (niet augustus), dus het tweemaandelijkse ritme schuift een maand op naar jan/mrt/mei/jul/sep/nov — eerstvolgende dus november, niet oktober.';
+const DASHBOARD_VERSION_PREV_2026_08_24i = '2026-08-24i - Nieuwe methodiek "stabiele vaste post" op Robs bevestiging ("ja, gewoon overnemen als het één bedrag steeds terugkeert"). Nieuwe functie stabielePostBedrag(cat, jaar, maand, minMaanden=3): checkt of een vaste-lastencategorie de laatste 3 afgesloten periodes op rij precies hetzelfde bedrag laat zien (o.b.v. alleBekendeTransacties(), exclusief de huidige/lopende periode) — zo ja, dat waargenomen bedrag gebruiken i.p.v. de handmatige schatting in VAST_COMPONENTEN; zo nee, terugvallen op de bestaande hardcoded waarde. Toegepast op alle "losse" posten die nog geen eigen engine hebben (Auto, Verzekeringen, Zorgverzekering, Telecom, Abonnementen, Goede doelen, Bankkosten, Vakbond, Paardrijden, Zakelijk) — Hypotheek/Nutsvoorzieningen/Casa 3S/Muziek blijven ongemoeid want die hebben al een eigen dynamische berekening. Nu nog geen zichtbaar effect: er zijn pas 2 volledig afgesloten periodes met granulaire data (juni, juli) — de regel heeft minimaal 3 nodig en activeert dus vanzelf zodra er meer maanden bijkomen, zonder dat Rob het per categorie hoeft aan te geven.';
 const DASHBOARD_VERSION_PREV_2026_08_24h = '2026-08-24h - BUGFIX n.a.v. Rob ("negatieve bedragen?"): "Overig" en "Cadeaus" toonden "begroot -€104,75" resp. "-€195,68" — een categorie kan in een historische maand netto meer terugbetaling dan uitgave hebben gehad (bv. de Kado-spaarpot-tegenboeking bij Cadeaus), waardoor het gewogen gemiddelde in voorspellingDagelijksPerCategorie() negatief uitkwam. Een negatief "begroot"-bedrag voor een uitgavencategorie slaat nergens op. Fix: resultaat per categorie nooit onder €0 laten zakken (Math.max(0, ...)). Uitgelegd (geen wijziging): Paardrijden staat bewust zowel bij Vaste lasten (De Flemming, via vendor_bucket-regel altijd vast) als bij Dagelijks (andere leveranciers zoals Epplejeck, geen vaste-bucket-regel, dus standaard dagelijks) — twee soorten uitgaven binnen dezelfde categorie, geen bug. Vakbond/Bankkosten-methodiek (stabiel al meerdere maanden) — nog open, ter bespreking met Rob.';
 const DASHBOARD_VERSION_PREV_2026_08_24g = '2026-08-24g - Grote herstructurering op Robs 4 screenshots. (1) BUG: actueelDetail() (Vaste lasten/Dagelijks-uitklap) toonde de hele lijst pas als total>0 — met alle posten op €0 (net gefixt in de vorige changelog-regel) bleef total dus 0 en verscheen "Nog geen transacties" i.p.v. de volledige lijst. Conditie nu op sorted.length>0 i.p.v. total>0 — de vaste posten op €0 zijn nu ook in Dagelijks écht zichtbaar, niet alleen in de code. (2) Inkomen — samenstelling: "Salaris" als optelling van Rob+Lindy platgeslagen naar twee losse regels ("Rob — LVNL", "Lindy — SARO"), geen uitklapbare tussenlaag meer nodig (SUB_COMPONENTEN_MAP leeggemaakt, was alleen voor Salaris). (3) Elke Inkomen-regel (Rob, Lindy, Belastingteruggave, Deurwaarder) heeft nu een kleurbolletje; alleen als die ROOD is (afwijkt van de referentie) verschijnt eronder "verwacht €X" — bij groen/grijs niets extra, geen aparte klik nodig. Nieuwe renderBarList-optie verwachtBijRood hiervoor. Referenties: Rob €11.400, Lindy €2.600 (ruim boven de laatste twee werkelijke bedragen, om normale schommelingen niet als "rood" te laten flitsen), Belastingteruggave = de voorspelling zelf (dus altijd groen), Deurwaarder = €0 verwacht. (4) Alfabetische sortering i.p.v. op bedrag, in zowel donutFor() (Inkomen/Sparen) als actueelDetail() (Vaste lasten/Dagelijks). (5) Footer-tekst in Dagelijks (uitleg over de meerdere-maanden-verwachting) fors ingekort op Robs verzoek.';
 const DASHBOARD_VERSION_PREV_2026_08_24f = '2026-08-24f - Zes dingen n.a.v. Robs screenshots. (1) "na salaris: Rabo → ING"-zinnetje weg. (2) "verwacht bij einde maand, incl. vorige maand/reis/saldo"-zinnetje weg. (3) Vorige-maand-kaart deed niets bij uitklappen (▾ draaide om maar toonde geen inhoud) — nu een echte samenstelling (Rabo/ING/Openstaand AMEX/Openstaand ING CC/Correctie/Totaal) zodra de maand definitief is afgesloten; berekenVorigeMaandSamenvatting() geeft het ruwe afsluiting-object nu ook terug i.p.v. alleen het eindbedrag. (4) donutFor() liet categorieën met waarde 0 verdwijnen (filter was v>0.001) — nu v>-0.001, dus standaardposten (Belastingteruggave, Deurwaarder) blijven zichtbaar op €0 i.p.v. te verdwijnen. Deurwaarder als expliciete regel (€0) toegevoegd aan INKOMEN_COMPONENTEN. (5) Zelfde probleem in actueelDetail() (Vaste lasten/Dagelijks-uitklap): nu wordt perCat eerst gevuld met alle categorieën uit VAST_COMPONENTEN resp. DAGELIJKS_COMPONENTEN op €0, vóórdat de werkelijke transacties worden opgeteld — Rob: "de vaste posten uit de verwachting neerzetten, waarde op 0, maar bij openklap het verwachte bedrag". Elke vaste-lastenpost (en dagelijks-categorie) staat dus altijd in de lijst, ook zonder transacties tot nu toe; tikken erop toont nog steeds het begrote bedrag (via de bestaande budgetMapAug-koppeling). (6) Salaris — uitsplitsing (Rob/Lindy) heeft nu een kleurbolletje (showDot+budgetFor, referentie €11.378,36 / €2.500) dat aangeeft of het bedrag rond de gebruikelijke verwachting zit.';
@@ -1310,6 +1333,7 @@ function getUitschieterGrenzen(){
   const bedragenPerCat = {};
   alleBekendeTransacties().forEach(r=>{
     if(!isDagelijksCategorie(r.category)) return;
+    if(effectiveBucket(r)!=='dagelijks') return; // categorienaam alleen is niet genoeg — bv. Paardrijden via De Flemming is per leverancier-regel "vast", moet hier niet meetellen
     if(r.amount>=0) return; // terugbetalingen tellen niet mee voor het bepalen van de "normale" transactiegrootte
     bedragenPerCat[r.category] = bedragenPerCat[r.category] || [];
     bedragenPerCat[r.category].push(Math.abs(r.amount));
@@ -1344,6 +1368,7 @@ function voorspellingDagelijksPerCategorie(huidigJaar, huidigMaand){
   const perMaand = {}; // "2026-6" -> {categorie: totaal (positief bedrag)}
   alleBekendeTransacties().forEach(r=>{
     if(!isDagelijksCategorie(r.category)) return;
+    if(effectiveBucket(r)!=='dagelijks') return; // BUGFIX (Rob, 24-08-2026): Paardrijden toonde hetzelfde bedrag bij Vast én Dagelijks — categorienaam alleen zegt niets over de bucket van déze transactie (De Flemming is via een leverancier-regel altijd "vast", ook al staat "Paardrijden" niet in de vaste-categorieën-lijst)
     if(effectiefIsUitschieter(r)) return; // eenmalig (automatisch of handmatig), negeren voor de verwachting
     const [j,m] = r.date.split('-');
     const key = `${j}-${parseInt(m,10)}`;
@@ -3663,12 +3688,20 @@ function renderVolgendeMaandView(){
     const d = donutFor(componenten);
     // Inkomen: elke regel (Rob, Lindy, Belastingteruggave, Overig inkomen, Deurwaarder) krijgt een bolletje
     // en toont "verwacht €X" alleen als het bolletje rood is — bij groen is er niets te zien (Rob, 24-08-2026).
-    const inkomenVerwacht = {"Rob — LVNL": 11400.00, "Lindy — SARO": 2600.00, "Belastingteruggave": BELASTING, "Deurwaarder": 0};
+    // Referentie: Rob's LVNL-basis is een vast contractbedrag (11.378,36). Lindy's SARO-salaris was begroot
+    // op €2.606 (Rob, 24-08-2026) — dat is de referentie, niet het toevallige laatste werkelijke bedrag.
+    const inkomenVerwacht = {"Rob — LVNL": 11378.36, "Lindy — SARO": 2606.00, "Belastingteruggave": BELASTING, "Deurwaarder": 900.00};
     const barHtml = renderBarList(d.sorted, d.total, {
       rowAttrs: (name)=>{ if(!SUB_COMPONENTEN_MAP[name]) return ''; const catKey=expandKey+'|'+name; return ` data-cat-toggle="${catKey}" style="cursor:pointer;${categoryExpand===catKey?'font-weight:600;':''}"`; },
       indicator: (name)=>{ if(!SUB_COMPONENTEN_MAP[name]) return ''; const catKey=expandKey+'|'+name; return categoryExpand===catKey?' ▾':' ▸'; },
       showDot: expandKey==='inkomen',
       verwachtBijRood: expandKey==='inkomen',
+      matchMode: expandKey==='inkomen',
+      // Deurwaarder: rood zolang er niets is binnengekomen (Rob, 24-08-2026: "rood en uitklap zolang er niets
+      // binnen is") — geen "verwacht €0 = groen", maar een openstaande post die aandacht verdient tot ze incasseert.
+      // Deurwaarder (24-08-2026, Rob: "marge aanhouden" is algemeen logischer dan een harde 0/1-cent-grens) —
+      // gebruikt nu dezelfde marge-gebaseerde match als Rob/Lindy hierboven, geen aparte forceRoodTot meer nodig.
+      forceRoodTot: ()=>null,
       budgetFor: expandKey==='inkomen' ? (name)=>inkomenVerwacht[name] : (()=>null),
     });
     return `<div class="card" style="grid-column: 1 / -1;">
@@ -3880,7 +3913,6 @@ function renderVolgendeMaandView(){
       </ul>
     </div>
 
-    <footer>Dagelijks: gemiddelde van 7-8 maanden echte data. Enel valt in augustus, IMU niet. Lindy: €2.489,66 (excl. variabele vergoedingen).</footer>
   `;
 }
 
@@ -3945,12 +3977,20 @@ function renderVolgendeMaandSepView(){
     const d = donutFor(componenten);
     // Inkomen: elke regel (Rob, Lindy, Belastingteruggave, Overig inkomen, Deurwaarder) krijgt een bolletje
     // en toont "verwacht €X" alleen als het bolletje rood is — bij groen is er niets te zien (Rob, 24-08-2026).
-    const inkomenVerwacht = {"Rob — LVNL": 11400.00, "Lindy — SARO": 2600.00, "Belastingteruggave": BELASTING, "Deurwaarder": 0};
+    // Referentie: Rob's LVNL-basis is een vast contractbedrag (11.378,36). Lindy's SARO-salaris was begroot
+    // op €2.606 (Rob, 24-08-2026) — dat is de referentie, niet het toevallige laatste werkelijke bedrag.
+    const inkomenVerwacht = {"Rob — LVNL": 11378.36, "Lindy — SARO": 2606.00, "Belastingteruggave": BELASTING, "Deurwaarder": 900.00};
     const barHtml = renderBarList(d.sorted, d.total, {
       rowAttrs: (name)=>{ if(!SUB_COMPONENTEN_MAP[name]) return ''; const catKey=expandKey+'|'+name; return ` data-cat-toggle="${catKey}" style="cursor:pointer;${categoryExpand===catKey?'font-weight:600;':''}"`; },
       indicator: (name)=>{ if(!SUB_COMPONENTEN_MAP[name]) return ''; const catKey=expandKey+'|'+name; return categoryExpand===catKey?' ▾':' ▸'; },
       showDot: expandKey==='inkomen',
       verwachtBijRood: expandKey==='inkomen',
+      matchMode: expandKey==='inkomen',
+      // Deurwaarder: rood zolang er niets is binnengekomen (Rob, 24-08-2026: "rood en uitklap zolang er niets
+      // binnen is") — geen "verwacht €0 = groen", maar een openstaande post die aandacht verdient tot ze incasseert.
+      // Deurwaarder (24-08-2026, Rob: "marge aanhouden" is algemeen logischer dan een harde 0/1-cent-grens) —
+      // gebruikt nu dezelfde marge-gebaseerde match als Rob/Lindy hierboven, geen aparte forceRoodTot meer nodig.
+      forceRoodTot: ()=>null,
       budgetFor: expandKey==='inkomen' ? (name)=>inkomenVerwacht[name] : (()=>null),
     });
     return `<div class="card" style="grid-column: 1 / -1;">
@@ -5292,12 +5332,12 @@ function renderSalarisView(){
 }
 /* ================= Salaris (Lindy — Stichting Samen Ambitieus Rotterdam, schaal 09 trede 10) =================
    Bron: loonstrook juli 2026 (AFAS). Anker: Brutoloon €3.015,00 bij 60% parttime.
-   Vanaf 1-9-2026 gaat Lindy 50% werken (bevestigd door Rob 26-7-2026) — Salaris/Bruto schalen daarmee mee. */
+   Vanaf 1-9-2026 gaat Lindy 50% werken (bevestigd door Rob) — Salaris/Bruto schalen daarmee mee; komt door verwerkingstijd pas in de oktober-strook terug, maar de ingangsdatum is 1-9. */
 const LINDY_ANCHOR_DATUM = '2026-07-01';
 const LINDY_BASIS_VOLTIJD = 5025.00; // 100%-schaalbedrag (schaal 09, trede 10) — Brutoloon = dit × parttime%
 const LINDY_PARTTIME_STAPPEN = [
   {vanaf:'2026-07-01', pct:60},
-  {vanaf:'2026-09-01', pct:50}, // bevestigd
+  {vanaf:'2026-09-01', pct:50}, // bevestigd — ingangsdatum, niet de datum waarop het in de loonstrook zichtbaar wordt
 ];
 // Effectieve percentages t.o.v. Brutoloon, afgeleid uit de juli-strook (geen exacte franchise-formule, want die ken ik niet)
 const LINDY_AOP_PCT = 7.58/3015.00*100;
@@ -5337,25 +5377,27 @@ function berekenLindyPeriodes(totJaar){
   return [...data].sort().map(datum=>{
     const pct = lindyParttimePct(datum);
     const basisVoltijd = lindyBasisVoltijd(datum);
-    const bruto = basisVoltijd * pct/100;
+    const parttimeKorting = -(basisVoltijd * (100-pct)/100); // negatief, net als Robs "Korting IKV"
+    const bruto = basisVoltijd + parttimeKorting; // = basisVoltijd * pct/100
     const aop = bruto*LINDY_AOP_PCT/100;
     const pensioen = bruto*LINDY_PENSIOEN_PCT/100;
     const loonheffing = bruto*LINDY_LOONHEFFING_PCT/100;
     const netto = bruto - aop - pensioen - loonheffing;
     const toeslagen = LINDY_TOESLAGEN_ANCHOR; // vast bedrag, gedeclareerd — schaalt niet mee met parttime%
-    return {vanaf:datum, parttimePct:pct, bruto, aop, pensioen, loonheffing, netto, toeslagen, uitTeBetalen: netto+toeslagen};
+    return {vanaf:datum, parttimePct:pct, basisVoltijd, parttimeKorting, bruto, aop, pensioen, loonheffing, netto, toeslagen, uitTeBetalen: netto+toeslagen};
   });
 }
 function lindySalarisJaarOverzicht(totJaar){
   const periodes = berekenLindyPeriodes(totJaar);
   const jaren = [];
   for(let j=2026; j<=totJaar; j++){
-    const janDatum = j+'-01-01', sepDatum = j+'-09-01', meiDatum = j+'-05-01', decDatum = j+'-12-01';
+    const janDatum = j+'-01-01', sepDatum = j+'-09-01', meiDatum = j+'-05-01', decDatum = j+'-12-01', novDatum = j+'-11-01';
     const actief = (d)=> periodes.filter(p=>p.vanaf<=d).slice(-1)[0] || periodes[0];
     const meiPct = lindyParttimePct(meiDatum), decPct = lindyParttimePct(decDatum);
     const meiBruto = lindyBasisVoltijd(meiDatum)*meiPct/100, decBruto = lindyBasisVoltijd(decDatum)*decPct/100;
     let vakantietoeslag = meiBruto*12*LINDY_VAKANTIETOESLAG_PCT/100;
     let dertiende = decBruto*12*LINDY_EINDEJAARSUITKERING_PCT/100;
+    const caoStapDitJaar = LINDY_CAO_STAPPEN.find(s=>s.vanaf===novDatum); // groeistap die dit jaar (november) is toegepast — zelfde idee als bij Rob (juli)
     if(j===2026){
       // Lindy is per 11-5-2026 in dienst — geen volledig opbouwjaar. Vakantietoeslag mei 2026 vervalt (nog niet in dienst
       // tijdens het opbouwjaar juni'25-mei'26). Eindejaarsuitkering december 2026 prorateren over het echt-gewerkte deel.
@@ -5365,9 +5407,9 @@ function lindySalarisJaarOverzicht(totJaar){
       dertiende = decBruto*12*LINDY_EINDEJAARSUITKERING_PCT/100 * (dagenInDienst2026/dagenIn2026);
     }
     if(j===2026){
-      jaren.push({jaar:j, periode:actief(LINDY_ANCHOR_DATUM), tweede:actief(sepDatum), vakantietoeslag, dertiende});
+      jaren.push({jaar:j, periode:actief(LINDY_ANCHOR_DATUM), tweede:actief(sepDatum), vakantietoeslag, dertiende, caoStapDitJaar});
     } else {
-      jaren.push({jaar:j, periode:actief(janDatum), tweede:actief(janDatum), vakantietoeslag, dertiende});
+      jaren.push({jaar:j, periode:actief(janDatum), tweede:actief(janDatum), vakantietoeslag, dertiende, caoStapDitJaar});
     }
   }
   return jaren;
@@ -5387,10 +5429,13 @@ function renderSalarisLindyView(){
         <span style="font-weight:600;font-size:15px;">${y.jaar}</span>
         <span class="stat-figure pos" style="font-size:19px;">${fmt(nettoJaar)}<span style="font-size:11px;color:var(--muted);font-weight:400;">/jr</span>${expanded?' ▾':' ▸'}</span>
       </div>
+      ${y.caoStapDitJaar ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">Cao-groei november ${y.jaar}: +${y.caoStapDitJaar.pct.toFixed(2)}%${y.caoStapDitJaar.aanname?' (aanname — inflatie-plug, geen echte cao) *':' (bevestigd)'}</div>` : ''}
       ${expanded ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);">
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;"><span>Netto/maand (vanaf ${p.vanaf.split('-').reverse().join('-')}, ${p.parttimePct}% parttime)</span><span>${fmt(p.uitTeBetalen)}</span></div>
         <div style="margin-top:6px;font-size:11px;color:var(--muted);">Opbouw (per maand):</div>
-        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Brutoloon (${p.parttimePct}% van €${lindyBasisVoltijd(p.vanaf).toFixed(2)})</span><span>${fmt(p.bruto)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Brutoloon (100%)</span><span>${fmt(p.basisVoltijd)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Parttime korting (${(100-p.parttimePct)}%)</span><span>${fmt(p.parttimeKorting)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;font-weight:600;"><span>Brutoloon (${p.parttimePct}%)</span><span>${fmt(p.bruto)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Premie AOP</span><span>${fmt(-p.aop)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Pensioen/NP</span><span>${fmt(-p.pensioen)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Loonheffing</span><span>${fmt(-p.loonheffing)}</span></div>
@@ -5403,9 +5448,6 @@ function renderSalarisLindyView(){
     </div>`;
   }).join('');
   return `
-    <div class="note-card card">
-      Ankerpunt is de loonstrook van juli 2026 (60% parttime, Brutoloon €3.015,00). Vanaf 1-9-2026 gaat Lindy 50% werken — daarna schaalt alles mee. Cao onderwijs: +1,2% per 1-11-2026 (bevestigd), daarna inflatie-plug van 2%/jr tot een nieuwe cao bekend is.
-    </div>
     ${rows}
     <footer>* Toeslagen (reiskosten/parkeerkosten/km-vergoeding) zijn een vast, gedeclareerd bedrag — schalen niet mee met parttime%. Cao onderwijs (PO/VO) loopt 1-11-2025 t/m 1-3-2027: +4,6% per 1-11-2025 (al in het julianker) + 1,2% per 1-11-2026 (bevestigd). Daarna nog geen nieuwe cao — inflatie-plug van 2%/jr, net als bij Rob. Vakantietoeslag (mei, 8%) en eindejaarsuitkering (december, 8,33%) zijn cao-percentages. Oktobertoelage staat wel op de strook (cumulatief €219,56 t/m juli) maar zit hier nog niet in — hoogte hangt af van functie/schaal en ik heb het exacte bedrag niet. Loonheffing is een effectief percentage o.b.v. juli 2026, geen volledige belastingschijven-doorrekening.</footer>
   `;
