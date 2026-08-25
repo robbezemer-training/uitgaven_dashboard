@@ -718,20 +718,15 @@ const VERMOGEN_NU_LABEL = 'augustus 2026'; // basis-anker; vermogenHuidigeMaandL
 // binnen die kalendermaand te vinden is in RABO_TX_SEP/ING_TX_SEP. Rijen die geen "maand jaar"-naam hebben
 // (13e maand, Vakantiegeld, VX, KM vergoeding Rob, Pensioen Rob) worden nooit automatisch overgeslagen — daar
 // blijft een handmatige aanpassing van VERMOGEN_NU_LABEL de enige manier (zoals nu al gebeurt bij een sessie).
-const MAAND_NAAM_NAAR_NR = {januari:1,februari:2,maart:3,april:4,mei:5,juni:6,juli:7,augustus:8,september:9,oktober:10,november:11,december:12};
-function parseVermogenMaandLabel(label){
-  const m = label.match(/^([a-zé]+)\s+(\d{4})$/i);
-  if(!m) return null;
-  const nr = MAAND_NAAM_NAAR_NR[m[1].toLowerCase()];
-  if(!nr) return null;
-  return {jaar: parseInt(m[2],10), maandNr: nr};
-}
+// parseVermogenMaandLabel zelf staat verderop in het bestand (bij Hypotheek) — {jaar, maand} als veldnamen,
+// hier hergebruikt i.p.v. een eigen duplicaat te definiëren (die eerdere versie brak hier alles stilzwijgend,
+// zie DASHBOARD_VERSION 2026-08-25e).
 function vermogenSparenGedaanVoorRij(row){
   const parsed = parseVermogenMaandLabel(row.m);
   if(!parsed) return false;
   const verwacht = (row.rob||0) + (row.lindy||0);
   if(verwacht<=0) return false;
-  const maandKey = parsed.jaar+'-'+String(parsed.maandNr).padStart(2,'0');
+  const maandKey = parsed.jaar+'-'+String(parsed.maand).padStart(2,'0');
   return [...RABO_TX_SEP, ...ING_TX_SEP].some(r=>{
     if(r.category!=='__INTERN_SPAREN__' || r.amount>=0) return false;
     if(!r.date.startsWith(maandKey)) return false;
@@ -1032,7 +1027,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {confirmedKind:'tx_ingcc',  pendingKind:'tx_pending_ingcc',  getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {confirmedKind:'tx_amex',   pendingKind:'tx_pending_amex',   getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-08-25d - Twee auto-doorschuif-mechanismen gebouwd op Robs verzoek. (1) VERMOGEN: nieuwe vermogenHuidigeMaandLabel() vervangt de hardcoded VERMOGEN_NU_LABEL overal waar de "huidige maand"-rij wordt bepaald (berekenVrijVermogen, berekenVermogenProjectieCore, berekenPotjesMaanden) — schuift automatisch door naar de volgende rij zodra voor die kalendermaand een __INTERN_SPAREN__-afschrijving (Rob+Lindy samen, marge max(€1,1%)) gevonden wordt in RABO_TX_SEP/ING_TX_SEP. Rijen zonder normale "maand jaar"-naam (13e maand, Vakantiegeld, VX e.d.) worden nooit automatisch overgeslagen. (2) HYPOTHEEK: nieuwe hypotheekHuidigeMaand() vervangt de hardcoded 2026/8 in renderHypotheekView() — schuift door zodra er voor de eerstvolgende kalendermaand al Hypotheek-categorie-afschrijvingen in RABO_TX_SEP/ING_TX_SEP staan. Beide vallen terug op het oude vaste anker (augustus 2026) zolang er geen matchende transactie gevonden wordt — RABO_TX_SEP/ING_TX_SEP zijn nu nog leeg, dus nog niets concreet te verifiëren, werkt vanzelf zodra de eerste september-transacties binnenkomen.';
+const DASHBOARD_VERSION = '2026-08-25e - Bugfix in de vorige sessie: ik had per ongeluk een TWEEDE functie parseVermogenMaandLabel() gedefinieerd (met een ander veldnaam, .maandNr i.p.v. het bestaande .maand) — in JS wint bij twee gelijknamige function-declaraties altijd de LAATSTE in het bestand, dus overal waar de auto-doorschuif-code (vermogenSparenGedaanVoorRij, berekenPotjesMaanden) ".maandNr" opvroeg kreeg het undefined terug van de al bestaande, oudere functie (die alleen .maand teruggeeft) — vandaar "undefined 2026" op de Balans-kaart en bij elke maandrij. M\'n eigen duplicaat verwijderd, code hergebruikt de bestaande parseVermogenMaandLabel/.maand-veldnaam i.p.v. een eigen (nutteloos) tweede exemplaar. Geverifieerd los in Node met de echte VERMOGEN_MAANDEN-data: label komt nu weer gewoon uit op "augustus 2026".';
+const DASHBOARD_VERSION_PREV_2026_08_25d = '2026-08-25d - Twee auto-doorschuif-mechanismen gebouwd op Robs verzoek. (1) VERMOGEN: nieuwe vermogenHuidigeMaandLabel() vervangt de hardcoded VERMOGEN_NU_LABEL overal waar de "huidige maand"-rij wordt bepaald (berekenVrijVermogen, berekenVermogenProjectieCore, berekenPotjesMaanden) — schuift automatisch door naar de volgende rij zodra voor die kalendermaand een __INTERN_SPAREN__-afschrijving (Rob+Lindy samen, marge max(€1,1%)) gevonden wordt in RABO_TX_SEP/ING_TX_SEP. Rijen zonder normale "maand jaar"-naam (13e maand, Vakantiegeld, VX e.d.) worden nooit automatisch overgeslagen. (2) HYPOTHEEK: nieuwe hypotheekHuidigeMaand() vervangt de hardcoded 2026/8 in renderHypotheekView() — schuift door zodra er voor de eerstvolgende kalendermaand al Hypotheek-categorie-afschrijvingen in RABO_TX_SEP/ING_TX_SEP staan. Beide vallen terug op het oude vaste anker (augustus 2026) zolang er geen matchende transactie gevonden wordt — RABO_TX_SEP/ING_TX_SEP zijn nu nog leeg, dus nog niets concreet te verifiëren, werkt vanzelf zodra de eerste september-transacties binnenkomen.';
 const DASHBOARD_VERSION_PREV_2026_08_25c = '2026-08-25c - Energie-tab op Robs verzoek vereenvoudigd: de 3 losse, inklapbare jaartegels (2023/2024/2025) zijn weg — er staat nu altijd direct het overzicht van het lopende jaar (2026), uitgeklapt, geen tik meer nodig. energieJaarSelectie/data-energie-jaar blijven ongebruikt in de code staan (geen effect meer, geen tegels om op te klikken) i.p.v. overal uit te vlooien en per ongeluk iets anders te breken. De "Vergelijk met"-knoppen onder de grafiek (andere jaren tonen) werken ongewijzigd.';
 const DASHBOARD_VERSION_PREV_2026_08_25b = '2026-08-25b - Zelfde principe nu ook bij "Overmaken naar ING" (Rob: "zo opgeruimd mogelijk houden" = tegel helemaal weg, geen "gedaan"-label). Nieuwe check overmakenGedaan in renderVolgendeMaandView (="Lopende maand" in de UI): alleen bij restNaarIng>0 (bij een tekort is er niets over te maken), zoekt in LM_RABO_TX (huidige periode) naar een __INTERN_ING__-afschrijving die qua bedrag overeenkomt (marge max(€1, 1%)) — zo ja, dan wordt de hele "Overmaken naar ING"-kaart overgeslagen. Nog niets te verifiëren (LM_RABO_TX/LM_ING_TX = RABO_TX_SEP/ING_TX_SEP zijn nu leeg), werkt vanzelf zodra de overboeking binnenkomt.';
 const DASHBOARD_VERSION_PREV_2026_08_25a = '2026-08-25a - "Vorige maand — sparen"-tegel toonde altijd het definitieve tekort/overschot als "nog te doen", ook als het bedrag al daadwerkelijk was overgemaakt naar sparen (Rob: "als er een transactie is geweest van het spaarbedrag, moet je kunnen zien dat er gespaard is, of de tegel kan weg"). berekenVorigeMaandSamenvatting() checkt nu, alleen bij een overschot (blijftOver>0 — bij een tekort is er niets om over te maken, Rob gaf aan nog niet te weten wat daar het handigste is), of er in RABO_TX_SEP/ING_TX_SEP een __INTERN_SPAREN__-afschrijving staat op of na de afsluitdatum die qua bedrag overeenkomt (marge max(€1, 1%)) — zo ja, sparenGedaan:true en de tegel verdwijnt vanzelf (bestaande !sparenGedaan-render-conditie deed dat al voor de geschatte/niet-afgesloten variant, gold alleen nog niet voor de definitieve/afgesloten variant, die had sparenGedaan hardcoded op false staan). Nog niets te verifiëren met de huidige databron (RABO_TX_SEP/ING_TX_SEP zijn nu nog leeg), werkt vanzelf zodra de sweep-transactie binnenkomt.';
@@ -4644,8 +4640,8 @@ function berekenPotjesMaanden(aantalMaanden, maandelijksBedragFn){
   const saldi = potjesSaldiNu();
   const namen = MAAND_NAMEN_NL;
   const keyOf = (label)=>{ const mm = label.match(/^([a-zë]+)/)[1]; const yy = parseInt(label.match(/\d{4}/)[0],10); return yy*12 + MAAND_NAMEN_NL.indexOf(mm)+1; };
-  const nuParsed = parseVermogenMaandLabel(vermogenHuidigeMaandLabel()) || {maandNr:8, jaar:2026};
-  let m = nuParsed.maandNr, y = nuParsed.jaar; // "nu" (vermogenHuidigeMaandLabel(), schuift automatisch door)
+  const nuParsed = parseVermogenMaandLabel(vermogenHuidigeMaandLabel()) || {maand:8, jaar:2026};
+  let m = nuParsed.maand, y = nuParsed.jaar; // "nu" (vermogenHuidigeMaandLabel(), schuift automatisch door)
   const rijen = [{label: namen[m-1]+' '+y, c3s: saldi.c3s, kado: saldi.kado, ...Object.fromEntries(POTJES_TRIP_IDS.map(id=>[id, saldi[id]]))}];
   const tripCache = {};
   POTJES_TRIP_IDS.forEach(id=>{
