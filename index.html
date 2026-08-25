@@ -711,7 +711,41 @@ const VERMOGEN_REIS_NAMEN = ["italië","italie","turkey","thailand","japan","chi
 const IKV_START_BALANCE = 89910;
 const IKV_JAREN = [{"jaar":"juli 2025","inkLVNL":10631,"rob":0,"lindy":445,"heks":1366,"uitgaven":-8167,"totaal":4275,"totaalAflos":null,"restJaarSaldo":-175928,"extraBijzInk":6000,"extraLindy":null,"extraUitgBasis":-12000,"reisSpaardoel":-35000,"aflosHyp":null,"italieEenmalig":-200000,"saldoEindJaar":-86018,"reisnamen":["Thailand","Italië","(PNW)"]},{"jaar":"juli 2026","inkLVNL":11315,"rob":0,"lindy":2400,"heks":900,"uitgaven":-8113,"totaal":6502,"totaalAflos":null,"restJaarSaldo":82152,"extraBijzInk":null,"extraLindy":3700,"extraUitgBasis":-12000,"reisSpaardoel":-39000,"aflosHyp":null,"italieEenmalig":null,"saldoEindJaar":-3867,"reisnamen":["Japan","Italië"]},{"jaar":"juli 2027","inkLVNL":11181,"rob":0,"lindy":2448,"heks":900,"uitgaven":-8275.26,"totaal":6253.74,"totaalAflos":null,"restJaarSaldo":71746.93,"extraBijzInk":32700.75,"extraLindy":null,"extraUitgBasis":-12240,"reisSpaardoel":-25000,"aflosHyp":null,"italieEenmalig":null,"saldoEindJaar":67879.93,"reisnamen":["China","Italië","Turkije"]},{"jaar":"juli 2028","inkLVNL":11353,"rob":0,"lindy":2497,"heks":918,"uitgaven":-8440.77,"totaal":6327.23,"totaalAflos":null,"restJaarSaldo":33074.51,"extraBijzInk":null,"extraLindy":null,"extraUitgBasis":-12484.8,"reisSpaardoel":-30000,"aflosHyp":null,"italieEenmalig":null,"saldoEindJaar":100954.44,"reisnamen":["Botswana","Marokko"]},{"jaar":"juli 2029","inkLVNL":11529,"rob":0,"lindy":2547,"heks":936.36,"uitgaven":-8609.58,"totaal":6402.78,"totaalAflos":null,"restJaarSaldo":53721.11,"extraBijzInk":null,"extraLindy":null,"extraUitgBasis":-12734.5,"reisSpaardoel":-10000,"aflosHyp":null,"italieEenmalig":null,"saldoEindJaar":154675.55,"reisnamen":["Faroer","Italië"]},{"jaar":"juli 2030","inkLVNL":11241,"rob":0,"lindy":2598,"heks":955.09,"uitgaven":-8781.77,"totaal":6012.32,"totaalAflos":null,"restJaarSaldo":36110.95,"extraBijzInk":null,"extraLindy":null,"extraUitgBasis":-12989.19,"reisSpaardoel":-25000,"aflosHyp":null,"italieEenmalig":null,"saldoEindJaar":190786.5,"reisnamen":["Alaska","Qatar"]},{"jaar":"juli 2031","inkLVNL":9842,"rob":0,"lindy":2650,"heks":974.19,"uitgaven":-8957.41,"totaal":4508.78,"totaalAflos":6134,"restJaarSaldo":-188440.27,"extraBijzInk":null,"extraLindy":null,"extraUitgBasis":-13248.97,"reisSpaardoel":-20000,"aflosHyp":-236317,"italieEenmalig":null,"saldoEindJaar":2346.23,"reisnamen":["Scandinavië","India"]},{"jaar":"juli 2032","inkLVNL":9999,"rob":0,"lindy":2703,"heks":993.67,"uitgaven":-9136.56,"totaal":4559.11,"totaalAflos":6266,"restJaarSaldo":31426.4,"extraBijzInk":null,"extraLindy":null,"extraUitgBasis":-13513.95,"reisSpaardoel":-30000,"aflosHyp":null,"italieEenmalig":null,"saldoEindJaar":33772.63,"reisnamen":["Kenya","NE USA","Italië"]},{"jaar":"juli 2033","inkLVNL":10160,"rob":0,"lindy":2757,"heks":1013.55,"uitgaven":-9319.29,"totaal":4611.26,"totaalAflos":6401,"restJaarSaldo":17767.02,"extraBijzInk":null,"extraLindy":null,"extraUitgBasis":-13784.23,"reisSpaardoel":-45000,"aflosHyp":null,"italieEenmalig":null,"saldoEindJaar":51539.65,"reisnamen":["Florida","Spitsbergen","Italië"]},{"jaar":"juli 2034","inkLVNL":10323,"rob":0,"lindy":2812,"heks":1033.82,"uitgaven":-9505.67,"totaal":4663.15,"totaalAflos":6538,"restJaarSaldo":39136.64,"extraBijzInk":null,"extraLindy":null,"extraUitgBasis":-14059.91,"reisSpaardoel":-25000,"aflosHyp":null,"italieEenmalig":null,"saldoEindJaar":90676.29,"reisnamen":["Chili & Falkand","Schotland"]},{"jaar":"juli 2035","inkLVNL":4750,"rob":1084.13,"lindy":2868,"heks":1054.49,"uitgaven":-9695.79,"totaal":60.83,"totaalAflos":856.13,"restJaarSaldo":18944.05,"extraBijzInk":null,"extraLindy":null,"extraUitgBasis":-14341.11,"reisSpaardoel":null,"aflosHyp":null,"italieEenmalig":null,"saldoEindJaar":109620.34,"reisnamen":[]}];
 const SPAAR_POTJES = {"Casa 3S":103420, "Italië (vakantie)":0, "Thailand (vakantie)":7095, "Kado":800, "Japan (nieuw doel)":0};
-const VERMOGEN_NU_LABEL = 'augustus 2026';
+const VERMOGEN_NU_LABEL = 'augustus 2026'; // basis-anker; vermogenHuidigeMaandLabel() schuift hier automatisch vanaf door
+// Rob, 25-08-2026: "de maand van Vermogen moet ook naar de volgende maand als er echt gespaard is" — dezelfde
+// detectie als bij Vorige maand — sparen/Overmaken naar ING, maar dan doorlopend: schuift net zo lang door
+// naar de volgende rij als voor die rij al een __INTERN_SPAREN__-afschrijving (Rob+Lindy samen, marge max(€1,1%))
+// binnen die kalendermaand te vinden is in RABO_TX_SEP/ING_TX_SEP. Rijen die geen "maand jaar"-naam hebben
+// (13e maand, Vakantiegeld, VX, KM vergoeding Rob, Pensioen Rob) worden nooit automatisch overgeslagen — daar
+// blijft een handmatige aanpassing van VERMOGEN_NU_LABEL de enige manier (zoals nu al gebeurt bij een sessie).
+const MAAND_NAAM_NAAR_NR = {januari:1,februari:2,maart:3,april:4,mei:5,juni:6,juli:7,augustus:8,september:9,oktober:10,november:11,december:12};
+function parseVermogenMaandLabel(label){
+  const m = label.match(/^([a-zé]+)\s+(\d{4})$/i);
+  if(!m) return null;
+  const nr = MAAND_NAAM_NAAR_NR[m[1].toLowerCase()];
+  if(!nr) return null;
+  return {jaar: parseInt(m[2],10), maandNr: nr};
+}
+function vermogenSparenGedaanVoorRij(row){
+  const parsed = parseVermogenMaandLabel(row.m);
+  if(!parsed) return false;
+  const verwacht = (row.rob||0) + (row.lindy||0);
+  if(verwacht<=0) return false;
+  const maandKey = parsed.jaar+'-'+String(parsed.maandNr).padStart(2,'0');
+  return [...RABO_TX_SEP, ...ING_TX_SEP].some(r=>{
+    if(r.category!=='__INTERN_SPAREN__' || r.amount>=0) return false;
+    if(!r.date.startsWith(maandKey)) return false;
+    return Math.abs(Math.abs(r.amount)-verwacht) <= Math.max(1, verwacht*0.01);
+  });
+}
+function vermogenHuidigeMaandLabel(){
+  let idx = VERMOGEN_MAANDEN.findIndex(r=>r.m===VERMOGEN_NU_LABEL);
+  if(idx===-1) return VERMOGEN_NU_LABEL;
+  while(idx+1 < VERMOGEN_MAANDEN.length && vermogenSparenGedaanVoorRij(VERMOGEN_MAANDEN[idx+1])){
+    idx++;
+  }
+  return VERMOGEN_MAANDEN[idx].m;
+}
 const VERMOGEN_NU_BEDRAG_STATISCH = 111315.19; // vaste fallback (Rabo-app-screenshot 07-08-2026), gebruikt zolang saldoCheck nog niet geladen is
 function vermogenNuBedragLive(){
   // Live optelling: het C3S-potje volgt dezelfde ankerpunt-plus-mutaties-berekening als het Saldo-check-kaartje
@@ -998,7 +1032,9 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {confirmedKind:'tx_ingcc',  pendingKind:'tx_pending_ingcc',  getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {confirmedKind:'tx_amex',   pendingKind:'tx_pending_amex',   getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-08-25b - Zelfde principe nu ook bij "Overmaken naar ING" (Rob: "zo opgeruimd mogelijk houden" = tegel helemaal weg, geen "gedaan"-label). Nieuwe check overmakenGedaan in renderVolgendeMaandView (="Lopende maand" in de UI): alleen bij restNaarIng>0 (bij een tekort is er niets over te maken), zoekt in LM_RABO_TX (huidige periode) naar een __INTERN_ING__-afschrijving die qua bedrag overeenkomt (marge max(€1, 1%)) — zo ja, dan wordt de hele "Overmaken naar ING"-kaart overgeslagen. Nog niets te verifiëren (LM_RABO_TX/LM_ING_TX = RABO_TX_SEP/ING_TX_SEP zijn nu leeg), werkt vanzelf zodra de overboeking binnenkomt.';
+const DASHBOARD_VERSION = '2026-08-25d - Twee auto-doorschuif-mechanismen gebouwd op Robs verzoek. (1) VERMOGEN: nieuwe vermogenHuidigeMaandLabel() vervangt de hardcoded VERMOGEN_NU_LABEL overal waar de "huidige maand"-rij wordt bepaald (berekenVrijVermogen, berekenVermogenProjectieCore, berekenPotjesMaanden) — schuift automatisch door naar de volgende rij zodra voor die kalendermaand een __INTERN_SPAREN__-afschrijving (Rob+Lindy samen, marge max(€1,1%)) gevonden wordt in RABO_TX_SEP/ING_TX_SEP. Rijen zonder normale "maand jaar"-naam (13e maand, Vakantiegeld, VX e.d.) worden nooit automatisch overgeslagen. (2) HYPOTHEEK: nieuwe hypotheekHuidigeMaand() vervangt de hardcoded 2026/8 in renderHypotheekView() — schuift door zodra er voor de eerstvolgende kalendermaand al Hypotheek-categorie-afschrijvingen in RABO_TX_SEP/ING_TX_SEP staan. Beide vallen terug op het oude vaste anker (augustus 2026) zolang er geen matchende transactie gevonden wordt — RABO_TX_SEP/ING_TX_SEP zijn nu nog leeg, dus nog niets concreet te verifiëren, werkt vanzelf zodra de eerste september-transacties binnenkomen.';
+const DASHBOARD_VERSION_PREV_2026_08_25c = '2026-08-25c - Energie-tab op Robs verzoek vereenvoudigd: de 3 losse, inklapbare jaartegels (2023/2024/2025) zijn weg — er staat nu altijd direct het overzicht van het lopende jaar (2026), uitgeklapt, geen tik meer nodig. energieJaarSelectie/data-energie-jaar blijven ongebruikt in de code staan (geen effect meer, geen tegels om op te klikken) i.p.v. overal uit te vlooien en per ongeluk iets anders te breken. De "Vergelijk met"-knoppen onder de grafiek (andere jaren tonen) werken ongewijzigd.';
+const DASHBOARD_VERSION_PREV_2026_08_25b = '2026-08-25b - Zelfde principe nu ook bij "Overmaken naar ING" (Rob: "zo opgeruimd mogelijk houden" = tegel helemaal weg, geen "gedaan"-label). Nieuwe check overmakenGedaan in renderVolgendeMaandView (="Lopende maand" in de UI): alleen bij restNaarIng>0 (bij een tekort is er niets over te maken), zoekt in LM_RABO_TX (huidige periode) naar een __INTERN_ING__-afschrijving die qua bedrag overeenkomt (marge max(€1, 1%)) — zo ja, dan wordt de hele "Overmaken naar ING"-kaart overgeslagen. Nog niets te verifiëren (LM_RABO_TX/LM_ING_TX = RABO_TX_SEP/ING_TX_SEP zijn nu leeg), werkt vanzelf zodra de overboeking binnenkomt.';
 const DASHBOARD_VERSION_PREV_2026_08_25a = '2026-08-25a - "Vorige maand — sparen"-tegel toonde altijd het definitieve tekort/overschot als "nog te doen", ook als het bedrag al daadwerkelijk was overgemaakt naar sparen (Rob: "als er een transactie is geweest van het spaarbedrag, moet je kunnen zien dat er gespaard is, of de tegel kan weg"). berekenVorigeMaandSamenvatting() checkt nu, alleen bij een overschot (blijftOver>0 — bij een tekort is er niets om over te maken, Rob gaf aan nog niet te weten wat daar het handigste is), of er in RABO_TX_SEP/ING_TX_SEP een __INTERN_SPAREN__-afschrijving staat op of na de afsluitdatum die qua bedrag overeenkomt (marge max(€1, 1%)) — zo ja, sparenGedaan:true en de tegel verdwijnt vanzelf (bestaande !sparenGedaan-render-conditie deed dat al voor de geschatte/niet-afgesloten variant, gold alleen nog niet voor de definitieve/afgesloten variant, die had sparenGedaan hardcoded op false staan). Nog niets te verifiëren met de huidige databron (RABO_TX_SEP/ING_TX_SEP zijn nu nog leeg), werkt vanzelf zodra de sweep-transactie binnenkomt.';
 const DASHBOARD_VERSION_PREV_2026_08_24t = '2026-08-24t - Bolletjes+uitklap uitgebreid naar Sparen op Robs verzoek ("overal in het systeem, daar waar het kan, met marge-functie"). Zelfde mechanisme als Inkomen: matchMode (afwijking in beide richtingen telt), marge 1%/min €25 voor de kleur, pijltje-uitklap al bij 1 cent verschil. Referenties: "Rob — vast" €2.000 (ROB_SPAREN, vast bedrag), "Lindy — volledig salaris" en "Deurwaarder (Velthoven)" delen dezelfde verwachtingscijfers als hun Inkomen-tegenhangers (€2.606 resp. €900) — logisch, want deze twee Sparen-posten ZIJN letterlijk gelijk aan de Inkomen-posten. matchKeys-variabele voegt sparen toe aan de bestaande inkomen-check, in beide expandCard()-instanties (Lopende + Volgende maand).';
 const DASHBOARD_VERSION_PREV_2026_08_24s = '2026-08-24s - Salaris-tabs herstructureerd op Robs verzoek ("rommelig", "tekst bij elkaar houden, onder netto per maand, met uitklap-pijl die de berekening geeft"). Cao-groei + Netto/maand staan nu ALTIJD zichtbaar direct onder de jaartotaal-regel (niet meer pas na uitklappen) — je ziet in één oogopslag welke cao/inflatie en welk netto-bedrag geldt. De ▸/▾-pijl is er nog steeds, maar onthult nu alleen de volledige bruto/aftrek-opbouw eronder, niet meer de cao/netto-regels zelf (die stonden zo eigenlijk dubbel: verstopt tot je klikte, en dan alsnog los van de rest). Zelfde structuur nu bij Rob én Lindy.';
@@ -4266,7 +4302,7 @@ function berekenVrijVermogen(){
   const spaarsaldo = vermogenNuBedragLive();
   const c3sOpen = c3sTotaalOpenBedrag();
   const maandenLive = vermogenMaandenLive();
-  const nuIdx = maandenLive.findIndex(r=>r.m===VERMOGEN_NU_LABEL);
+  const nuIdx = maandenLive.findIndex(r=>r.m===vermogenHuidigeMaandLabel());
   const slice = nuIdx!==-1 ? maandenLive.slice(nuIdx) : [];
   // Lopende reizen (live potje, zoals Thailand) tellen alleen mee zolang hun eind-datum nog niet bereikt is —
   // anders zou het potje voor altijd als "doel" blijven meetellen, ook lang na de reis.
@@ -4608,7 +4644,8 @@ function berekenPotjesMaanden(aantalMaanden, maandelijksBedragFn){
   const saldi = potjesSaldiNu();
   const namen = MAAND_NAMEN_NL;
   const keyOf = (label)=>{ const mm = label.match(/^([a-zë]+)/)[1]; const yy = parseInt(label.match(/\d{4}/)[0],10); return yy*12 + MAAND_NAMEN_NL.indexOf(mm)+1; };
-  let m = 8, y = 2026; // augustus 2026 = "nu" (VERMOGEN_NU_LABEL)
+  const nuParsed = parseVermogenMaandLabel(vermogenHuidigeMaandLabel()) || {maandNr:8, jaar:2026};
+  let m = nuParsed.maandNr, y = nuParsed.jaar; // "nu" (vermogenHuidigeMaandLabel(), schuift automatisch door)
   const rijen = [{label: namen[m-1]+' '+y, c3s: saldi.c3s, kado: saldi.kado, ...Object.fromEntries(POTJES_TRIP_IDS.map(id=>[id, saldi[id]]))}];
   const tripCache = {};
   POTJES_TRIP_IDS.forEach(id=>{
@@ -4689,7 +4726,7 @@ function berekenPotjesMaanden(aantalMaanden, maandelijksBedragFn){
    elkaar. Nu is er nog maar één plek waar dit wordt uitgerekend. */
 function berekenVermogenProjectieCore(metAflossing){
   const maandenLive = vermogenMaandenLive();
-  const startIdx = maandenLive.findIndex(r=>r.m===VERMOGEN_NU_LABEL);
+  const startIdx = maandenLive.findIndex(r=>r.m===vermogenHuidigeMaandLabel());
   const slice = maandenLive.slice(startIdx);
   const offset = vermogenNuBedragLive() - slice[0].basis;
   const basisAflos = metAflossing ? berekenBasisMetAflossing(slice) : null;
@@ -5119,9 +5156,26 @@ function renderAflosDelenKeuzeCard(opts){
       })() : ''}
     </div>`;
 }
+// Rob, 25-08-2026: "Hypotheek moet ook naar de volgende maand als hypotheek-transacties plaatsvinden" —
+// zelfde soort auto-doorschuiven als bij Vermogen. Hypotheek wordt begin van de maand (rond de 1e-3e) in
+// meerdere delen afgeschreven, categorie "Hypotheek" — zodra die afschrijvingen voor de eerstvolgende maand
+// al in RABO_TX_SEP/ING_TX_SEP staan, schuift de "huidige maand" van deze tab automatisch door. Basis-anker
+// (2026/8) blijft de handmatige terugvaloptie, net als VERMOGEN_NU_LABEL.
+function hypotheekHuidigeMaand(){
+  let jaar = 2026, maand = 8;
+  while(true){
+    const nextMaand = maand===12 ? 1 : maand+1;
+    const nextJaar = maand===12 ? jaar+1 : jaar;
+    const maandKey = nextJaar+'-'+String(nextMaand).padStart(2,'0');
+    const heeftBetaling = [...RABO_TX_SEP, ...ING_TX_SEP].some(r=>r.category==='Hypotheek' && r.amount<0 && r.date.startsWith(maandKey));
+    if(!heeftBetaling) break;
+    jaar = nextJaar; maand = nextMaand;
+  }
+  return {jaar, maand};
+}
 function renderHypotheekView(){
   const now = new Date();
-  const nuJaar = 2026, nuMaand = 8; // lopende maand-conventie van dit dashboard (zie DASHBOARD_VERSION)
+  const {jaar: nuJaar, maand: nuMaand} = hypotheekHuidigeMaand();
   const startIdx = HYPOTHEEK_MAANDEN.findIndex(r=>r.y===nuJaar && r.m===nuMaand);
   const slice = HYPOTHEEK_MAANDEN.slice(startIdx);
   const huidige = slice[0];
@@ -5709,47 +5763,40 @@ function renderEnergieView(){
     ${tariefJaren.map(j=>`<span style="font-size:10px;color:var(--muted);">${j}</span>`).join('')}
   </div>`;
 
-  // Jaartegels: dichtgeklapt tonen ze alleen het jaartal. Tikken klapt open (single-open accordion via
-  // energieJaarSelectie) mét verzamelde jaargegevens, EN bepaalt welk jaar de grafiek/maanddetail hieronder toont.
-  // Niets getikt (energieJaarSelectie===null) => grafiek/maanddetail vallen terug op het lopende jaar.
-  const jaarTegelsHtml = ENERGIE_JAREN.map(j=>{
-    const jRecs = ENERGIE_DATA[j];
-    const totmJ = energieWerkelijkTM(j);
-    const totaalJ = energieJaarTotaal(j,12);
-    const gemJ = energieJaarTotaal(j, totmJ) / totmJ;
-    const expanded = energieJaarSelectie === j;
-    const gasTotaalJ = jRecs.reduce((s,r)=>s+r.gas,0);
-    const electraTotaalJ = jRecs.reduce((s,r)=>s+r.electra,0);
-    const opgewektTotaalJ = jRecs.reduce((s,r)=>s+r.opgewekt,0);
-    const teruggeleverdTotaalJ = jRecs.reduce((s,r)=>s+r.teruggeleverd,0);
-    const autoTotaalJ = jRecs.reduce((s,r,i)=>{
-      const jm = j+'-'+String(i+1).padStart(2,'0');
-      const w = energieAutoOverrides[jm] != null ? energieAutoOverrides[jm] : r.stroomAuto;
-      return s + (w||0);
-    }, 0);
-    const gemTariefGasJ = jRecs.slice(0,totmJ).reduce((s,r)=>s+r.tariefGas,0) / totmJ;
-    const gemTariefStroomJ = jRecs.slice(0,totmJ).reduce((s,r)=>s+r.tariefStroom,0) / totmJ;
-    const gridRewardsTotaalJ = jRecs.reduce((s,r)=>s+(r.gridRewards||0),0);
-    const detailRegel = (label, val) => `<div style="display:flex;justify-content:space-between;"><span>${label}</span><span>${val}</span></div>`;
-    return `<div class="card" data-energie-jaar="${j}" style="cursor:pointer;${expanded?'border-color:var(--brass);':''}">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-weight:600;font-size:18px;">${j}</span>
-        <span style="color:var(--muted);font-size:12px;">${expanded?'▾':'▸'}</span>
-      </div>
-      ${expanded ? `<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);">
-        ${detailRegel('Totaal'+(j===huidigJaar?' (incl. prognose)':''), fmt(totaalJ))}
-        ${detailRegel('Gemiddelde/mnd (werkelijk)', fmt(gemJ))}
-        ${detailRegel('Gas', gasTotaalJ.toLocaleString('nl-NL')+' m³')}
-        ${detailRegel('Electra verbruikt', electraTotaalJ.toLocaleString('nl-NL')+' kWh')}
-        ${detailRegel('Opgewekt', opgewektTotaalJ.toLocaleString('nl-NL')+' kWh')}
-        ${detailRegel('Teruggeleverd', teruggeleverdTotaalJ.toLocaleString('nl-NL')+' kWh')}
-        ${detailRegel('Auto verbruik', autoTotaalJ.toLocaleString('nl-NL')+' kWh')}
-        ${detailRegel('Gem. tarief gas', '€'+gemTariefGasJ.toFixed(3)+'/m³')}
-        ${detailRegel('Gem. tarief stroom', '€'+gemTariefStroomJ.toFixed(3)+'/kWh')}
-        ${gridRewardsTotaalJ ? `<div style="display:flex;justify-content:space-between;color:var(--dot-ok);"><span>Grid Rewards ontvangen</span><span>${fmt(gridRewardsTotaalJ)}</span></div>` : ''}
-      </div>` : ''}
-    </div>`;
-  }).join('');
+  // Jaaroverzicht: op Robs verzoek (25-08-2026, "3 losse tegels weg, gewoon het overzicht van het lopende
+  // jaar laten zien, uitgeklapt") — geen accordion/tegels voor 2023-2025 meer, altijd direct het lopende
+  // jaar getoond, zonder te hoeven tikken. energieJaarSelectie/de jaartegel-tik-logica is hiermee overbodig
+  // voor dit blok (de chart/maanddetail-sectie eronder blijft z'n eigen "Vergelijk met"-knoppen houden voor
+  // andere jaren).
+  const jRecsHuidig = ENERGIE_DATA[huidigJaar];
+  const gasTotaalHuidig = jRecsHuidig.reduce((s,r)=>s+r.gas,0);
+  const electraTotaalHuidig = jRecsHuidig.reduce((s,r)=>s+r.electra,0);
+  const opgewektTotaalHuidig = jRecsHuidig.reduce((s,r)=>s+r.opgewekt,0);
+  const teruggeleverdTotaalHuidig = jRecsHuidig.reduce((s,r)=>s+r.teruggeleverd,0);
+  const autoTotaalHuidig = jRecsHuidig.reduce((s,r,i)=>{
+    const jm = huidigJaar+'-'+String(i+1).padStart(2,'0');
+    const w = energieAutoOverrides[jm] != null ? energieAutoOverrides[jm] : r.stroomAuto;
+    return s + (w||0);
+  }, 0);
+  const gemTariefGasHuidig = jRecsHuidig.slice(0,werkelijkTMHuidig).reduce((s,r)=>s+r.tariefGas,0) / werkelijkTMHuidig;
+  const gemTariefStroomHuidig = jRecsHuidig.slice(0,werkelijkTMHuidig).reduce((s,r)=>s+r.tariefStroom,0) / werkelijkTMHuidig;
+  const gridRewardsTotaalHuidig = jRecsHuidig.reduce((s,r)=>s+(r.gridRewards||0),0);
+  const detailRegelJaar = (label, val) => `<div style="display:flex;justify-content:space-between;"><span>${label}</span><span>${val}</span></div>`;
+  const jaarTegelsHtml = `<div class="card">
+    <div style="font-weight:600;font-size:18px;">${huidigJaar}</div>
+    <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);">
+      ${detailRegelJaar('Totaal (incl. prognose)', fmt(jaarTotaalVolledig))}
+      ${detailRegelJaar('Gemiddelde/mnd (werkelijk)', fmt(gemiddeldeWerkelijk))}
+      ${detailRegelJaar('Gas', gasTotaalHuidig.toLocaleString('nl-NL')+' m³')}
+      ${detailRegelJaar('Electra verbruikt', electraTotaalHuidig.toLocaleString('nl-NL')+' kWh')}
+      ${detailRegelJaar('Opgewekt', opgewektTotaalHuidig.toLocaleString('nl-NL')+' kWh')}
+      ${detailRegelJaar('Teruggeleverd', teruggeleverdTotaalHuidig.toLocaleString('nl-NL')+' kWh')}
+      ${detailRegelJaar('Auto verbruik', autoTotaalHuidig.toLocaleString('nl-NL')+' kWh')}
+      ${detailRegelJaar('Gem. tarief gas', '€'+gemTariefGasHuidig.toFixed(3)+'/m³')}
+      ${detailRegelJaar('Gem. tarief stroom', '€'+gemTariefStroomHuidig.toFixed(3)+'/kWh')}
+      ${gridRewardsTotaalHuidig ? `<div style="display:flex;justify-content:space-between;color:var(--dot-ok);"><span>Grid Rewards ontvangen</span><span>${fmt(gridRewardsTotaalHuidig)}</span></div>` : ''}
+    </div>
+  </div>`;
 
   const rows = recs.map((r,i)=>{
     const prognose = isHuidigJaar && i>=werkelijkTM;
@@ -5806,7 +5853,7 @@ function renderEnergieView(){
       </div>
     </div>
 
-    <div class="card-label" style="margin:16px 0 8px;">Jaren — tik voor details (bepaalt ook de grafiek/maanddetail hieronder)</div>
+    <div class="card-label" style="margin:16px 0 8px;">Dit jaar</div>
     <div style="display:flex;flex-direction:column;gap:8px;">${jaarTegelsHtml}</div>
 
     <div class="card" data-energie-chart-toggle="1" style="cursor:pointer;margin-top:16px;">
