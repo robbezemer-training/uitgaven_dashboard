@@ -982,7 +982,9 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {confirmedKind:'tx_ingcc',  pendingKind:'tx_pending_ingcc',  getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {confirmedKind:'tx_amex',   pendingKind:'tx_pending_amex',   getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-08-24g - Grote herstructurering op Robs 4 screenshots. (1) BUG: actueelDetail() (Vaste lasten/Dagelijks-uitklap) toonde de hele lijst pas als total>0 — met alle posten op €0 (net gefixt in de vorige changelog-regel) bleef total dus 0 en verscheen "Nog geen transacties" i.p.v. de volledige lijst. Conditie nu op sorted.length>0 i.p.v. total>0 — de vaste posten op €0 zijn nu ook in Dagelijks écht zichtbaar, niet alleen in de code. (2) Inkomen — samenstelling: "Salaris" als optelling van Rob+Lindy platgeslagen naar twee losse regels ("Rob — LVNL", "Lindy — SARO"), geen uitklapbare tussenlaag meer nodig (SUB_COMPONENTEN_MAP leeggemaakt, was alleen voor Salaris). (3) Elke Inkomen-regel (Rob, Lindy, Belastingteruggave, Deurwaarder) heeft nu een kleurbolletje; alleen als die ROOD is (afwijkt van de referentie) verschijnt eronder "verwacht €X" — bij groen/grijs niets extra, geen aparte klik nodig. Nieuwe renderBarList-optie verwachtBijRood hiervoor. Referenties: Rob €11.400, Lindy €2.600 (ruim boven de laatste twee werkelijke bedragen, om normale schommelingen niet als "rood" te laten flitsen), Belastingteruggave = de voorspelling zelf (dus altijd groen), Deurwaarder = €0 verwacht. (4) Alfabetische sortering i.p.v. op bedrag, in zowel donutFor() (Inkomen/Sparen) als actueelDetail() (Vaste lasten/Dagelijks). (5) Footer-tekst in Dagelijks (uitleg over de meerdere-maanden-verwachting) fors ingekort op Robs verzoek.';
+const DASHBOARD_VERSION = '2026-08-24i - Nieuwe methodiek "stabiele vaste post" op Robs bevestiging ("ja, gewoon overnemen als het één bedrag steeds terugkeert"). Nieuwe functie stabielePostBedrag(cat, jaar, maand, minMaanden=3): checkt of een vaste-lastencategorie de laatste 3 afgesloten periodes op rij precies hetzelfde bedrag laat zien (o.b.v. alleBekendeTransacties(), exclusief de huidige/lopende periode) — zo ja, dat waargenomen bedrag gebruiken i.p.v. de handmatige schatting in VAST_COMPONENTEN; zo nee, terugvallen op de bestaande hardcoded waarde. Toegepast op alle "losse" posten die nog geen eigen engine hebben (Auto, Verzekeringen, Zorgverzekering, Telecom, Abonnementen, Goede doelen, Bankkosten, Vakbond, Paardrijden, Zakelijk) — Hypotheek/Nutsvoorzieningen/Casa 3S/Muziek blijven ongemoeid want die hebben al een eigen dynamische berekening. Nu nog geen zichtbaar effect: er zijn pas 2 volledig afgesloten periodes met granulaire data (juni, juli) — de regel heeft minimaal 3 nodig en activeert dus vanzelf zodra er meer maanden bijkomen, zonder dat Rob het per categorie hoeft aan te geven.';
+const DASHBOARD_VERSION_PREV_2026_08_24h = '2026-08-24h - BUGFIX n.a.v. Rob ("negatieve bedragen?"): "Overig" en "Cadeaus" toonden "begroot -€104,75" resp. "-€195,68" — een categorie kan in een historische maand netto meer terugbetaling dan uitgave hebben gehad (bv. de Kado-spaarpot-tegenboeking bij Cadeaus), waardoor het gewogen gemiddelde in voorspellingDagelijksPerCategorie() negatief uitkwam. Een negatief "begroot"-bedrag voor een uitgavencategorie slaat nergens op. Fix: resultaat per categorie nooit onder €0 laten zakken (Math.max(0, ...)). Uitgelegd (geen wijziging): Paardrijden staat bewust zowel bij Vaste lasten (De Flemming, via vendor_bucket-regel altijd vast) als bij Dagelijks (andere leveranciers zoals Epplejeck, geen vaste-bucket-regel, dus standaard dagelijks) — twee soorten uitgaven binnen dezelfde categorie, geen bug. Vakbond/Bankkosten-methodiek (stabiel al meerdere maanden) — nog open, ter bespreking met Rob.';
+const DASHBOARD_VERSION_PREV_2026_08_24g = '2026-08-24g - Grote herstructurering op Robs 4 screenshots. (1) BUG: actueelDetail() (Vaste lasten/Dagelijks-uitklap) toonde de hele lijst pas als total>0 — met alle posten op €0 (net gefixt in de vorige changelog-regel) bleef total dus 0 en verscheen "Nog geen transacties" i.p.v. de volledige lijst. Conditie nu op sorted.length>0 i.p.v. total>0 — de vaste posten op €0 zijn nu ook in Dagelijks écht zichtbaar, niet alleen in de code. (2) Inkomen — samenstelling: "Salaris" als optelling van Rob+Lindy platgeslagen naar twee losse regels ("Rob — LVNL", "Lindy — SARO"), geen uitklapbare tussenlaag meer nodig (SUB_COMPONENTEN_MAP leeggemaakt, was alleen voor Salaris). (3) Elke Inkomen-regel (Rob, Lindy, Belastingteruggave, Deurwaarder) heeft nu een kleurbolletje; alleen als die ROOD is (afwijkt van de referentie) verschijnt eronder "verwacht €X" — bij groen/grijs niets extra, geen aparte klik nodig. Nieuwe renderBarList-optie verwachtBijRood hiervoor. Referenties: Rob €11.400, Lindy €2.600 (ruim boven de laatste twee werkelijke bedragen, om normale schommelingen niet als "rood" te laten flitsen), Belastingteruggave = de voorspelling zelf (dus altijd groen), Deurwaarder = €0 verwacht. (4) Alfabetische sortering i.p.v. op bedrag, in zowel donutFor() (Inkomen/Sparen) als actueelDetail() (Vaste lasten/Dagelijks). (5) Footer-tekst in Dagelijks (uitleg over de meerdere-maanden-verwachting) fors ingekort op Robs verzoek.';
 const DASHBOARD_VERSION_PREV_2026_08_24f = '2026-08-24f - Zes dingen n.a.v. Robs screenshots. (1) "na salaris: Rabo → ING"-zinnetje weg. (2) "verwacht bij einde maand, incl. vorige maand/reis/saldo"-zinnetje weg. (3) Vorige-maand-kaart deed niets bij uitklappen (▾ draaide om maar toonde geen inhoud) — nu een echte samenstelling (Rabo/ING/Openstaand AMEX/Openstaand ING CC/Correctie/Totaal) zodra de maand definitief is afgesloten; berekenVorigeMaandSamenvatting() geeft het ruwe afsluiting-object nu ook terug i.p.v. alleen het eindbedrag. (4) donutFor() liet categorieën met waarde 0 verdwijnen (filter was v>0.001) — nu v>-0.001, dus standaardposten (Belastingteruggave, Deurwaarder) blijven zichtbaar op €0 i.p.v. te verdwijnen. Deurwaarder als expliciete regel (€0) toegevoegd aan INKOMEN_COMPONENTEN. (5) Zelfde probleem in actueelDetail() (Vaste lasten/Dagelijks-uitklap): nu wordt perCat eerst gevuld met alle categorieën uit VAST_COMPONENTEN resp. DAGELIJKS_COMPONENTEN op €0, vóórdat de werkelijke transacties worden opgeteld — Rob: "de vaste posten uit de verwachting neerzetten, waarde op 0, maar bij openklap het verwachte bedrag". Elke vaste-lastenpost (en dagelijks-categorie) staat dus altijd in de lijst, ook zonder transacties tot nu toe; tikken erop toont nog steeds het begrote bedrag (via de bestaande budgetMapAug-koppeling). (6) Salaris — uitsplitsing (Rob/Lindy) heeft nu een kleurbolletje (showDot+budgetFor, referentie €11.378,36 / €2.500) dat aangeeft of het bedrag rond de gebruikelijke verwachting zit.';
 const DASHBOARD_VERSION_PREV_2026_08_24e = '2026-08-24e - Op Robs verzoek: Belastingteruggave (hypotheekrenteaftrek) in Lopende maand toonde €0 zolang de échte transactie deze periode nog niet was geland, terwijl de rest van Lopende maand (Vaste lasten, Dagelijks) al wel een verwachting gebruikt zodra het werkelijke cijfer nog ontbreekt. Rob: "aangezien te besteden een verwachting is, houd daar dan ook rekening mee". Fix: BELASTING gebruikt nu het werkelijke bedrag als dat er al is (belastingActueel>0), anders dezelfde voorspelling als Volgende maand — hypotheekSchoon(hypotheekLM).belastingAftrek (dezelfde renteaftrek-berekening, nu ook al eerder in de functie beschikbaar gemaakt i.p.v. pas later gedefinieerd).';
 const DASHBOARD_VERSION_PREV_2026_08_24d = '2026-08-24d - BUGFIX n.a.v. Rob ("je wist dat Enel om de maand kwam, waarom hier geen rekening mee gehouden"): een salarisperiode beslaat vaak delen van TWEE kalendermaanden (nu: 24-aug t/m 25-sep), maar de ENEL/IMU/Muziek-seizoenslogica (die per kalendermaand factureert) checkte alleen de "label"-maand van de periode (LM_MAAND_KORT=sep) — Enel (bi-maandelijks, o.a. augustus) werd zo gemist omdat de rekening al binnen de eerste kalendermaand van de periode viel, terwijl het label "september" zei. Trof zowel de per-categorie "begroot"-regel in de Vaste Lasten-uitklap (toonde €415,28 i.p.v. €476,28 voor Casa 3S) als, bleek bij het narekenen, ook al de top-level "verwacht €6.038,65"-tegel (die had toevallig al €415,28+61,00 hardcoded staan, dus toonde toen wel het juiste bedrag maar niet via een robuuste/herhaalbare berekening — zou bij een volgende periode zonder Enel-raakvlak alsnog fout gaan staan). Fix: nieuwe maandenInDezePeriode (Set met de kalendermaand-afkorting van zowel PERIODE_START_SALARISDATUM als PERIODE_EINDE_SALARISDATUM), ENEL/IMU/Muziek checken nu of ÉÉN van die twee maanden matcht i.p.v. alleen LM_MAAND_KORT. Toegepast op zowel VAST_COMPONENTEN (top-level verwachting) als casa3sBudgetAug/muziekBudgetAug (detail-uitklap) — beide gebruiken nu dezelfde herbruikbare berekening, kunnen dus niet meer uit elkaar lopen. Cijfer voor deze periode blijft toevallig ongewijzigd (€476,28, want augustus zat sowieso al goed) — maar de berekening is nu correct en herhaalbaar voor elke toekomstige periode, niet meer afhankelijk van een toevallig kloppende hardcoded waarde.';
@@ -1385,7 +1387,10 @@ function voorspellingDagelijksPerCategorie(huidigJaar, huidigMaand){
   alleCats.forEach(cat=>{
     let som = 0;
     maanden.forEach((mk,i)=>{ som += (perMaand[mk][cat]||0) * correctieFactor[mk] * gewichten[i]; });
-    result[cat] = Math.round((som/gewichtTotaal)*100)/100;
+    // Een categorie kan in een historische maand netto meer terugbetaling dan uitgave hebben gehad (bv. een
+    // grote retour) — zonder correctie zou het gewogen gemiddelde dan negatief kunnen uitkomen, wat als
+    // "begroot -€X" nergens op slaat voor een uitgavencategorie. Nooit onder €0 laten zakken (Rob, 24-08-2026).
+    result[cat] = Math.max(0, Math.round((som/gewichtTotaal)*100)/100);
   });
   return {perCategorie: result, aantalMaanden: maanden.length, maanden};
 }
@@ -1527,6 +1532,30 @@ function effectiveBucket(t){
   const catRule = bucketCategorieOverrides[t.category];
   if(catRule && t.date >= catRule.since) return catRule.bucket; // structureel, maar alleen vanaf de datum dat de regel gezet is
   return JUL_VASTE_LASTEN_CATS.includes(t.category) ? 'vast' : 'dagelijks';
+}
+// Methodiek "stabiele vaste post" (Rob, 24-08-2026: "ja, gewoon overnemen als het één bedrag steeds
+// terugkeert"): als een vaste-lastencategorie de laatste `minMaanden` afgesloten maanden op rij precies
+// hetzelfde bedrag laat zien, is dat betrouwbaarder dan een handmatig ingevuld/verouderd bedrag in
+// VAST_COMPONENTEN — gebruik dan automatisch dat waargenomen bedrag i.p.v. de hardcoded schatting.
+// Blijft het bedrag wisselen (geen minMaanden op rij gelijk), dan valt terug op de meegegeven fallback.
+function stabielePostBedrag(cat, huidigJaar, huidigMaand, minMaanden=3){
+  const perMaand = {};
+  alleBekendeTransacties().forEach(r=>{
+    if(r.category!==cat) return;
+    if(effectiveBucket(r)!=='vast') return;
+    const [j,m] = r.date.split('-');
+    const key = `${j}-${parseInt(m,10)}`;
+    perMaand[key] = (perMaand[key]||0) - r.amount;
+  });
+  const huidigeKey = `${huidigJaar}-${huidigMaand}`;
+  const maanden = Object.keys(perMaand).filter(k=>k!==huidigeKey).sort((a,b)=>{
+    const [ja,ma]=a.split('-').map(Number), [jb,mb]=b.split('-').map(Number);
+    return (ja*12+ma)-(jb*12+mb);
+  });
+  if(maanden.length < minMaanden) return null;
+  const laatsteN = maanden.slice(-minMaanden).map(k=>Math.round(perMaand[k]*100)/100);
+  const alleGelijk = laatsteN.every(v=>Math.abs(v-laatsteN[0])<0.01 && v>0.001);
+  return alleGelijk ? laatsteN[0] : null;
 }
 // Statische snapshot van de Supabase 'overrides'-tabel (peildatum 22-07-2026, 21:19).
 // Dient als fallback zodat het dashboard ook correct oogt wanneer het lokaal/offline
@@ -3484,11 +3513,12 @@ function renderVolgendeMaandView(){
   ]);
   const casa3sSeizoen = ([...maandenInDezePeriode].some(m=>ENEL_MAANDEN.has(m))?ENEL_BEDRAG:0) + ([...maandenInDezePeriode].some(m=>IMU_MAANDEN.has(m))?IMU_BEDRAG:0);
   const muziekSeizoen = [...maandenInDezePeriode].some(m=>MUZIEK_MAANDEN.has(m)) ? MUZIEK_BEDRAG : 0;
+  const vastStabiel = (cat, fallback) => stabielePostBedrag(cat, LM_JAAR, LM_MAAND) ?? fallback;
   const VAST_COMPONENTEN = {
-    "Hypotheek": hypotheekBegrootLM, "Auto": 896.53, "Verzekeringen": 163.33, "Zorgverzekering": 347.20,
-    "Nutsvoorzieningen": 26.00+energiePrognoseMaand(LM_MAAND), "Telecom": 94.99, "Abonnementen": 28.63+39.30+89.78,
-    "Goede doelen": 2.00, "Bankkosten": 4.65+4.53+20.00, "Casa 3S": CASA_LENING+casa3sSeizoen,
-    "Vakbond": 25.60, "Muziek": muziekSeizoen, "Paardrijden": 325.00+143.18, "Zakelijk": 117.45,
+    "Hypotheek": hypotheekBegrootLM, "Auto": vastStabiel("Auto", 896.53), "Verzekeringen": vastStabiel("Verzekeringen", 163.33), "Zorgverzekering": vastStabiel("Zorgverzekering", 347.20),
+    "Nutsvoorzieningen": 26.00+energiePrognoseMaand(LM_MAAND), "Telecom": vastStabiel("Telecom", 94.99), "Abonnementen": vastStabiel("Abonnementen", 28.63+39.30+89.78),
+    "Goede doelen": vastStabiel("Goede doelen", 2.00), "Bankkosten": vastStabiel("Bankkosten", 4.65+4.53+20.00), "Casa 3S": CASA_LENING+casa3sSeizoen,
+    "Vakbond": vastStabiel("Vakbond", 25.60), "Muziek": muziekSeizoen, "Paardrijden": vastStabiel("Paardrijden", 325.00+143.18), "Zakelijk": vastStabiel("Zakelijk", 117.45),
     /* Muziek (CultuurLocaal) op €0: 25 jul-24 aug valt volledig in de bevestigde zomerstop (geen incasso's jul/aug/sep).
        Actieve maanden (jan-jun, okt-dec): €182,73/mnd — nieuw tarief sinds okt, zie vendor_patronen in Supabase.
        Medisch staat hier bewust niet bij (Robs bevestiging 18-08): de zorgverzekeringspremie (VGZ, €347,20/mnd)
@@ -3875,11 +3905,12 @@ function renderVolgendeMaandSepView(){
   const INKOMEN_COMPONENTEN = {"Rob — LVNL": ROB_BASIS, "Lindy — SARO": LINDY, "Belastingteruggave": BELASTING, "Overig inkomen": LINDY_TOESLAGEN, "Deurwaarder": 0};
   const SALARIS_SUBCOMPONENTEN = {"Rob — LVNL": ROB_BASIS, "Lindy — SARO": LINDY};
   const SPAREN_COMPONENTEN = {"Rob — vast": ROB_SPAREN, "Lindy — volledig salaris": LINDY, "Deurwaarder (Velthoven)": 0};
+  const vastStabielVM = (cat, fallback) => stabielePostBedrag(cat, VM_JAAR, VM_MAAND) ?? fallback;
   const VAST_COMPONENTEN = {
-    "Hypotheek": HYPOTHEEK_BEGROOT, "Auto": 896.53, "Verzekeringen": 163.33, "Zorgverzekering": 347.20,
-    "Nutsvoorzieningen": 26.00+energiePrognoseMaand(VM_MAAND), "Telecom": 94.99, "Abonnementen": 28.63+39.30+89.78,
-    "Goede doelen": 2.00, "Bankkosten": 4.65+4.53+20.00, "Casa 3S": 415.28,
-    "Vakbond": 25.60, "Muziek": MUZIEK_MAANDEN.has('okt') ? 182.73 : 0.00, "Paardrijden": 325.00+143.18, "Zakelijk": 117.45,
+    "Hypotheek": HYPOTHEEK_BEGROOT, "Auto": vastStabielVM("Auto", 896.53), "Verzekeringen": vastStabielVM("Verzekeringen", 163.33), "Zorgverzekering": vastStabielVM("Zorgverzekering", 347.20),
+    "Nutsvoorzieningen": 26.00+energiePrognoseMaand(VM_MAAND), "Telecom": vastStabielVM("Telecom", 94.99), "Abonnementen": vastStabielVM("Abonnementen", 28.63+39.30+89.78),
+    "Goede doelen": vastStabielVM("Goede doelen", 2.00), "Bankkosten": vastStabielVM("Bankkosten", 4.65+4.53+20.00), "Casa 3S": 415.28,
+    "Vakbond": vastStabielVM("Vakbond", 25.60), "Muziek": MUZIEK_MAANDEN.has('okt') ? 182.73 : 0.00, "Paardrijden": vastStabielVM("Paardrijden", 325.00+143.18), "Zakelijk": vastStabielVM("Zakelijk", 117.45),
     /* Medisch staat hier bewust niet bij (Robs bevestiging 18-08): de zorgverzekeringspremie (VGZ, €347,20/mnd)
        zit al in "Verzekeringen" hierboven — vaste last, ongewijzigd. "Medisch" is uitsluitend eigen-bijdrage/
        apotheek, komt onregelmatig voor (juni €253,83, juli €479,88, aug tot nu toe €0) en hoort dus bij
