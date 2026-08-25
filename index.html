@@ -1029,7 +1029,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {confirmedKind:'tx_ingcc',  pendingKind:'tx_pending_ingcc',  getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {confirmedKind:'tx_amex',   pendingKind:'tx_pending_amex',   getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-08-25l - Twee dingen op Robs verzoek. (1) De "Balans — spaarpotjes"-hero toonde voor de HUIDIGE maand altijd de theoretische Rob/Lindy/Deurwaarder-planning, ook als er allang een échte spaartransactie was (nuPosten riep altijd theorieFn() aan, nooit de echte transacties, in tegenstelling tot de losse maandtegels die dat wél al deden). Fix: checkt nu eerst op een echte __INTERN_SPAREN__-afschrijving (Casa Tre Sorelle) op of na PERIODE_START_SALARISDATUM — is die er, dan vervangt die het hele planningsrijtje (nu dus "Gespaard (Casa Tre Sorelle) — €4.505,00" i.p.v. Rob €2.000/Lindy €2.606/Deurwaarder €900). (2) Een "idee"-reis (zoals Italië 2027) kreeg met de vorige fix terecht geen eigen potje meer, maar verdween daarmee OOK helemaal uit de vermogensprojectie — de kosten gingen nergens meer vanaf, waardoor de lange-termijn-Vermogen-lijn te optimistisch werd (Rob: "anders weet je niet hoe je vermogen loopt met alle reizen die je wil doen"). Fix: op de kalendermaand van de reis zelf (reisTimingMaandLabel) gaat het volledige budget alsnog in één keer van C3S af — geen eigen potje, wel een echte eenmalige onttrekking uit de algemene pot op het moment van de reis.';
+const DASHBOARD_VERSION = '2026-08-25m - Bugfix in de vorige sessie (Rob merkte op: grafiek moet veel meer zaagtand hebben): de "reis voorbij"-check (sluitKey) greep bij een "idee"-reis al in VÓÓR de nieuwe kosten-aftrek op de reismaand ooit bereikt werd — een idee-reis zonder eigen einddatum krijgt sluitKey gelijk aan de reismaand zelf, dus de vorige if/return-volgorde sloeg de aftrek stelselmatig over. Idee-reizen worden nu EERST en apart afgehandeld (eigen if-tak, geen eigen potje, wel de aftrek op de reismaand), vóór de sluitKey-check voor planning/lopend-reizen. Losstaand getest met de echte REIZEN_PLANNING: 23 idee-reizen tussen 2027-2034 krijgen nu allemaal hun eigen aftrekmoment (Italië 2027 t/m Chili 2034, samen €250.000 aan momenten binnen de projectieperiode) — dat hoort dus zichtbaar zaagtand te geven in de Potjes-grafiek.';
+const DASHBOARD_VERSION_PREV_2026_08_25l = '2026-08-25l - Twee dingen op Robs verzoek. (1) De "Balans — spaarpotjes"-hero toonde voor de HUIDIGE maand altijd de theoretische Rob/Lindy/Deurwaarder-planning, ook als er allang een échte spaartransactie was (nuPosten riep altijd theorieFn() aan, nooit de echte transacties, in tegenstelling tot de losse maandtegels die dat wél al deden). Fix: checkt nu eerst op een echte __INTERN_SPAREN__-afschrijving (Casa Tre Sorelle) op of na PERIODE_START_SALARISDATUM — is die er, dan vervangt die het hele planningsrijtje (nu dus "Gespaard (Casa Tre Sorelle) — €4.505,00" i.p.v. Rob €2.000/Lindy €2.606/Deurwaarder €900). (2) Een "idee"-reis (zoals Italië 2027) kreeg met de vorige fix terecht geen eigen potje meer, maar verdween daarmee OOK helemaal uit de vermogensprojectie — de kosten gingen nergens meer vanaf, waardoor de lange-termijn-Vermogen-lijn te optimistisch werd (Rob: "anders weet je niet hoe je vermogen loopt met alle reizen die je wil doen"). Fix: op de kalendermaand van de reis zelf (reisTimingMaandLabel) gaat het volledige budget alsnog in één keer van C3S af — geen eigen potje, wel een echte eenmalige onttrekking uit de algemene pot op het moment van de reis.';
 const DASHBOARD_VERSION_PREV_2026_08_25k = '2026-08-25k - Op Robs correctie: geen bedrag-marge meer bij de "is het al gebeurd"-detecties (Vorige maand — sparen, Overmaken naar ING, vermogenSparenGedaanVoorRij) — alleen nog categorie (__INTERN_SPAREN__/__INTERN_ING__, dedicated categorieën die uitsluitend voor deze specifieke overboekingen gebruikt worden) plus datum. Reden: "er staat letterlijk C3S in de omschrijving, dus kan niet missen" — een bedrag dat een paar euro afwijkt van de planning (zoals de zojuist verwerkte €4.505 vs. verwachte €4.490) hoorde nooit een reden te zijn om de match te laten mislukken.';
 const DASHBOARD_VERSION_PREV_2026_08_25j = '2026-08-25j - Rabo-afschrift 24-08-2026 (Rob geüpload) verwerkt in RABO_TX_SEP (was nog leeg): salaris Rob (€2.505,83) en Lindy/LVNL (€11.378,36), Enel Energia (Casa 3S, -€62,55), Youfone/DELTA Fiber (Telecom), de overboeking naar ING (-€4.200, __INTERN_ING__) en de sparen-overboeking naar Casa Tre Sorelle (-€4.505, __INTERN_SPAREN__). Losstaand geverifieerd in Node: dit bedrag matcht de sparen-detectie (verwacht Rob+Lindy €4.490, afwijking €15, ruim binnen de marge van max(€1,1%)=€44,90) — dus "Vorige maand — sparen" en "Overmaken naar ING" zouden dit nu moeten oppikken zodra de bijbehorende voorwaarden verder kloppen (Vorige maand — sparen blijft zichtbaar zolang blijftOver<0, zoals nu het geval is; dat is bewust, zie eerdere fix). "Overmaken naar ING" (restNaarIng €4.208,35 vs. deze -€4.200, afwijking €8,35, ruim binnen marge) zou nu moeten verdwijnen.';
 const DASHBOARD_VERSION_PREV_2026_08_25i = '2026-08-25i - Op Robs verduidelijking: de Vermogen-maand hoort gewoon mee te springen met de nieuwe lopende-maand-datum (PERIODE_START_SALARISDATUM, hetzelfde anker als bij "Vorige maand — sparen"/"Overmaken naar ING"), MET de geplande/verwachte bedragen — niet pas als er een matchende sparen-transactie gevonden wordt (dat was de vorige aanname, nu achterhaald). vermogenHuidigeMaandLabel() herbouwd: leest simpelweg de kalendermaand ná PERIODE_START_SALARISDATUM (augustus 2026 → september 2026), valt terug op VERMOGEN_NU_LABEL als die maand niet in de tabel bestaat. Geverifieerd los in Node met de echte data: komt uit op "september 2026", zoals verwacht. vermogenSparenGedaanVoorRij() blijft in de code staan als bouwsteen voor een latere verfijning: zodra de écht bijbehorende transactie gevonden wordt, moeten de getoonde Rob/Lindy-bedragen de werkelijke transactie tonen i.p.v. de planning — dat raakt de per-maand-breakdown (rond regel 4539, "Rob — sparen"/"Lindy — sparen") en is nog niet gebouwd, want de transactie is één gecombineerd bedrag (Rob+Lindy samen) en RABO_TX_SEP/ING_TX_SEP zijn in dit bestand nog leeg om tegen te testen — aan Rob gevraagd om de echte transactiedetails zodra die er zijn.';
@@ -4702,24 +4703,23 @@ function berekenPotjesMaanden(aantalMaanden, maandelijksBedragFn){
     c3s = Math.round((c3s + c3sGroei)*100)/100;
     const rij = {kado: saldi.kado}; // Kado heeft geen groeimodel — blijft vlak op het huidige, echte saldo
     POTJES_TRIP_IDS.forEach(id=>{
-      const {trip, sluitKey, startKey, timingKey} = tripCache[id];
+      const {trip, sluitKey, timingKey} = tripCache[id];
       if(!trip){ rij[id]=null; return; }
+      // Rob, 25-08-2026: een "idee"-reis apart en EERST afhandelen — anders grijpt de "reis voorbij"-check
+      // hieronder al in (een idee-reis zonder eigen einddatum krijgt sluitKey===timingKey) en wordt de aftrek
+      // hieronder nooit bereikt. Geen eigen potje (blijft altijd 0, dus geen premature reservering — reisPotje-
+      // Waarde regelt "planning"/"lopend" al apart), maar op de kalendermaand van de reis zelf gaat het volledige
+      // budget alsnog in één keer van C3S af — anders klopt de lange-termijn-vermogenslijn niet meer (Rob: "je
+      // weet dan niet hoe je vermogen loopt met alle reizen die je nog wil doen").
+      if(effectiveStatus(trip)==='idee'){
+        if(timingKey!=null && huidigeKey===timingKey) c3s = Math.round((c3s - (trip.budget||0))*100)/100;
+        rij[id] = 0;
+        vorigTripWaarde[id] = rij[id];
+        return;
+      }
       // Op Robs verzoek (14-08-2026): reis voorbij = potje niet meer TONEN (null), niet gewoon €0,00 laten staan.
       if(sluitKey!=null && huidigeKey>=sluitKey){ rij[id]=null; return; }
-      // Rob, 25-08-2026: het opengaan van het 9-maanden-venster mag NIET vanzelf een potje vullen voor een reis
-      // die nog "idee" is — dat gaf bv. Italië 2027 (nog idee) al in oktober het volledige bedrag, puur op
-      // basis van de kalender, los van of de reis al écht gepland is. Alleen "planning" en "lopend" hebben al
-      // een vastgezet potje (reisPotjeWaarde regelt dat al) en blijven dus vlak op het huidige saldo. "idee"
-      // blijft altijd op €0 tot Rob de status zelf naar "planning" zet (dan pakt reisPotjeWaarde het vanzelf op
-      // vanaf dat moment, in een latere sessie/herberekening) — geen aparte tijdvenster-logica meer nodig.
-      // Rob, verduidelijkt: een "idee"-reis heeft dan wel geen eigen potje, maar de kosten ervan mogen niet
-      // stilzwijgend uit de projectie verdwijnen — anders klopt het totale vermogen op de lange termijn niet
-      // meer (je ziet dan niet hoe je vermogen loopt met alle reizen die je nog wil doen). Daarom: op de
-      // kalendermaand van de reis zelf (reisTimingMaandLabel) gaat het volledige budget in één keer van C3S af
-      // — geen eigen potje, gewoon een eenmalige uitgave uit de algemene pot, precies op het moment van de reis.
-      if(effectiveStatus(trip)!=='idee'){ rij[id] = saldi[id]; return; }
-      if(timingKey!=null && huidigeKey===timingKey) c3s = Math.round((c3s - (trip.budget||0))*100)/100;
-      rij[id] = 0;
+      rij[id] = saldi[id];
       vorigTripWaarde[id] = rij[id];
     });
     rij.label = label; rij.c3s = c3s; // c3s pas ná de eventuele reis-transfer(s) hierboven vastleggen
