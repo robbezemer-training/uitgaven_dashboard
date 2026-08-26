@@ -1031,7 +1031,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {confirmedKind:'tx_ingcc',  pendingKind:'tx_pending_ingcc',  getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {confirmedKind:'tx_amex',   pendingKind:'tx_pending_amex',   getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-08-25ab - Weergavefout uit de vorige melding opgelost, bevestigd door Rob (1/9 → 50%, 1/11 → cao, allebei nog niet bereikt): de "2026"-jaartegel in de Lindy-tab liet in de uitgeklapte breakdown altijd het tarief van 1/9 (50%) zien, ook nu we daar nog niet zijn — code koos bewust "het meest recente tarief van het jaar" (y.tweede), niet het nu-geldende. Voor 2026 nu vast op y.periode (het juli-anker, 60%) i.p.v. de september-waarde; andere jaren ongewijzigd (waren al goed). De gewogen jaartotaal-som (juli-aug 60% + sep-dec 50%) gebruikte al correct beide periodes en bleef ongemoeid. Losstaand geverifieerd: bruto/netto/uit-te-betalen bij 60% komt nu exact uit op €3.015,00 / €2.489,98 / €2.505,83 — identiek aan de augustus-loonstrook.';
+const DASHBOARD_VERSION = '2026-08-25ac - Rob vroeg: schuift dit vanzelf door op 1/11 (cao)? Antwoord was nee (m\'n vorige fix zette het NU-tarief hardcoded vast), dus meteen gebouwd: lindySalarisJaarOverzicht() geeft nu ook y.huidig terug (actief() o.b.v. de ECHTE devicedatum, new Date()), en de "2026"-tegel in renderSalarisLindyView gebruikt y.huidig i.p.v. het hardcoded y.periode zodra het weergegeven jaar het huidige kalenderjaar is. Dit is bewust WEL een live Date()-koppeling (in tegenstelling tot bijna al het andere in dit dashboard, dat handmatig per sessie wordt bijgewerkt) — want parttime% (1/9) en cao-stap (1/11) zijn allebei al bevestigde, puur kalendergedreven data, geen onzekere transactie om op te wachten. Losstaand gesimuleerd met 26-08/15-09/05-11: schuift correct door van 60%-geen-cao naar 50%-geen-cao naar 50%-met-cao.';
+const DASHBOARD_VERSION_PREV_2026_08_25ab = '2026-08-25ab - Weergavefout uit de vorige melding opgelost, bevestigd door Rob (1/9 → 50%, 1/11 → cao, allebei nog niet bereikt): de "2026"-jaartegel in de Lindy-tab liet in de uitgeklapte breakdown altijd het tarief van 1/9 (50%) zien, ook nu we daar nog niet zijn — code koos bewust "het meest recente tarief van het jaar" (y.tweede), niet het nu-geldende. Voor 2026 nu vast op y.periode (het juli-anker, 60%) i.p.v. de september-waarde; andere jaren ongewijzigd (waren al goed). De gewogen jaartotaal-som (juli-aug 60% + sep-dec 50%) gebruikte al correct beide periodes en bleef ongemoeid. Losstaand geverifieerd: bruto/netto/uit-te-betalen bij 60% komt nu exact uit op €3.015,00 / €2.489,98 / €2.505,83 — identiek aan de augustus-loonstrook.';
 const DASHBOARD_VERSION_PREV_2026_08_25aa = '2026-08-25aa - Op Robs verzoek (n.a.v. de augustus-loonstrook): LINDY_TOESLAGEN_ANCHOR bevatte parkeerkosten en km-vergoeding naast de vaste reiskostenvergoeding — die twee zijn variabel en komen sowieso al los binnen als "Lindy vergoeding (SARO)"-transactie (categorie Overig inkomen), dus telden dubbel. Nu alleen nog de vaste €15,85 reiskostenvergoeding (was 15.85+32.19+90.16-42.01=96.19) — precies de enige toeslag-regel die ook echt op de augustus-strook stond. Label/footer in de Lindy-tab aangepast van "Toeslagen (reiskosten/parkeren/km)" naar "Reiskosten (vast)". Dit was al een langer openstaand aandachtspunt (zie DASHBOARD_VERSION_PREV_2026_08_24n) — nu opgelost. LET OP, apart gesignaleerd maar nog niet gefixt: dezelfde augustus-strook laat ook zien dat Lindy in augustus nog op 60% parttime zit (Parttime %: 60,00, Brutoloon 3.015,00) — maar de "2026"-jaartegel in de Lindy-tab toont in de uitgeklapte breakdown al de 50%-cijfers (Brutoloon 2.512,50), terwijl LINDY_PARTTIME_STAPPEN de overgang naar 50% pas op 1-9 zet. Dat lijkt een weergavefout in welke periode-entry er in de jaartegel getoond wordt, niet in de stappen-tabel zelf — nog niet aangepast, wil dat eerst met je doornemen voor ik daarin ga wijzigen.';
 const DASHBOARD_VERSION_PREV_2026_08_25z = '2026-08-25z - Echte oorzaak van de "saldo klopt niet"-verwarring gevonden en opgelost: het hele 360-rijen hypotheekschema had een structurele labelfout van precies één kalendermaand, over de volledige looptijd (okt 2021 t/m sep 2051) — geen kwestie van de verkeerde "welke maand is nu"-aanname zoals eerder gedacht. Bewijs: zowel het officiële Rabo-PDF als de live Rabo-app tonen nu (26-08-2026) €814.889,30 als openstaande schuld — dat matchte tot nu toe de rij die in het schema per ongeluk "september" heette, terwijl "augustus" er een volle aflossingstermijn (€1.582,27) naast zat. Fix: elke rij se (jaar,maand) is één maand teruggezet door het hele schema heen — puur relabelen, geen enkel bedrag aangepast (dus de rente- en aflossingscorrecties van hiervoor blijven gewoon geldig, zitten nu alleen op de juiste rij). hypotheekHuidigeMaand() weer simpel op 2026/8 — klopt nu weer echt, geen "welke rij is nu"-giswerk meer nodig. Geverifieerd: nieuwe augustusrij = €814.891,17, verschil met de echte bank nog maar €1,87 (cumulatieve afronding, verwaarloosbaar).';
 const DASHBOARD_VERSION_PREV_2026_08_25y = '2026-08-25y - Doorgerekend zoals gevraagd: renteLineair, bruto, belastingteruggave, netto en nettoCorr herrekend voor alle 268 maanden waarin de gecorrigeerde 1,66%-rente (was 1,64%) daadwerkelijk gold (vanaf de renteverlaging begin 2025 tot deze twee leningdelen rond 2047 aflopen). Methodiek: rente per leningdeel = restant×rente/1200 (ongeronde som over alle lineaire delen, exact zoals het bestaande schema al deed — geverifieerd doordat de oude renteLineair-waarden zo precies terug te rekenen waren), belastingteruggave herberekend met het per-rij impliciete belastingtarief (tarief = oude belastingteruggave / oude aftrekbare-basis, dus geen aanname van één vaste 36,97%-constante maar het echte tarief dat elke rij al gebruikte). Netto-effect: circa +€2/mnd bruto, +€1,3/mnd netto voor deze twee delen samen. BELANGRIJK, ter correctie van mijn eigen eerdere aanname: dit verklaart het €1,87-verschil met het PDF NIET — restschuld/hoofdsom is bij lineaire aflossing volledig onafhankelijk van het rentepercentage, dus dat kleine verschil (814.891,17 berekend vs 814.889,30 in het PDF) blijft ongewijzigd staan; vermoedelijk gewoon cumulatieve afronding over de jaren. Bewust NIET meegenomen: de bruto3/netto3/verschil3-kolommen (het "wat als ik aflos"-scenario vanaf okt 2031) — kon de exacte onderliggende formule niet met zekerheid herleiden zonder risico op een nieuwe fout, en dat is sowieso een hypothetisch scenario, niet de actuele situatie.';
@@ -5580,6 +5581,7 @@ function berekenLindyPeriodes(totJaar){
 }
 function lindySalarisJaarOverzicht(totJaar){
   const periodes = berekenLindyPeriodes(totJaar);
+  const vandaag = new Date().toISOString().slice(0,10);
   const jaren = [];
   for(let j=2026; j<=totJaar; j++){
     const janDatum = j+'-01-01', sepDatum = j+'-09-01', meiDatum = j+'-05-01', decDatum = j+'-12-01', novDatum = j+'-11-01';
@@ -5598,9 +5600,9 @@ function lindySalarisJaarOverzicht(totJaar){
       dertiende = decBruto*12*LINDY_EINDEJAARSUITKERING_PCT/100 * (dagenInDienst2026/dagenIn2026);
     }
     if(j===2026){
-      jaren.push({jaar:j, periode:actief(LINDY_ANCHOR_DATUM), tweede:actief(sepDatum), vakantietoeslag, dertiende, caoStapDitJaar});
+      jaren.push({jaar:j, periode:actief(LINDY_ANCHOR_DATUM), tweede:actief(sepDatum), huidig:actief(vandaag), vakantietoeslag, dertiende, caoStapDitJaar});
     } else {
-      jaren.push({jaar:j, periode:actief(janDatum), tweede:actief(janDatum), vakantietoeslag, dertiende, caoStapDitJaar});
+      jaren.push({jaar:j, periode:actief(janDatum), tweede:actief(janDatum), huidig:actief(vandaag), vakantietoeslag, dertiende, caoStapDitJaar});
     }
   }
   return jaren;
@@ -5611,10 +5613,12 @@ function renderSalarisLindyView(){
   const rows = jaren.map(y=>{
     const key = String(y.jaar);
     const expanded = salarisJaarExpand==='lindy-'+key;
-    const p = y.periode; // Rob, 25-08-2026: moet het NU geldende tarief tonen (60%, augustus-loonstrook bevestigt dit),
-    // niet het tarief dat pas op 1/9 ingaat — was voor 2026 nog hardcoded op y.tweede ("meest recente tarief van
-    // het jaar"), maar dat liep dus vooruit op een datum die nog niet bereikt is. y.tweede wordt hieronder nog
-    // wel gebruikt voor de gewogen jaartotaal-som (juli-aug 60% + sep-dec 50%), dat blijft correct.
+    const p = y.jaar===new Date().getFullYear() ? y.huidig : y.periode; // Rob, 25-08-2026: moet het NU geldende
+    // tarief tonen — was voor 2026 hardcoded op y.periode (het juli-anker), maar dat zou op 1/9 en 1/11 niet
+    // vanzelf meeschuiven naar het parttime- resp. cao-tarief dat dan ingaat. y.huidig pakt de écht van-toepassing-
+    // zijnde periode o.b.v. de kalenderdatum van het device, dus dit klopt vanzelf zodra die data aanbreken —
+    // geen handmatige aanpassing meer nodig, in tegenstelling tot bijna alles verder in dit dashboard (dat kan
+    // hier wél, want dit hangt niet af van een externe transactie-bevestiging, alleen van de kalender).
     const nettoJaar = (y.jaar===2026
       ? y.periode.uitTeBetalen*2 + y.tweede.uitTeBetalen*4 // juli-aug op 60% (2 mnd), sep-dec op 50% (4 mnd)
       : p.uitTeBetalen*12) + y.vakantietoeslag + y.dertiende;
