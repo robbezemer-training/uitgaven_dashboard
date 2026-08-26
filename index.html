@@ -1031,7 +1031,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {confirmedKind:'tx_ingcc',  pendingKind:'tx_pending_ingcc',  getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {confirmedKind:'tx_amex',   pendingKind:'tx_pending_amex',   getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-08-25af - Rob verduidelijkt: Nominaal volgt zijn eigen Excel-schema (los van de salarisrekenmotor) — de eerdere vraag om Lindy\'s sparen-cijfers te herberekenen op basis van het salarismodel was dus de verkeerde aanpak. In plaats daarvan de VERMOGEN_MAANDEN-rijen gewoon gelijkgetrokken met een screenshot van Robs echte Excel: september 2026 lindy 2606→2505, oktober 2026 lindy 2800→2100 (november/december stonden al goed op 2100). Cascaderende basis/basis2-kolommen voor alle rijen vanaf september 2026 meegecorrigeerd (-101 vanaf sept, nog eens -700 vanaf okt, cumulatief dus -801 vanaf oktober).';
+const DASHBOARD_VERSION = '2026-08-25ag - Bugfix op de sleepbalk van net: Rob merkte terecht op dat de tooltip vlak boven het aanraakpunt verscheen — op een telefoon zit je vinger daar dan precies overheen, onleesbaar. Tooltip-bij-de-vinger weggehaald; het cijfer verschijnt nu in het vaste label-regeltje boven de grafiek zelf ("Potjes — som over tijd..." wordt tijdens het slepen "[maand] · [bedrag]"), dat nooit door een vinger bedekt wordt. Lijn+stip op de grafiek blijven staan om te laten zien waar je zit.';
+const DASHBOARD_VERSION_PREV_2026_08_25af = '2026-08-25af - Rob verduidelijkt: Nominaal volgt zijn eigen Excel-schema (los van de salarisrekenmotor) — de eerdere vraag om Lindy\'s sparen-cijfers te herberekenen op basis van het salarismodel was dus de verkeerde aanpak. In plaats daarvan de VERMOGEN_MAANDEN-rijen gewoon gelijkgetrokken met een screenshot van Robs echte Excel: september 2026 lindy 2606→2505, oktober 2026 lindy 2800→2100 (november/december stonden al goed op 2100). Cascaderende basis/basis2-kolommen voor alle rijen vanaf september 2026 meegecorrigeerd (-101 vanaf sept, nog eens -700 vanaf okt, cumulatief dus -801 vanaf oktober).';
 const DASHBOARD_VERSION_PREV_2026_08_25ae = '2026-08-25ae - Sleepbalk toegevoegd aan de Potjes-grafiek in Vermogen, op Robs verzoek ("tof als je over de grafiek kan schuiven en dan het vermogen kan zien"). renderPotjesChart() wrapt de bestaande SVG nu in een [data-potjes-chart]-container met labels/waarden als data-attributen; een nieuwe pointer/touch-handler in render() berekent bij aanraken/slepen het dichtstbijzijnde punt en toont een verticale lijn + stip + tooltip (maand · bedrag) via directe DOM-updates, geen render() per beweging. Alleen renderPotjesChart zelf aangepast, niet de gedeelde renderVermogenChart() (die ook elders wordt hergebruikt) — dus geen effect op andere grafieken.';
 const DASHBOARD_VERSION_PREV_2026_08_25ad = '2026-08-25ad - Woordgebruik gelijkgetrokken tussen Rob- en Lindy-salaristab, op Robs verzoek. Lindy: "Brutoloon (60%)" → "Fiscaal Bruto" en "Nettoloon" → "Netto (effectief X%)" (nu ook met effectief-percentage, zoals Rob al had) — zelfde termen als bij Rob. Headers bij beiden nu ook expliciet over de tijdsbasis: Lindy "situatie nu — cao-verhoging van 1 november zit hier nog niet in" (want de tegel is sinds de vorige fix live-datum-gebaseerd, dus dit moet gezegd worden); Rob "gebaseerd op de loonstrook van juli 2026" (was "laatste periode dit jaar", verwarrend naast Lindy\'s nu-framing).';
 const DASHBOARD_VERSION_PREV_2026_08_25ac = '2026-08-25ac - Rob vroeg: schuift dit vanzelf door op 1/11 (cao)? Antwoord was nee (m\'n vorige fix zette het NU-tarief hardcoded vast), dus meteen gebouwd: lindySalarisJaarOverzicht() geeft nu ook y.huidig terug (actief() o.b.v. de ECHTE devicedatum, new Date()), en de "2026"-tegel in renderSalarisLindyView gebruikt y.huidig i.p.v. het hardcoded y.periode zodra het weergegeven jaar het huidige kalenderjaar is. Dit is bewust WEL een live Date()-koppeling (in tegenstelling tot bijna al het andere in dit dashboard, dat handmatig per sessie wordt bijgewerkt) — want parttime% (1/9) en cao-stap (1/11) zijn allebei al bevestigde, puur kalendergedreven data, geen onzekere transactie om op te wachten. Losstaand gesimuleerd met 26-08/15-09/05-11: schuift correct door van 60%-geen-cao naar 50%-geen-cao naar 50%-met-cao.';
@@ -4253,11 +4254,10 @@ function renderPotjesChart(maanden){
   // attachPotjesChartScrub(), geen volledige re-render per beweging — dat zou hakkelen bij het slepen).
   const labelsJson = JSON.stringify(maanden.map(r=>r.label)).replace(/"/g,'&quot;');
   const valuesJson = JSON.stringify(totalen).replace(/"/g,'&quot;');
-  return `<div class="potjes-chart-wrap" data-potjes-chart="1" data-labels="${labelsJson}" data-values="${valuesJson}" style="position:relative;touch-action:pan-y;">
+  return `<div class="potjes-chart-wrap" data-potjes-chart="1" data-labels="${labelsJson}" data-values="${valuesJson}" data-default-label="Potjes — som over tijd, vanaf ${maanden[0].label}" style="position:relative;touch-action:pan-y;">
     ${chart}
     <div class="potjes-scrub-line" style="position:absolute;top:0;bottom:0;width:1px;background:var(--paper);opacity:0;pointer-events:none;"></div>
     <div class="potjes-scrub-dot" style="position:absolute;width:8px;height:8px;margin-left:-4px;margin-top:-4px;border-radius:50%;background:#c9a227;border:2px solid var(--bg);opacity:0;pointer-events:none;"></div>
-    <div class="potjes-scrub-tip" style="position:absolute;top:-4px;transform:translate(-50%,-100%);background:var(--card-bg,#1c1f27);border:1px solid var(--rule);border-radius:8px;padding:4px 8px;font-family:'IBM Plex Mono',monospace;font-size:11px;white-space:nowrap;opacity:0;pointer-events:none;"></div>
   </div>
   ${asHtml}`;
 }
@@ -4935,7 +4935,7 @@ function renderPotjesView(maandelijksBedragFn, theorieFn){
       </div>
     </div>
     ${vermogenAflosDetailOpen ? '' : `<div class="card trend-card vermogen-trend-sticky">
-      <div class="card-label">Potjes — som over tijd, vanaf ${nuPotjes.label}</div>
+      <div class="card-label" data-potjes-readout="1">Potjes — som over tijd, vanaf ${nuPotjes.label}</div>
       ${renderPotjesChart(potjesMaanden)}
     </div>`}
     <div class="card-label" style="margin:18px 0 8px;">Per maand (tik voor de transacties)</div>
@@ -6344,9 +6344,14 @@ function render(){
   // Rob, 25-08-2026: sleepbalk op de Potjes-grafiek — rechtstreekse DOM-updates tijdens pointermove/touchmove,
   // geen render() per beweging (dat zou hakkelen). Werkt op elke [data-potjes-chart]-container die renderPotjesChart()
   // neerzet; positionering volgt exact dezelfde min/max/pad/w/h-formule als renderVermogenChart() zelf gebruikt.
+  // Rob, 25-08-2026, bugfix op de sleepbalk van net: de tooltip verscheen vlak boven het aanraakpunt, dus je
+  // vinger zat er precies overheen — onleesbaar op een telefoon. Nu géén tekst meer bij de vinger; de lijn+stip
+  // blijven op de grafiek staan (laten zien WAAR je zit), maar het leesbare cijfer verschijnt in het vaste
+  // label-regeltje boven de grafiek ("Potjes — som over tijd, vanaf ..."), dat nooit door een vinger bedekt wordt.
   document.querySelectorAll('[data-potjes-chart]').forEach(wrap=>{
     const labels = JSON.parse(wrap.dataset.labels);
     const values = JSON.parse(wrap.dataset.values);
+    const defaultLabel = wrap.dataset.defaultLabel;
     const n = values.length;
     const w=900, h=200, pad=10;
     const max = Math.max(...values)*1.05;
@@ -6354,7 +6359,7 @@ function render(){
     const stepX = (w-pad*2)/(n-1);
     const lijn = wrap.querySelector('.potjes-scrub-line');
     const dot = wrap.querySelector('.potjes-scrub-dot');
-    const tip = wrap.querySelector('.potjes-scrub-tip');
+    const readout = document.querySelector('[data-potjes-readout]');
     const update = (clientX)=>{
       const rect = wrap.getBoundingClientRect();
       const frac = Math.min(1, Math.max(0, (clientX-rect.left)/rect.width));
@@ -6365,12 +6370,12 @@ function render(){
       const yPct = (yVal/h)*100;
       lijn.style.left = xPct+'%'; lijn.style.opacity = '0.5';
       dot.style.left = xPct+'%'; dot.style.top = yPct+'%'; dot.style.opacity = '1';
-      tip.style.left = xPct+'%'; tip.style.top = yPct+'%'; tip.style.opacity = '1';
-      tip.textContent = `${labels[i]} · ${fmt(values[i])}`;
-      // tegen afsnijden aan de randen van het scherm
-      tip.style.transform = xPct<8 ? 'translate(0,-100%)' : (xPct>92 ? 'translate(-100%,-100%)' : 'translate(-50%,-100%)');
+      if(readout) readout.textContent = `${labels[i]} · ${fmt(values[i])}`;
     };
-    const hide = ()=>{ lijn.style.opacity='0'; dot.style.opacity='0'; tip.style.opacity='0'; };
+    const hide = ()=>{
+      lijn.style.opacity='0'; dot.style.opacity='0';
+      if(readout && defaultLabel) readout.textContent = defaultLabel;
+    };
     wrap.addEventListener('pointerdown', e=>{ update(e.clientX); });
     wrap.addEventListener('pointermove', e=>{ if(e.buttons>0 || e.pointerType==='touch') update(e.clientX); });
     wrap.addEventListener('pointerup', hide);
