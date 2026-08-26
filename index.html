@@ -1034,7 +1034,9 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {confirmedKind:'tx_ingcc',  pendingKind:'tx_pending_ingcc',  getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {confirmedKind:'tx_amex',   pendingKind:'tx_pending_amex',   getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-08-25r - Twee visuele fixes op Robs verzoek, vóór het live-checken. (1) "Doel"-regel onder een potjesbedrag stond bij elke reis (Thailand, Japan, etc.), maar hoort alleen bij C3S — een reis-potje wordt in één keer volledig aangemaakt (geen doelbedrag-opbouw zoals C3S, dat gekoppeld is aan het openstaande bouwbedrag), dus "doel" heeft daar geen betekenis. Nu alleen getoond bij key==="c3s" in de Balans-hero. (2) De "komende maanden"-tegels (per-maand-uitklap) toonden een reis die net een potje krijgt (bv. Italië 2027) DUBBEL: één keer in de potjeslijst zelf, én nogmaals als los regeltje in de theoretische breakdown eronder (theorieFn() gaf ook de "gebeurtenis"-signalen mee, die de hero-kaart al langer filtert maar de maandtegels nog niet deden). Zelfde .filter(t=>!t.gebeurtenis) nu ook daar toegepast.';
+const DASHBOARD_VERSION = '2026-08-25t - Op Robs melding na de live-test (het mechanisme zelf werkte): de "Idee ▸ plannen"/"↩ Terug naar idee"-knoppen reageerden direct op elke tik — risicovol voor iets met een echt financieel effect (geld verlaat/keert terug in de C3S-pot), bij per ongeluk aanraken. Beide knoppen vragen nu eerst een confirm()-bevestiging (met reisnaam + bedrag erbij), pas bij OK gebeurt de actie. Bijgevangen bugfix: "↩ Terug naar idee" zette alleen de status terug, maar liet de C3S-onttrekking van de promotie staan — dus C3S zou blijvend te laag blijven staan terwijl het potje alweer weg was. Nu wordt de bijbehorende c3sOnttrekkingenLive-invoer ook verwijderd (en de Supabase-rij mee, deleteOverrideRow) zodra een reis teruggezet wordt naar idee.';
+const DASHBOARD_VERSION_PREV_2026_08_25s = '2026-08-25s - Twee dingen op Robs verzoek. (1) Vermogen-projectie loopt nu tot maart 2035 i.p.v. juli 2035 (107 vaste maanden) — dynamisch berekend vanaf vermogenHuidigeMaandLabel(), dus blijft kloppen als de lopende maand verder opschuift. (2) Inflatie: Deurwaarder-bedrag (heks) stond nog hardcoded op €900 (+€850 in de bonusmaanden januari/juli) in zowel potjesMaandelijksBedragIkv() als de bijbehorende breakdown potjesTheoretischeRegelsIkv() — enige post die niet meegroeide met de 2%/jr-index die de rest van Inflatie al gebruikt. Nu ×ikv2pctIndex(jaar,maand) op beide plekken, dus alles binnen Inflatie is nu consequent aan hetzelfde inflatiepercentage gekoppeld. Effect vrij klein op de eerdere vraag over het verschil met Nominaal: geverifieerd met de echte code, verschil bij maart 2035 was €147.610, is nu €137.844 (Deurwaarder was een klein deel van de kloof, niet de hoofdoorzaak — dat blijft het lagere/dalende Rob-nettosaldo na geïndexeerde uitgaven).';
+const DASHBOARD_VERSION_PREV_2026_08_25r = '2026-08-25r - Twee visuele fixes op Robs verzoek, vóór het live-checken. (1) "Doel"-regel onder een potjesbedrag stond bij elke reis (Thailand, Japan, etc.), maar hoort alleen bij C3S — een reis-potje wordt in één keer volledig aangemaakt (geen doelbedrag-opbouw zoals C3S, dat gekoppeld is aan het openstaande bouwbedrag), dus "doel" heeft daar geen betekenis. Nu alleen getoond bij key==="c3s" in de Balans-hero. (2) De "komende maanden"-tegels (per-maand-uitklap) toonden een reis die net een potje krijgt (bv. Italië 2027) DUBBEL: één keer in de potjeslijst zelf, én nogmaals als los regeltje in de theoretische breakdown eronder (theorieFn() gaf ook de "gebeurtenis"-signalen mee, die de hero-kaart al langer filtert maar de maandtegels nog niet deden). Zelfde .filter(t=>!t.gebeurtenis) nu ook daar toegepast.';
 const DASHBOARD_VERSION_PREV_2026_08_25q = '2026-08-25q - Twee echte bugs gevonden n.a.v. Robs live-check. (1) C3S-basissaldo klopte niet: de €4.505 Rabo→Casa Tre Sorelle-storting van 24-08 stond al wel als informatieve tekstregel in de Balans-hero ("Gespaard..."), maar voedde nooit de eigenlijke berekening — C3S_STORTINGEN (de array die berekenC3SGeschatSaldo() echt gebruikt) was nog leeg. Dus alleen de Japan-onttrekking (-27.000) werd toegepast, niet de storting: 86.198,19-27.000=59.198,19 i.p.v. de juiste 86.198,19+4.505-27.000=63.703,19 (exact het bedrag dat Rob zelf al had uitgerekend). Fix: C3S_STORTINGEN aangevuld met deze storting. Losstaand geverifieerd: komt nu uit op €63.703,19. (2) Geen zaagtand in de Potjes-grafiek: een "idee"-reis had in de groei-loop een vroegtijdige "return" zodra het 9-maanden-venster opende, waardoor de bestaande sluitKey-check (reis voorbij → potje verdwijnt, al lang werkend voor planning/lopend) voor idee-reizen NOOIT bereikt werd — het geld verliet C3S dus wel bij het openen van het venster, maar kwam er nooit meer bij vandaan bij de eigenlijke reisdatum (geen "echte uitgave"-moment), dus geen zichtbare terugval in de totaalgrafiek. Fix: sluitKey-check verplaatst vóór de idee-specifieke logica, geldt nu voor alle reizen. Losstaand gesimuleerd (Italië 2027, venster okt 2026 – juli 2027): potje vult in oktober, blijft vlak, verdwijnt in juli 2027 (de "uitgave"-stap) — precies het patroon dat een zaagtand in de grafiek hoort te geven.';
 const DASHBOARD_VERSION_PREV_2026_08_25p = '2026-08-25p - Twee echte gaten gedicht die Rob ontdekte via screenshots. (1) De "Idee ▸ plannen"-knop in Reizen (data-promote-status) zette alleen de status, maar maakte nooit de bijbehorende C3S-onttrekking aan — dus het potje werd wél "echt" (telde mee in vermogenNuBedragLive), maar C3S daalde niet mee: precies het "geld verschijnt uit het niets"-probleem dat eerder bij Japan met de hand is rechtgezet, nu structureel voor elke toekomstige promotie. Fix: de klik-handler legt nu zelf een c3sOnttrekkingenLive-invoer vast (nieuwe Supabase-kind "c3s_onttrekking", per reis-id, {datum:vandaag, bedrag:trip.budget}), en berekenC3SGeschatSaldo() telt deze automatisch mee naast de bestaande statische C3S_ONTTREKKINGEN (die blijft voor oudere, handmatig vastgelegde gevallen zoals Japan). (2) reisPotjeWaarde()/vermogenNuBedragLive() eisten voorheen ook een vooraf-benoemd trip.potje-veld — dat hebben alleen de "oudere" reizen (Japan/Thailand/Italië-2026); een reis als Italië 2027 heeft dat veld niet. Zonder fix zou de knop dus wél C3S laten dalen maar zonder dat er een zichtbaar potje tegenover stond. Fix: zonder trip.potje valt reisPotjeWaarde() terug op de c3sOnttrekkingenLive-invoer zelf als potje-waarde. Losstaand gesimuleerd met Italië 2027 (geen potje-veld): voor promotie €0, na promotie €4.000 potje + C3S daalt met exact €4.000. Bevestigd (los, tweede punt uit Robs screenshot): de "Vermogen — Casa 3S-potje"-regel in Saldo-check (Lopende maand) gebruikte al dezelfde berekenC3SGeschatSaldo()-functie als de Vermogen-tab — die kunnen dus al niet uit elkaar lopen, het ontbrekende stuk was puur de knop zelf. LET OP: nieuwe Supabase-kind "c3s_onttrekking" moet nog wel zijn toegestaan in de CHECK-constraint van de overrides-tabel — als opslaan faalt, moet die constraint nog uitgebreid worden (zelfde patroon als eerdere nieuwe kinds, bv. vendor_bucket/c3s_subcat).';
 const DASHBOARD_VERSION_PREV_2026_08_25o = '2026-08-25o - Rob corrigeerde de vorige sessie verder: het 9-maanden-reserveringsvenster geldt gewoon OOK voor "idee"-reizen (niet alleen planning/lopend) — het budget gaat wél degelijk van C3S af zodra het venster opent, ook als de reis nog maar een idee is. De enige uitzondering is de lopende maand zelf ("nu", rij 0) — die komt uit een aparte, echte bron (saldi/reisPotjeWaarde, altijd €0 voor idee) en wordt door deze projectie-loop toch al nooit aangeraakt, dus dat klopte al vanzelf. Het 9-maanden-venster-mechanisme (startKey, dat ik gisteren volledig had weggehaald) is voor "idee"-reizen hersteld — nu specifiek beperkt tot rijen ná de lopende maand, exact zoals Rob illustreerde: wordt de lopende maand oktober en een reis (venster ook oktober) staat nog op idee, dan geen overdracht in oktober, maar wel al in november. Losstaand gesimuleerd met precies dat scenario: klopt (0 in "nu", daarna eenmalig -€4.000 van C3S, potje blijft vlak op €4.000).';
@@ -4530,14 +4532,17 @@ function potjesMaandelijksBedragIkv(jaar, maand){
   const robNetto = robP ? robP.netto : 0;
   const uitgavenGeindexeerd = liveUitgavenMaandAnchor(jaar, maand);
   const priveGeindexeerd = IKV_PRIVE_BUFFER_MAAND_ANCHOR * ikv2pctIndex(jaar, maand);
-  let rob = robNetto - uitgavenGeindexeerd - priveGeindexeerd, lindy = lindyP ? lindyP.netto : 0, heks = 900;
+  let rob = robNetto - uitgavenGeindexeerd - priveGeindexeerd, lindy = lindyP ? lindyP.netto : 0, heks = 900*ikv2pctIndex(jaar, maand);
   // Op Robs verzoek (17-08-2026): "neem aan dat 13e en vak in salaris wel kloppen en dus koppelen met inflatie"
   // — bonussen komen nu uit dezelfde salarisJaarOverzicht als de Salaris-tab (al deeltijd-gecorrigeerd), i.p.v.
   // het oude "8.500/8.327 × robRatio" (bruto-cao-only, dus zonder deeltijd — zelfde fout als bij de reguliere
   // bijdrage hierboven). Terugval op de oude schatting alleen als het jaar buiten bereik van de salarismotor valt.
   const robJaarVerdiend = salarisJaarOverzicht(2036).find(y=>y.jaar===vj);
-  if(maand===1){ rob += (robJaarVerdiend && robJaarVerdiend.dertiende) ? robJaarVerdiend.dertiende : 8500*robRatio; heks += 850; } // Rob — 13e maand (verdiend in december)
-  if(maand===7){ rob += (robJaarVerdiend && robJaarVerdiend.vakantiegeld) ? robJaarVerdiend.vakantiegeld : 8327*robRatio; heks += 850; } // Rob — vakantiegeld (verdiend in juni)
+  // Rob, 25-08-2026: "dan is alles met inflatie gekoppeld" — de Deurwaarder-basis hierboven indexeert nu al mee
+  // (was hardcoded 900), en dezelfde 2%/jr-index geldt consequent ook voor deze twee Deurwaarder-bonusposten
+  // hieronder (waren nog hardcoded 850).
+  if(maand===1){ rob += (robJaarVerdiend && robJaarVerdiend.dertiende) ? robJaarVerdiend.dertiende : 8500*robRatio; heks += 850*ikv2pctIndex(jaar, maand); } // Rob — 13e maand (verdiend in december)
+  if(maand===7){ rob += (robJaarVerdiend && robJaarVerdiend.vakantiegeld) ? robJaarVerdiend.vakantiegeld : 8327*robRatio; heks += 850*ikv2pctIndex(jaar, maand); } // Rob — vakantiegeld (verdiend in juni)
   const lindyJaarVerdiend = lindySalarisJaarOverzicht(2036).find(y=>y.jaar===vj);
   if(lindyJaarVerdiend){
     if(vm===5) lindy += lindyJaarVerdiend.vakantietoeslag||0; // verdiend in mei → beschikbaar in juni
@@ -4639,10 +4644,10 @@ function potjesTheoretischeRegelsIkv(maandLabel){
     const robRatio = robP && robPeriodes[0] ? robP.salaris/robPeriodes[0].salaris : 1;
     const lindyPeriodes = berekenLindyPeriodes(2036);
     const lindyP = lindyPeriodes.filter(x=>x.vanaf<=verdiendDatum).slice(-1)[0] || lindyPeriodes[0];
-    let heks = 900;
+    let heks = 900*ikv2pctIndex(p.jaar, p.maand);
     const robJaarVerdiend = salarisJaarOverzicht(2036).find(y=>y.jaar===vj);
-    if(p.maand===1){ heks += 850; regels.push({naam:'Rob — 13e maand', bedrag:Math.round(((robJaarVerdiend && robJaarVerdiend.dertiende) ? robJaarVerdiend.dertiende : 8500*robRatio)*100)/100}); }
-    if(p.maand===7){ heks += 850; regels.push({naam:'Rob — vakantiegeld', bedrag:Math.round(((robJaarVerdiend && robJaarVerdiend.vakantiegeld) ? robJaarVerdiend.vakantiegeld : 8327*robRatio)*100)/100}); }
+    if(p.maand===1){ heks += 850*ikv2pctIndex(p.jaar, p.maand); regels.push({naam:'Rob — 13e maand', bedrag:Math.round(((robJaarVerdiend && robJaarVerdiend.dertiende) ? robJaarVerdiend.dertiende : 8500*robRatio)*100)/100}); }
+    if(p.maand===7){ heks += 850*ikv2pctIndex(p.jaar, p.maand); regels.push({naam:'Rob — vakantiegeld', bedrag:Math.round(((robJaarVerdiend && robJaarVerdiend.vakantiegeld) ? robJaarVerdiend.vakantiegeld : 8327*robRatio)*100)/100}); }
     const ikvIndex = ikv2pctIndex(p.jaar, p.maand);
     const uitgavenGeindexeerd = liveUitgavenMaandAnchor(p.jaar, p.maand);
     const priveGeindexeerd = IKV_PRIVE_BUFFER_MAAND_ANCHOR * ikvIndex;
@@ -4862,7 +4867,11 @@ function renderPotjesView(maandelijksBedragFn, theorieFn){
   // "lopende" reis blijft dat groen ook als het saldo daarna weer daalt door echte uitgaven). Lopende maand
   // (augustus) is deze hero-tegel zelf; maandtegels beginnen dus bij september. Maandtegels tonen de
   // bedragen altijd (niet meer achter een tik verstopt); tikken opent nu de échte transacties van die maand.
-  const potjesMaanden = berekenPotjesMaanden(107, maandelijksBedragFn); // t/m juli 2035, zelfde einde als de oude Nominaal-projectie
+  // Rob, 25-08-2026: tegels voorlopig niet verder dan maart 2035 (was juli 2035/107 vaste maanden) — dynamisch
+  // berekend vanaf "nu" zodat dit blijft kloppen ook als vermogenHuidigeMaandLabel() verder doorschuift.
+  const nuVoorLengte = parseVermogenMaandLabel(vermogenHuidigeMaandLabel()) || {maand:8, jaar:2026};
+  const aantalMaandenTotMaart2035 = (2035*12+3) - (nuVoorLengte.jaar*12+nuVoorLengte.maand);
+  const potjesMaanden = berekenPotjesMaanden(aantalMaandenTotMaart2035, maandelijksBedragFn);
   const doelen = potjesDoelen();
   const nuPotjes = potjesMaanden[0];
   // Op Robs verzoek (14-08-2026): Kado helemaal niet meer tonen in Vermogen (niet in de hero-kaart, niet in de
@@ -6193,12 +6202,18 @@ function render(){
   document.querySelectorAll('[data-promote-status]').forEach(el=>el.addEventListener('click',(e)=>{
     e.stopPropagation();
     const id = el.dataset.promoteStatus;
+    const trip = REIZEN_PLANNING.find(p=>p.id===id);
+    // Rob, 25-08-2026: knop reageerde meteen op elke tik — risico op per ongeluk aanraken voor iets met een
+    // echt financieel effect (geld gaat uit C3S). Nu een expliciete bevestiging ervoor, met het bedrag erbij
+    // zodat direct duidelijk is wat er gebeurt.
+    const naamVoorConfirm = trip ? `${trip.naam} ${trip.jaar||''}`.trim() : id;
+    const bedragVoorConfirm = trip && trip.budget ? ` Dit haalt ${fmt(trip.budget)} uit de C3S-pot.` : '';
+    if(!confirm(`${naamVoorConfirm} van idee naar planning zetten?${bedragVoorConfirm}`)) return;
     setReisPlanOverride(id, {status: 'planning'});
     // Rob, 25-08-2026: idee → planning betekent dat het budget ECHT een eigen potje wordt, onttrokken uit de
     // C3S-basis — dat gebeurt intern bij Rabo (nooit als gewone transactie te zien), dus hier vastgelegd op
     // het moment van de knop-klik zelf. Alleen bij een reis die nog GEEN eigen onttrekking heeft (voorkomt
     // dubbel onttrekken als de knop per ongeluk twee keer gebruikt wordt of status ooit terug/heen gaat).
-    const trip = REIZEN_PLANNING.find(p=>p.id===id);
     if(trip && trip.budget && !c3sOnttrekkingenLive[id]){
       const vandaag = new Date().toISOString().slice(0,10);
       const entry = {datum: vandaag, bedrag: trip.budget, naar: trip.potje || `${trip.naam} ${trip.jaar||''}`.trim()};
@@ -6210,7 +6225,17 @@ function render(){
   document.querySelectorAll('[data-demote-idee]').forEach(el=>el.addEventListener('click',(e)=>{
     e.stopPropagation();
     const id = el.dataset.demoteIdee;
+    const trip = REIZEN_PLANNING.find(p=>p.id===id);
+    const naamVoorConfirm = trip ? `${trip.naam} ${trip.jaar||''}`.trim() : id;
+    if(!confirm(`${naamVoorConfirm} terugzetten naar idee? Het potje verdwijnt weer en het bedrag komt terug in de C3S-pot.`)) return;
     setReisPlanOverride(id, {status: 'idee'});
+    // Rob, 25-08-2026: terug naar idee moet de onttrekking van hierboven ook weer opheffen — anders blijft C3S
+    // voor altijd te laag staan (geld "verdwenen") terwijl het potje alweer weg is. Zelfde delete-patroon als
+    // de andere override-resets (bv. setCategoryOverrideByKey('__AUTO__')).
+    if(c3sOnttrekkingenLive[id]){
+      delete c3sOnttrekkingenLive[id];
+      deleteOverrideRow('c3s_onttrekking', id);
+    }
     reisTripExpand = null;
     render();
   }));
