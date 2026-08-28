@@ -1031,7 +1031,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {confirmedKind:'tx_ingcc',  pendingKind:'tx_pending_ingcc',  getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {confirmedKind:'tx_amex',   pendingKind:'tx_pending_amex',   getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-08-27m - Drie dingen n.a.v. Robs screenshots. (1) Hypotheek werkte nog niet: die tab heeft een compleet los toggle-systeem (hypotheekTegelExpand/hypotheekJaarExpand, data-hyp-*-toggle) dat nooit meegenomen was in de kader/scroll-fixes - nu alle 4 hoofdtegels (Bruto hypotheeklast/Resterende hoofdsom/WOZ-waarde/Vervroegd aflossen) plus de per-jaar-accordion voorzien van dezelfde open-highlight-rand en scrollC3sNaarKop als de rest van de app. (2) Vermogen sprong verkeerd onder de grafiek: die tab heeft een TWEEDE sticky balk (.vermogen-opties-grid, de Nominaal/Inflatie/Aflossen-keuzerij) bovenop de gewone sticky header - de generieke scrollC3sNaarKop (die maar 1 sticky-hoogte aftrekt) mikte daardoor mis. potjes-maand-toggle en de Vermogen-jaar-accordion (renderJaarAccordion, data-jaar-toggle - had zelf ook nog geen highlight-rand) gebruiken nu scrollMetStickyOffset met beide sticky-selectors, een al bestaande functie die precies hiervoor gebouwd was maar nog niet overal werd gebruikt; jaar-accordion kreeg ook zijn ontbrekende open-highlight-rand. (3) Salaris-jaartegels (Rob- en Lindy-tab) hadden eigen handgeschreven opmaak (losse spans met font-weight/font-size i.p.v. de standaard card-label/stat-figure/stat-sub-klassen) - nu omgezet naar exact dezelfde opmaak als de rest van de app (Hypotheek, Vermogen, etc.), inclusief de open-highlight-rand en scroll. Vorige versie (2026-08-27l - Scroll-gedrag consistent gemaakt op Robs verzoek ("soms springt hij weg"): het scroll-onder-sticky-header-mechanisme dat C3S al had (scrollC3sNaarKop) zat alleen daar - de generieke data-expand-toggle (Lopende/Volgende/Vorige maand, Saldo-check, Bestedingsruimte, Overmaken naar ING, Vorige-maand-sparen) en de Reizen/Vermogen-potjes-toggles deden na het openen/sluiten helemaal niets met de scrollpositie, wat het onvoorspelbare spring-gedrag verklaart. Nu roepen alle toggle-handlers (data-expand, data-reis-tile-toggle, data-reis-trip-toggle, data-reis-afgesloten-toggle, data-potjes-maand) dezelfde scrollC3sNaarKop() aan na render() - de getikte tegel schuift voortaan altijd netjes net onder de sticky header, consistent bij elke tegel in de hele app. Losstaand n.a.v. Robs screenshot-controle: de kader-fix uit 27k (alleen open tegel krijgt rand) staat al goed in dit bestand geverifieerd (Saldo-check/Vorige-maand-sparen dicht = geen rand, Bestedingsruimte open = wel rand) - de screenshots die Rob liet zien tonen nog het oude gedrag, wat er sterk op wijst dat de live app nog niet op de laatste gepushte versie staat. Vorige versie (2026-08-27k - Op Robs verzoek doorgevoerd door het HELE systeem (niet meer alleen Lopende maand): kader-regel nu overal consistent - alleen de geselecteerde/open tegel krijgt een rand (brass, 2px), verder nergens. Basis-CSS .card heeft geen standaardrand meer (transparant i.p.v. var(--rule)), met een standaard margin-bottom:14px zodat tegels overal netjes los van elkaar blijven staan via ruimte i.p.v. randen (kleine bijwerking: in de bestaande hero/hero4-grids komt hier bovenop de grid-gap nog wat extra ruimte bij, cosmetisch, geen layoutbreuk). Alle accordion-tegels door het hele bestand nagelopen en voorzien van de open-highlight: Vorige maand (accordionTile + Overmaken-naar-ING-kaart), Lopende maand (tile, Bestedingsruimte), Volgende maand (tile), Saldo-check, Vorige-maand-sparen, Vermogen-potjes-per-maand, en alle Reizen-tegels (hoofd-trip-tegel, budget/gespaard/uitgegeven-subtegels, niet-toegewezen-tegel, afgesloten-reizen-tegel). Losse statuskleuren-op-rand (rood/groen/oranje voor negatief saldo, over budget, tekort) overal weggehaald - die informatie stond al op het bedrag zelf via tekstkleur, dus geen informatieverlies, alleen de rand is nu uitsluitend een open/geselecteerd-signaal. Detail-kaarten die direct onder een open tegel verschijnen (Inkomen/Sparen/Vaste-lasten/Dagelijks-samenstelling, Bestedingsruimte-samenstelling) hebben geen eigen rand meer, zodat ze optisch één blok vormen met de tegel erboven i.p.v. twee gestapelde kaders. C3S sectie-tegels (Koop/Project/Bouw/Afwerking/Facturen) volgden dit patroon via .c3s-sectie-tegel.active al helemaal correct, dus daar niets aangepast. Vorige versie (2026-08-27j - Op Robs verzoek (screenshot): in Lopende maand liet een uitgeklapte tegel (bv. Vaste lasten) niet zien dat die geselecteerd/open was - de samenvattingstegel en de uitklap-detailkaart eronder waren twee losse, los ogende kaders. Fix (alleen in tile()/actueelDetail()/expandCard() binnen renderVolgendeMaandView, = Lopende maand in de UI - de identieke functies in Vorige maand/Volgende maand bewust ongemoeid): de samenvattingstegel krijgt nu een brass-kleurige highlight-rand (dikker, 2px) zodra hij open staat; de detailkaart die eronder verschijnt heeft nu geen eigen rand meer (transparant, bovenhoeken vierkant, -1px marge) zodat het oogt als één doorlopend blok i.p.v. twee gestapelde kaders. Vorige versie (2026-08-27i - Bug gevonden n.a.v. Robs screenshot: __PAYMENT__ (AMEX-crediterings-/betalingsmarkering) stond niet in JUL_INTERN_CATS, waardoor die als zichtbare categorie (met bolletje, op €0,00) lekte in de Dagelijks/Vaste-lasten-uitklap van Lopende maand — precies zo een interne markering als __AMEX_BETALING__/__INGCC_BETALING__ die daar al wel in stonden. __PAYMENT__ toegevoegd aan de lijst; isSpendRow/isDagelijksCategorie/voorspellingDagelijksPerCategorie gebruiken die lijst allemaal al, dus deze ene toevoeging dekt alle plekken (geverifieerd, geen losse filterlogica elders). Autokosten op €0,00 in dezelfde screenshot is géén bug - bestaande, legitieme categorie zonder transacties deze periode, precies het vaste-posten-op-0-tonen-gedrag dat al eerder bewust zo gebouwd is. Vorige versie (2026-08-27h - Op Robs terechte punt: bolletjes-systeem (afwijking-kleur + verwacht-uitklap) had geen functie in Volgende maand — dat zijn statische voorspelde bedragen, geen werkelijke transacties, dus een bolletje dat afwijking-van-verwacht toont vergelijkt een getal met zichzelf. Verwijderd uit expandCard() binnen renderVolgendeMaandSepView() (Inkomen/Sparen-samenstelling en de Salaris-uitsplitsing eronder) - geen showDot/matchMode/budgetFor/wijktAf meer daar, gewoon platte bedragen. De vrijwel identieke expandCard() binnen renderVolgendeMaandView() (= Lopende maand in de UI) blijft ongewijzigd - daar staat een echt transactiebedrag tegenover een verwachting, dus daar heeft het bolletje wel functie. Vorige versie (2026-08-27g - AMEX-afschrift 28-05 t/m 27-06 verwerkt (n.a.v. Robs terechte punt: statements zijn geen probleem, ze stonden allemaal al in het systeem - alleen in het oude AMEX_ALL-array, nooit gemigreerd). Tijdens migreren een echte fout in de UNIQUE-constraint ontdekt en gefixt: (account,datum,vendor,bedrag) sloot ten onrechte LEGITIEME duplicaten uit (bv. 5x KLM e46,99 dezelfde dag - 5 losse tickets, geen fout) - de constraint zou die stilzwijgend hebben laten verdwijnen, het omgekeerde van de bedoeling. Tabel kreeg een occurrence-kolom (1,2,3...) die exacte duplicaten nu wel onderscheidt; constraint is nu (account,datum,vendor,bedrag,occurrence). Bij het narekenen bleek dit ook al 8 rijen (4 paren) in de eerdere grote migratie te hebben gekost - Rabo-hypotheektermijnen en ING-aankopen die toevallig 2x hetzelfde bedrag hadden. Rechtgezet. AMEX_ALL (149 rijen, dec 2025-jun 2026) gemigreerd naar transactions (account=AMEX) - overlapt niet met de eerder gemigreerde AMEX_TX_JUL (jun-aug 2026), dus nu 1 doorlopende AMEX-historie. txForMonth()/amexHistorisch (voorspellingslogica) lazen nog rechtstreeks uit het hardcoded AMEX_ALL - nu omgezet naar het live-geladen AMEX_TX_JUL, dat nu automatisch de volledige historie bevat. Zelfde ontdekt en gefixt voor MC_TX_ALL (ING creditcard-historie, bleek al volledig een subset van de eerder gemigreerde INGCC_TX_JUL) - txForMonth-tegenhanger voor MC nu ook omgezet naar INGCC_TX_JUL. Drie dode hardcoded arrays (AMEX_ALL, AMEX_PERIOD, MC_TX_ALL) verwijderd. Nog niet gedaan: dezelfde interne-duplicaten-check op de overige gemigreerde batches (INGCC/AMEX_TX_JUL, live tx_rabo/tx_ing) - die kwamen bij eerdere migraties toevallig zonder interne dubbele (datum,vendor,bedrag)-combinaties uit de test, maar dat is niet exhaustief voor toekomstige nieuwe statements. Vorige versie (2026-08-27f - Migratie AFGEROND (Rob: nee alles omzetten, is logischer) - laatste stukken: C3S, eenmalig-vlag en maand-afsluiting. C3S_POSTEN (60 posten) en C3S_FACTUREN (7 facturen) zijn geen hardcoded arrays meer, worden nu live geladen uit de al langer bestaande maar tot nu toe ongebruikte c3s_posten/c3s_facturen-tabellen (2 ontbrekende kolommen toegevoegd: tel_methode, voortgang; c3s_facturen bleek een verouderde snapshot te bevatten - overschreven met de correcte, actuele data uit de hardcoded array). De losse kind=c3s_notitie/c3s_voortgang/c3s_subcat-overrides (55 rijen) zijn in de tabel-kolommen zelf verwerkt; bestaande c3sNotitieOverrides/c3sVoortgangOverrides/c3sSubcatOverrides-lookups blijven ongewijzigd werken (nu gevuld vanuit p.notities/p.voortgang/p.subcategorie i.p.v. losse rijen), dus geen van de ~15 call sites door de C3S-code heen hoefde aangepast - alleen de 3 schrijffuncties (setC3sNotitie/Voortgang/Subcat) PATCHen nu de tabel direct (nieuwe helper patchC3sPostField). transactions kreeg een eenmalig-kolom (BOOLEAN) - effectiefIsUitschieter() checkt die nu eerst, de Eenmalig-checkbox schrijft er nu direct naartoe. Nieuwe tabel maand_afsluitingen (1 rij, periode_start_datum als lookup-key) vervangt de laatste losse override-rij. Overrides-tabel bevat nu alleen nog 24+17 legacy per-tx category/reis-rijen van vóór het gemigreerde tx-venster (2025-data) - onschadelijk, blijven als fallback staan, verder leeg. Geverifieerd: RABO-saldo nog steeds exact 5.013,93 (ongewijzigd na alle C3S/eenmalig-wijzigingen, zoals verwacht). Hiermee is de hele overrides-kind-aanpak vervangen door een echt relationeel schema: transactions, vendor_rules, reizen, saldo_ankers, c3s_posten, c3s_facturen, maand_afsluitingen, plus de al bestaande vendor_patronen/salaris_parameters. Vorige versie (2026-08-27e - Derde stap tabellen-migratie: reizen en saldo-ankers. transactions kreeg een trip_id kolom - 28 van de 45 losse reis-toewijzingen (de rest is oudere 2025-data buiten het gemigreerde tx-venster, blijft onschadelijk in overrides staan) staan nu direct op de transactierij i.p.v. als aparte kind=reis-override. Nieuwe tabel reizen (trip_id/budget/timing/status/jaar/afgewikkeld/afgewikkeld_bedrag/afgewikkeld_maand) vervangt de losse kind=reis_plan (4) en kind=reis_budget (1) rijen - elke reis is nu 1 rij met eigen kolommen. Nieuwe tabel saldo_ankers (rekening/tipo/bedrag/datum) vervangt de 7 losse kind=saldo-rijen (RABO/ING/AMEX/CC/C3S/KADO/REIS_THAILAND-2026) - 1 rij per rekening/potje i.p.v. een los JSON-veld per stuk. Lees- en schrijfkant beide omgebouwd: effectiveReis() checkt nu eerst t.trip_id, setReisOverrideByKey/setReisPlanOverride/setReisBudgetOverride schrijven nu naar transactions/reizen (nieuwe helpers patchTransactionField/saveReisVeld), saldoCheck wordt bij live-load nu uit saldo_ankers opgebouwd i.p.v. uit overrides. Geverifieerd via SQL: 28 tx met trip_id, 7 saldo-ankers, 5 reizen, allemaal correct. Resterend in de generieke overrides-tabel (bewust nog niet aangepakt, apart traject): C3S (c3s_notitie/voortgang/subcat, 55 rijen - C3S_POSTEN staat momenteel nog los hardcoded in deze HTML i.p.v. live uit de al bestaande c3s_posten-tabel te lezen, dat is een grotere ombouw met meer regressierisico dan de stappen tot nu toe), eenmalig (2) en maand_afsluiting (1, te klein voor een eigen tabel). Vorige versie (2026-08-27d - Vervolg op de tabellen-migratie: categorisatie-regels. Nieuwe kolommen op transactions (category was er al, nu ook bucket TEXT) - 64 losse per-tx categorie-correcties en 4 per-tx bucket-correcties rechtstreeks in de transactierij gezet i.p.v. als aparte override ernaast (24 categorie-overrides die niet matchten - oude/AMEX-vendornaam-verschillen of pre-migratie-data - blijven als legacy fallback staan, onschadelijk). Nieuwe tabel vendor_rules (vendor_key/default_category/default_bucket) vervangt de losse overrides-rijen kind=vendor (47) en kind=vendor_bucket (2) - een leverancier-regel is nu 1 rij met 2 kolommen i.p.v. 2 aparte kind-rijen. Leesfuncties (effectiveCategory/effectiveBucket) ongewijzigd qua logica maar lezen nu vendorOverrides/vendorBucketOverrides die bij live-load uit vendor_rules gevuld worden (nieuw stuk in loadTransactionsTable), en effectiveBucket checkt eerst t.bucket (nieuwe kolom) voor de legacy bucketOverrides-check. Schrijfkant ook omgebouwd: setOverrideByKey/setBucketOverrideByKey PATCHen nu direct de transactions-rij (nieuwe helper patchTransactionField), setVendorBucketOverride/de vendor-leer-regel in setOverrideByKey upserten nu vendor_rules (nieuwe helper saveVendorRule) - nieuwe correcties belanden dus niet meer in de oude generieke overrides-tabel. categoryOverrides[key] wordt nog wel gezet (puur voor het bestaande handmatig-aangepast-label in de UI), maar is niet meer de bron van waarheid. Nog niet aangepakt: reis-toewijzingen (45), C3S (c3s_notitie/voortgang/subcat, 55), reis_plan/budget, saldo-ankers, eenmalig, maand_afsluiting - blijven voorlopig in de generieke overrides-tabel, apart traject. Vorige versie (2026-08-27c - Structurele fix (start van Robs alle-financien-zijn-tabellen-verzoek): transacties eerst. Nieuwe Supabase-tabel transactions (account/date/vendor/amount/category, UNIQUE(account,date,vendor,amount) - dubbeltelling is nu een database-constraint, geen JS-vergelijking meer) vervangt de oude driedubbele opslag (hardcoded arrays in deze HTML + losse overrides-kind-rijen tx_rabo/tx_ing/tx_ingcc/tx_amex + fragiele date+vendor+bedrag-stringmatch die al eens een echte dubbeltelling gaf). Alle bestaande tx gemigreerd (553 unieke rijen, incl. de al langer lopende INGCC/AMEX-historie en de tot dusver alleen-live 22-26/8-transacties die ik eerder over het hoofd had gezien). Nieuwe functie loadTransactionsTable() haalt bij elke live load ALLE transacties op en vervangt RABO/ING_TX_JUL/AUG/SEP en INGCC/AMEX_TX_JUL wholesale (geen merge/append meer) - periodegrenzen volgen Robs salarisdatum-conventie (JUL/AUG-knip op 24-07, AUG/SEP-knip op PERIODE_START_SALARISDATUM/24-08). Geverifieerd via SQL dat dit exact dezelfde saldi oplevert als de handmatige narekening hiervoor (RABO 5.013,93 / ING 3.513,00, tx t/m 26-08). Oude tx_rabo/tx_ing/tx_ingcc/tx_amex-rijen in overrides opgeruimd. Bewust nog niet aangepakt (Robs bredere waarom-niet-alles-tabellen-vraag): categorieen/vendor-regels/C3S/salaris blijven voorlopig in de generieke overrides-kind-tabel - apart traject, later. Vorige versie (2026-08-27b - Correctie op de vorige (27a) saldo-check-fix, n.a.v. Rob ("wtf jij had alle data al tm 26/8" + "geen aparte tekstregel, alleen de peildatum"). Twee dingen recht gezet. (1) Ik had ten onrechte geconcludeerd dat de tx-data een gat had tot 24/8 - er stonden al live tx_rabo/tx_ing-rijen in Supabase (overrides-tabel) t/m 26-08, ik had die niet opgehaald voor ik dat concludeerde. Narekening met de echte live-data bevestigt dat de aanpak uit 27a inhoudelijk klopt: anker (168,44 RABO / 425,99 ING, beide 21-08) + som van alle live tx erna komt exact uit op Robs bevestigde bank-app-bedragen op 24-08 (5.216,80 / 4.270,27) - de functie berekenRekeningSaldoUitTx() werkt dus al correct zodra de app live Supabase laadt. (2) Op Robs verzoek de hele bank-app-vergelijking (live_bedrag/live_datum, de "nog niet verwerkt"-tekstregel) weer verwijderd: de bank-app zelf loopt sowieso voor op tx die nog niet gedownload zijn, dus dat verschil was geen bruikbaar signaal. De Saldo-check-tegel toont nu alleen het berekende bedrag (anker+tx) en de peildatum (= datum van de laatste meetellende tx, of de ankerdatum als er nog geen nieuwere tx zijn) - geen aparte regel meer. saldoCheck-schema voor RABO/ING teruggebracht tot alleen {csv_bedrag, csv_datum} (het anker); de Bestedingsruimte-correctie die op het oude live_bedrag-verschil leunde is verwijderd (stond toch al op 0, want dat verschil betekende nooit iets bruikbaars). Geen statische RABO_TX_SEP/ING_TX_SEP-bake gedaan ondanks dat de live tx al t/m 26-08 klaarstaan - dat risico stond al gedocumenteerd (een eerdere sessie kreeg zo een dubbeltelling doordat een vendor-naam net niet exact overeenkwam met de live-versie) - de live Supabase-merge blijft dus de enige bron voor deze twee periodes, dit bestand hoeft daar niet mee gesynchroniseerd te worden. Vorige versie (2026-08-25ai - Vaste vendor-regel toegevoegd: "m bezemer" (vendorKey van "M. Bezemer (maandelijks sparen)") → categorie "Familie", bevestigd door Rob (spaarpotje voor Maud, blijft Familie). Deze €75/mnd bleek al 3x terug te komen (juni, juli, augustus, steeds rond de 26e) maar had nog geen vaste regel — moest elke maand opnieuw met de hand gecorrigeerd worden. Losstaand geverifieerd: vendorKey("M. Bezemer (maandelijks sparen)")="m bezemer", botst niet met "maud bezemer" (Maud\'s eigen, aparte transacties).';
+const DASHBOARD_VERSION = '2026-08-27o - Drie dingen n.a.v. Robs screenshots. (1) De 3 statkaarten bovenaan Energie (Totaal/Gemiddelde/T.o.v. vorig jaar) weggehaald - dezelfde info stond al in de DIT JAAR-kaart eronder, dus puur dubbel. (2) Bug gefixt: geselecteerde tegel bleef gemarkeerd/open staan als je een andere tegel opende ("blijft hangen") - energieChartExpand/energieTariefExpand/energieMaandExpand waren 3 losse, onafhankelijke state-variabelen; samengevoegd tot 1 gedeelde energieOpenTegel zodat openen van een tegel altijd alle andere in de Energie-tab sluit (echte single-open-accordion, net als de rest van de app al deed). (3) Sleepbalk (eerder alleen op de Potjes-grafiek in Vermogen) gegeneraliseerd naar renderScrubbaarChart() - werkt nu ook op de 3 grafieken in Energie (Verloop per maand, Tarief gas, Tarief stroom), elk met een eigen readout-regeltje (data-scrub-readout matcht op scrubKey, meerdere grafieken kunnen nu tegelijk op één scherm staan zonder elkaars sleepbalk te breken). Tarief-grafieken tonen tijdens het slepen het tarief in €X,XXX/eenheid i.p.v. een bedrag. Vorige versie (2026-08-27n - Drie dingen n.a.v. Robs screenshots. (1) Hypotheek/Vermogen (vorige ronde) bleken bij Vermogen nog steeds soms mis te scrollen (springt half onder de grafiek) - scrollC3sNaarKop/scrollMetStickyOffset gebruikten maar 1 requestAnimationFrame, wat een net-verouderde layout kon meten; nu dubbele rAF plus een herhaling 400ms later (na de smooth-scroll-animatie) om eventuele resterende afwijking te corrigeren. (2) Energie-tab had de nieuwe tegel-opzet nog niet: de DIT JAAR-kaart gebruikte losse font-weight/font-size-spans i.p.v. de standaard card-label/stat-figure-klassen (zelfde probleem als eerder bij Salaris) - nu gelijkgetrokken, plus open-highlight-rand en scroll toegevoegd aan alle accordion-tegels (Verloop per maand, Tarief gas/stroom, Maanddetail-per-maand). (3) Op Robs verzoek de 3 Vergelijk-met-knoppen (2023/2024/2025) onder de grafiek verwijderd ("voegen niet toe") - inclusief de bijbehorende renderTweeLijnenChart()-functie, energieVergelijkJaar-state en click-handler. Bijvangst: energieJaarSelectie/data-energie-jaar, al sinds een eerdere sessie (25c) dode code (de bijbehorende jaartegels bestonden al niet meer, maar de state/handler bleven toen bewust ongemoeid staan) nu ook opgeruimd - precies hetzelfde soort onvolledige cleanup dat Rob nu opnieuw signaleerde. Vorige versie (2026-08-27m - Drie dingen n.a.v. Robs screenshots. (1) Hypotheek werkte nog niet: die tab heeft een compleet los toggle-systeem (hypotheekTegelExpand/hypotheekJaarExpand, data-hyp-*-toggle) dat nooit meegenomen was in de kader/scroll-fixes - nu alle 4 hoofdtegels (Bruto hypotheeklast/Resterende hoofdsom/WOZ-waarde/Vervroegd aflossen) plus de per-jaar-accordion voorzien van dezelfde open-highlight-rand en scrollC3sNaarKop als de rest van de app. (2) Vermogen sprong verkeerd onder de grafiek: die tab heeft een TWEEDE sticky balk (.vermogen-opties-grid, de Nominaal/Inflatie/Aflossen-keuzerij) bovenop de gewone sticky header - de generieke scrollC3sNaarKop (die maar 1 sticky-hoogte aftrekt) mikte daardoor mis. potjes-maand-toggle en de Vermogen-jaar-accordion (renderJaarAccordion, data-jaar-toggle - had zelf ook nog geen highlight-rand) gebruiken nu scrollMetStickyOffset met beide sticky-selectors, een al bestaande functie die precies hiervoor gebouwd was maar nog niet overal werd gebruikt; jaar-accordion kreeg ook zijn ontbrekende open-highlight-rand. (3) Salaris-jaartegels (Rob- en Lindy-tab) hadden eigen handgeschreven opmaak (losse spans met font-weight/font-size i.p.v. de standaard card-label/stat-figure/stat-sub-klassen) - nu omgezet naar exact dezelfde opmaak als de rest van de app (Hypotheek, Vermogen, etc.), inclusief de open-highlight-rand en scroll. Vorige versie (2026-08-27l - Scroll-gedrag consistent gemaakt op Robs verzoek ("soms springt hij weg"): het scroll-onder-sticky-header-mechanisme dat C3S al had (scrollC3sNaarKop) zat alleen daar - de generieke data-expand-toggle (Lopende/Volgende/Vorige maand, Saldo-check, Bestedingsruimte, Overmaken naar ING, Vorige-maand-sparen) en de Reizen/Vermogen-potjes-toggles deden na het openen/sluiten helemaal niets met de scrollpositie, wat het onvoorspelbare spring-gedrag verklaart. Nu roepen alle toggle-handlers (data-expand, data-reis-tile-toggle, data-reis-trip-toggle, data-reis-afgesloten-toggle, data-potjes-maand) dezelfde scrollC3sNaarKop() aan na render() - de getikte tegel schuift voortaan altijd netjes net onder de sticky header, consistent bij elke tegel in de hele app. Losstaand n.a.v. Robs screenshot-controle: de kader-fix uit 27k (alleen open tegel krijgt rand) staat al goed in dit bestand geverifieerd (Saldo-check/Vorige-maand-sparen dicht = geen rand, Bestedingsruimte open = wel rand) - de screenshots die Rob liet zien tonen nog het oude gedrag, wat er sterk op wijst dat de live app nog niet op de laatste gepushte versie staat. Vorige versie (2026-08-27k - Op Robs verzoek doorgevoerd door het HELE systeem (niet meer alleen Lopende maand): kader-regel nu overal consistent - alleen de geselecteerde/open tegel krijgt een rand (brass, 2px), verder nergens. Basis-CSS .card heeft geen standaardrand meer (transparant i.p.v. var(--rule)), met een standaard margin-bottom:14px zodat tegels overal netjes los van elkaar blijven staan via ruimte i.p.v. randen (kleine bijwerking: in de bestaande hero/hero4-grids komt hier bovenop de grid-gap nog wat extra ruimte bij, cosmetisch, geen layoutbreuk). Alle accordion-tegels door het hele bestand nagelopen en voorzien van de open-highlight: Vorige maand (accordionTile + Overmaken-naar-ING-kaart), Lopende maand (tile, Bestedingsruimte), Volgende maand (tile), Saldo-check, Vorige-maand-sparen, Vermogen-potjes-per-maand, en alle Reizen-tegels (hoofd-trip-tegel, budget/gespaard/uitgegeven-subtegels, niet-toegewezen-tegel, afgesloten-reizen-tegel). Losse statuskleuren-op-rand (rood/groen/oranje voor negatief saldo, over budget, tekort) overal weggehaald - die informatie stond al op het bedrag zelf via tekstkleur, dus geen informatieverlies, alleen de rand is nu uitsluitend een open/geselecteerd-signaal. Detail-kaarten die direct onder een open tegel verschijnen (Inkomen/Sparen/Vaste-lasten/Dagelijks-samenstelling, Bestedingsruimte-samenstelling) hebben geen eigen rand meer, zodat ze optisch één blok vormen met de tegel erboven i.p.v. twee gestapelde kaders. C3S sectie-tegels (Koop/Project/Bouw/Afwerking/Facturen) volgden dit patroon via .c3s-sectie-tegel.active al helemaal correct, dus daar niets aangepast. Vorige versie (2026-08-27j - Op Robs verzoek (screenshot): in Lopende maand liet een uitgeklapte tegel (bv. Vaste lasten) niet zien dat die geselecteerd/open was - de samenvattingstegel en de uitklap-detailkaart eronder waren twee losse, los ogende kaders. Fix (alleen in tile()/actueelDetail()/expandCard() binnen renderVolgendeMaandView, = Lopende maand in de UI - de identieke functies in Vorige maand/Volgende maand bewust ongemoeid): de samenvattingstegel krijgt nu een brass-kleurige highlight-rand (dikker, 2px) zodra hij open staat; de detailkaart die eronder verschijnt heeft nu geen eigen rand meer (transparant, bovenhoeken vierkant, -1px marge) zodat het oogt als één doorlopend blok i.p.v. twee gestapelde kaders. Vorige versie (2026-08-27i - Bug gevonden n.a.v. Robs screenshot: __PAYMENT__ (AMEX-crediterings-/betalingsmarkering) stond niet in JUL_INTERN_CATS, waardoor die als zichtbare categorie (met bolletje, op €0,00) lekte in de Dagelijks/Vaste-lasten-uitklap van Lopende maand — precies zo een interne markering als __AMEX_BETALING__/__INGCC_BETALING__ die daar al wel in stonden. __PAYMENT__ toegevoegd aan de lijst; isSpendRow/isDagelijksCategorie/voorspellingDagelijksPerCategorie gebruiken die lijst allemaal al, dus deze ene toevoeging dekt alle plekken (geverifieerd, geen losse filterlogica elders). Autokosten op €0,00 in dezelfde screenshot is géén bug - bestaande, legitieme categorie zonder transacties deze periode, precies het vaste-posten-op-0-tonen-gedrag dat al eerder bewust zo gebouwd is. Vorige versie (2026-08-27h - Op Robs terechte punt: bolletjes-systeem (afwijking-kleur + verwacht-uitklap) had geen functie in Volgende maand — dat zijn statische voorspelde bedragen, geen werkelijke transacties, dus een bolletje dat afwijking-van-verwacht toont vergelijkt een getal met zichzelf. Verwijderd uit expandCard() binnen renderVolgendeMaandSepView() (Inkomen/Sparen-samenstelling en de Salaris-uitsplitsing eronder) - geen showDot/matchMode/budgetFor/wijktAf meer daar, gewoon platte bedragen. De vrijwel identieke expandCard() binnen renderVolgendeMaandView() (= Lopende maand in de UI) blijft ongewijzigd - daar staat een echt transactiebedrag tegenover een verwachting, dus daar heeft het bolletje wel functie. Vorige versie (2026-08-27g - AMEX-afschrift 28-05 t/m 27-06 verwerkt (n.a.v. Robs terechte punt: statements zijn geen probleem, ze stonden allemaal al in het systeem - alleen in het oude AMEX_ALL-array, nooit gemigreerd). Tijdens migreren een echte fout in de UNIQUE-constraint ontdekt en gefixt: (account,datum,vendor,bedrag) sloot ten onrechte LEGITIEME duplicaten uit (bv. 5x KLM e46,99 dezelfde dag - 5 losse tickets, geen fout) - de constraint zou die stilzwijgend hebben laten verdwijnen, het omgekeerde van de bedoeling. Tabel kreeg een occurrence-kolom (1,2,3...) die exacte duplicaten nu wel onderscheidt; constraint is nu (account,datum,vendor,bedrag,occurrence). Bij het narekenen bleek dit ook al 8 rijen (4 paren) in de eerdere grote migratie te hebben gekost - Rabo-hypotheektermijnen en ING-aankopen die toevallig 2x hetzelfde bedrag hadden. Rechtgezet. AMEX_ALL (149 rijen, dec 2025-jun 2026) gemigreerd naar transactions (account=AMEX) - overlapt niet met de eerder gemigreerde AMEX_TX_JUL (jun-aug 2026), dus nu 1 doorlopende AMEX-historie. txForMonth()/amexHistorisch (voorspellingslogica) lazen nog rechtstreeks uit het hardcoded AMEX_ALL - nu omgezet naar het live-geladen AMEX_TX_JUL, dat nu automatisch de volledige historie bevat. Zelfde ontdekt en gefixt voor MC_TX_ALL (ING creditcard-historie, bleek al volledig een subset van de eerder gemigreerde INGCC_TX_JUL) - txForMonth-tegenhanger voor MC nu ook omgezet naar INGCC_TX_JUL. Drie dode hardcoded arrays (AMEX_ALL, AMEX_PERIOD, MC_TX_ALL) verwijderd. Nog niet gedaan: dezelfde interne-duplicaten-check op de overige gemigreerde batches (INGCC/AMEX_TX_JUL, live tx_rabo/tx_ing) - die kwamen bij eerdere migraties toevallig zonder interne dubbele (datum,vendor,bedrag)-combinaties uit de test, maar dat is niet exhaustief voor toekomstige nieuwe statements. Vorige versie (2026-08-27f - Migratie AFGEROND (Rob: nee alles omzetten, is logischer) - laatste stukken: C3S, eenmalig-vlag en maand-afsluiting. C3S_POSTEN (60 posten) en C3S_FACTUREN (7 facturen) zijn geen hardcoded arrays meer, worden nu live geladen uit de al langer bestaande maar tot nu toe ongebruikte c3s_posten/c3s_facturen-tabellen (2 ontbrekende kolommen toegevoegd: tel_methode, voortgang; c3s_facturen bleek een verouderde snapshot te bevatten - overschreven met de correcte, actuele data uit de hardcoded array). De losse kind=c3s_notitie/c3s_voortgang/c3s_subcat-overrides (55 rijen) zijn in de tabel-kolommen zelf verwerkt; bestaande c3sNotitieOverrides/c3sVoortgangOverrides/c3sSubcatOverrides-lookups blijven ongewijzigd werken (nu gevuld vanuit p.notities/p.voortgang/p.subcategorie i.p.v. losse rijen), dus geen van de ~15 call sites door de C3S-code heen hoefde aangepast - alleen de 3 schrijffuncties (setC3sNotitie/Voortgang/Subcat) PATCHen nu de tabel direct (nieuwe helper patchC3sPostField). transactions kreeg een eenmalig-kolom (BOOLEAN) - effectiefIsUitschieter() checkt die nu eerst, de Eenmalig-checkbox schrijft er nu direct naartoe. Nieuwe tabel maand_afsluitingen (1 rij, periode_start_datum als lookup-key) vervangt de laatste losse override-rij. Overrides-tabel bevat nu alleen nog 24+17 legacy per-tx category/reis-rijen van vóór het gemigreerde tx-venster (2025-data) - onschadelijk, blijven als fallback staan, verder leeg. Geverifieerd: RABO-saldo nog steeds exact 5.013,93 (ongewijzigd na alle C3S/eenmalig-wijzigingen, zoals verwacht). Hiermee is de hele overrides-kind-aanpak vervangen door een echt relationeel schema: transactions, vendor_rules, reizen, saldo_ankers, c3s_posten, c3s_facturen, maand_afsluitingen, plus de al bestaande vendor_patronen/salaris_parameters. Vorige versie (2026-08-27e - Derde stap tabellen-migratie: reizen en saldo-ankers. transactions kreeg een trip_id kolom - 28 van de 45 losse reis-toewijzingen (de rest is oudere 2025-data buiten het gemigreerde tx-venster, blijft onschadelijk in overrides staan) staan nu direct op de transactierij i.p.v. als aparte kind=reis-override. Nieuwe tabel reizen (trip_id/budget/timing/status/jaar/afgewikkeld/afgewikkeld_bedrag/afgewikkeld_maand) vervangt de losse kind=reis_plan (4) en kind=reis_budget (1) rijen - elke reis is nu 1 rij met eigen kolommen. Nieuwe tabel saldo_ankers (rekening/tipo/bedrag/datum) vervangt de 7 losse kind=saldo-rijen (RABO/ING/AMEX/CC/C3S/KADO/REIS_THAILAND-2026) - 1 rij per rekening/potje i.p.v. een los JSON-veld per stuk. Lees- en schrijfkant beide omgebouwd: effectiveReis() checkt nu eerst t.trip_id, setReisOverrideByKey/setReisPlanOverride/setReisBudgetOverride schrijven nu naar transactions/reizen (nieuwe helpers patchTransactionField/saveReisVeld), saldoCheck wordt bij live-load nu uit saldo_ankers opgebouwd i.p.v. uit overrides. Geverifieerd via SQL: 28 tx met trip_id, 7 saldo-ankers, 5 reizen, allemaal correct. Resterend in de generieke overrides-tabel (bewust nog niet aangepakt, apart traject): C3S (c3s_notitie/voortgang/subcat, 55 rijen - C3S_POSTEN staat momenteel nog los hardcoded in deze HTML i.p.v. live uit de al bestaande c3s_posten-tabel te lezen, dat is een grotere ombouw met meer regressierisico dan de stappen tot nu toe), eenmalig (2) en maand_afsluiting (1, te klein voor een eigen tabel). Vorige versie (2026-08-27d - Vervolg op de tabellen-migratie: categorisatie-regels. Nieuwe kolommen op transactions (category was er al, nu ook bucket TEXT) - 64 losse per-tx categorie-correcties en 4 per-tx bucket-correcties rechtstreeks in de transactierij gezet i.p.v. als aparte override ernaast (24 categorie-overrides die niet matchten - oude/AMEX-vendornaam-verschillen of pre-migratie-data - blijven als legacy fallback staan, onschadelijk). Nieuwe tabel vendor_rules (vendor_key/default_category/default_bucket) vervangt de losse overrides-rijen kind=vendor (47) en kind=vendor_bucket (2) - een leverancier-regel is nu 1 rij met 2 kolommen i.p.v. 2 aparte kind-rijen. Leesfuncties (effectiveCategory/effectiveBucket) ongewijzigd qua logica maar lezen nu vendorOverrides/vendorBucketOverrides die bij live-load uit vendor_rules gevuld worden (nieuw stuk in loadTransactionsTable), en effectiveBucket checkt eerst t.bucket (nieuwe kolom) voor de legacy bucketOverrides-check. Schrijfkant ook omgebouwd: setOverrideByKey/setBucketOverrideByKey PATCHen nu direct de transactions-rij (nieuwe helper patchTransactionField), setVendorBucketOverride/de vendor-leer-regel in setOverrideByKey upserten nu vendor_rules (nieuwe helper saveVendorRule) - nieuwe correcties belanden dus niet meer in de oude generieke overrides-tabel. categoryOverrides[key] wordt nog wel gezet (puur voor het bestaande handmatig-aangepast-label in de UI), maar is niet meer de bron van waarheid. Nog niet aangepakt: reis-toewijzingen (45), C3S (c3s_notitie/voortgang/subcat, 55), reis_plan/budget, saldo-ankers, eenmalig, maand_afsluiting - blijven voorlopig in de generieke overrides-tabel, apart traject. Vorige versie (2026-08-27c - Structurele fix (start van Robs alle-financien-zijn-tabellen-verzoek): transacties eerst. Nieuwe Supabase-tabel transactions (account/date/vendor/amount/category, UNIQUE(account,date,vendor,amount) - dubbeltelling is nu een database-constraint, geen JS-vergelijking meer) vervangt de oude driedubbele opslag (hardcoded arrays in deze HTML + losse overrides-kind-rijen tx_rabo/tx_ing/tx_ingcc/tx_amex + fragiele date+vendor+bedrag-stringmatch die al eens een echte dubbeltelling gaf). Alle bestaande tx gemigreerd (553 unieke rijen, incl. de al langer lopende INGCC/AMEX-historie en de tot dusver alleen-live 22-26/8-transacties die ik eerder over het hoofd had gezien). Nieuwe functie loadTransactionsTable() haalt bij elke live load ALLE transacties op en vervangt RABO/ING_TX_JUL/AUG/SEP en INGCC/AMEX_TX_JUL wholesale (geen merge/append meer) - periodegrenzen volgen Robs salarisdatum-conventie (JUL/AUG-knip op 24-07, AUG/SEP-knip op PERIODE_START_SALARISDATUM/24-08). Geverifieerd via SQL dat dit exact dezelfde saldi oplevert als de handmatige narekening hiervoor (RABO 5.013,93 / ING 3.513,00, tx t/m 26-08). Oude tx_rabo/tx_ing/tx_ingcc/tx_amex-rijen in overrides opgeruimd. Bewust nog niet aangepakt (Robs bredere waarom-niet-alles-tabellen-vraag): categorieen/vendor-regels/C3S/salaris blijven voorlopig in de generieke overrides-kind-tabel - apart traject, later. Vorige versie (2026-08-27b - Correctie op de vorige (27a) saldo-check-fix, n.a.v. Rob ("wtf jij had alle data al tm 26/8" + "geen aparte tekstregel, alleen de peildatum"). Twee dingen recht gezet. (1) Ik had ten onrechte geconcludeerd dat de tx-data een gat had tot 24/8 - er stonden al live tx_rabo/tx_ing-rijen in Supabase (overrides-tabel) t/m 26-08, ik had die niet opgehaald voor ik dat concludeerde. Narekening met de echte live-data bevestigt dat de aanpak uit 27a inhoudelijk klopt: anker (168,44 RABO / 425,99 ING, beide 21-08) + som van alle live tx erna komt exact uit op Robs bevestigde bank-app-bedragen op 24-08 (5.216,80 / 4.270,27) - de functie berekenRekeningSaldoUitTx() werkt dus al correct zodra de app live Supabase laadt. (2) Op Robs verzoek de hele bank-app-vergelijking (live_bedrag/live_datum, de "nog niet verwerkt"-tekstregel) weer verwijderd: de bank-app zelf loopt sowieso voor op tx die nog niet gedownload zijn, dus dat verschil was geen bruikbaar signaal. De Saldo-check-tegel toont nu alleen het berekende bedrag (anker+tx) en de peildatum (= datum van de laatste meetellende tx, of de ankerdatum als er nog geen nieuwere tx zijn) - geen aparte regel meer. saldoCheck-schema voor RABO/ING teruggebracht tot alleen {csv_bedrag, csv_datum} (het anker); de Bestedingsruimte-correctie die op het oude live_bedrag-verschil leunde is verwijderd (stond toch al op 0, want dat verschil betekende nooit iets bruikbaars). Geen statische RABO_TX_SEP/ING_TX_SEP-bake gedaan ondanks dat de live tx al t/m 26-08 klaarstaan - dat risico stond al gedocumenteerd (een eerdere sessie kreeg zo een dubbeltelling doordat een vendor-naam net niet exact overeenkwam met de live-versie) - de live Supabase-merge blijft dus de enige bron voor deze twee periodes, dit bestand hoeft daar niet mee gesynchroniseerd te worden. Vorige versie (2026-08-25ai - Vaste vendor-regel toegevoegd: "m bezemer" (vendorKey van "M. Bezemer (maandelijks sparen)") → categorie "Familie", bevestigd door Rob (spaarpotje voor Maud, blijft Familie). Deze €75/mnd bleek al 3x terug te komen (juni, juli, augustus, steeds rond de 26e) maar had nog geen vaste regel — moest elke maand opnieuw met de hand gecorrigeerd worden. Losstaand geverifieerd: vendorKey("M. Bezemer (maandelijks sparen)")="m bezemer", botst niet met "maud bezemer" (Maud\'s eigen, aparte transacties).';
 const DASHBOARD_VERSION_PREV_2026_08_25ah = '2026-08-25ah - Rob merkte op: augustus staat als "werkelijk" terwijl de maand nog loopt (26e vandaag) — klopt, ENERGIE_HUIDIGE_MAAND_2026 stond op 8, teruggezet naar 7. Augustus krijgt nu het "(prognose)"-label totdat de maand echt is afgerond; de opvallend lage augustus-cijfers (Gas 8,38 m³) bevestigen dat dit sowieso een onvolledige maand was, geen afgeronde.';
 const DASHBOARD_VERSION_PREV_2026_08_25ag = '2026-08-25ag - Bugfix op de sleepbalk van net: Rob merkte terecht op dat de tooltip vlak boven het aanraakpunt verscheen — op een telefoon zit je vinger daar dan precies overheen, onleesbaar. Tooltip-bij-de-vinger weggehaald; het cijfer verschijnt nu in het vaste label-regeltje boven de grafiek zelf ("Potjes — som over tijd..." wordt tijdens het slepen "[maand] · [bedrag]"), dat nooit door een vinger bedekt wordt. Lijn+stip op de grafiek blijven staan om te laten zien waar je zit.';
 const DASHBOARD_VERSION_PREV_2026_08_25af = '2026-08-25af - Rob verduidelijkt: Nominaal volgt zijn eigen Excel-schema (los van de salarisrekenmotor) — de eerdere vraag om Lindy\'s sparen-cijfers te herberekenen op basis van het salarismodel was dus de verkeerde aanpak. In plaats daarvan de VERMOGEN_MAANDEN-rijen gewoon gelijkgetrokken met een screenshot van Robs echte Excel: september 2026 lindy 2606→2505, oktober 2026 lindy 2800→2100 (november/december stonden al goed op 2100). Cascaderende basis/basis2-kolommen voor alle rijen vanaf september 2026 meegecorrigeerd (-101 vanaf sept, nog eens -700 vanaf okt, cumulatief dus -801 vanaf oktober).';
@@ -1964,7 +1964,7 @@ function setC3sSectie(sectie){
   scrollC3sNaarKop('[data-c3s-sectie="'+sectie+'"]');
 }
 function scrollC3sNaarKop(selector){
-  requestAnimationFrame(()=>{
+  const doScroll = ()=>{
     const el = document.querySelector(selector);
     if(!el) return;
     const header = document.querySelector('.detail-header');
@@ -1972,7 +1972,14 @@ function scrollC3sNaarKop(selector){
     const rect = el.getBoundingClientRect();
     const targetY = window.scrollY + rect.top - headerH - 8;
     window.scrollTo({top: Math.max(0, targetY), behavior:'smooth'});
-  });
+  };
+  // Dubbele rAF: na render() moet de browser eerst een keer volledig layouten voordat getBoundingClientRect()
+  // betrouwbaar is — met maar 1 rAF kon dit soms nog een net-verouderde layout meten (bv. vlak na een
+  // grafiek/chart die zijn eigen hoogte pas een fractie later claimt), waardoor de tegel net verkeerd uitkwam.
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    doScroll();
+    setTimeout(doScroll, 400); // herhaal na de smooth-scroll-animatie: corrigeert eventuele resterende afwijking
+  }));
 }
 // Op Robs verzoek (17-08-2026): scrollToSelector gebruikte scrollIntoView(block:'start'), dat negeert de TWEE
 // sticky koppen boven de Vermogen-maandenlijst (.detail-header ÉN .vermogen-opties-grid, die zelf ook nog
@@ -1980,7 +1987,7 @@ function scrollC3sNaarKop(selector){
 // leek. Deze variant trekt de hoogte van alle stapelende sticky-koppen binnen dezelfde detail-view eraf, zodat
 // de Nominaal/Inflatie/Aflos-keuzetegels bovenaan blijven staan én de doelmaand er direct onder verschijnt.
 function scrollMetStickyOffset(selector, extraSelectors){
-  requestAnimationFrame(()=>{
+  const doScroll = ()=>{
     const el = document.querySelector(selector);
     if(!el) return;
     let offset = 8;
@@ -1991,7 +1998,13 @@ function scrollMetStickyOffset(selector, extraSelectors){
     const rect = el.getBoundingClientRect();
     const targetY = window.scrollY + rect.top - offset;
     window.scrollTo({top: Math.max(0, targetY), behavior:'smooth'});
-  });
+  };
+  // Zelfde dubbele-rAF + na-correctie als scrollC3sNaarKop (Rob, 27-08-2026: "Vermogen komt nog half onder
+  // grafiek uit") — met 2 stapelende sticky-balken is de kans op een verouderde meting nog groter.
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    doScroll();
+    setTimeout(doScroll, 400);
+  }));
 }
 function c3sStatusLabelVoorExport(p, heuristicGestartIds){
   if(p.categorie!=='werkzaamheid' && p.categorie!=='materiaal') return '';
@@ -2753,13 +2766,14 @@ let vermogenMomentExpand = null; // index van uitgeklapt bijzonder-moment, of nu
 let vermogenJaarExpand = null; // welke jaar-tegel in Vermogen is uitgeklapt, of null
 let vermogenPotjesMaandExpand = null; // welke maandtegel in de nieuwe Balans-potjes-lijst is uitgeklapt, of null
 let vermogenMaandExpand = null; // welke maand-rij (2e niveau) is uitgeklapt, of null
-let energieJaarSelectie = null; // "getikte" jaartegel (accordion + bepaalt grafiek/maanddetail); null = geen tegel getikt -> lopende jaar
+// (energieJaarSelectie/data-energie-jaar op Robs verzoek nu écht opgeruimd, 27-08-2026 — was al ongebruikt sinds 25c maar bleef staan)
 let energieAutoOverrides = {}; // "YYYY-MM" -> kWh, handmatige CORRECTIE/aanvulling op de Excel-kolom "Stroom auto" (voor maanden die nog niet in de sheet staan)
 let energieAutoEditOpen = null; // "YYYY-MM" van de maand die nu bewerkt wordt, of null
-let energieVergelijkJaar = null; // jaar waarmee de trendgrafiek wordt vergeleken (overlay), of null = geen vergelijking
-let energieMaandExpand = null; // "YYYY-MM" van de opengeklapte maandtegel in de Energie-tab, of null (single-open accordion, zoals de rest van de app)
-let energieTariefExpand = null; // 'gas' | 'stroom' | null — single-open accordion, tikken op de ander sluit de eerste
-let energieChartExpand = false; // toont "Verloop per maand"-grafiek pas na tikken op die tegel
+// (energieVergelijkJaar-vergelijkingsfunctie op Robs verzoek verwijderd, 27-08-2026: "die 3 losse tegels voegen niet toe")
+let energieOpenTegel = null; // "chart" | "tarief-gas" | "tarief-stroom" | "maand-YYYY-MM" | null — ÉÉN gedeelde state
+// voor alle accordions in de Energie-tab (was voorheen 3 losse variabelen die onafhankelijk open konden staan,
+// waardoor bv. de grafiek open+gemarkeerd bleef terwijl je een tarief-tegel opende — Rob, 27-08-2026: "geselecteerd
+// blijft hangen als je ander selecteert"). Nu sluit het openen van een tegel altijd alle andere in deze tab.
 let salarisJaarExpand = null; // welke jaar-tegel in Salaris (Rob) is uitgeklapt, of null
 let hypotheekGekozenDelen = []; // array van DELEN_META-indices die de gebruiker handmatig heeft aangevinkt om vervroegd af te lossen (alleen de 7 niet-aflossingsvrije delen komen in aanmerking)
 let hypotheekJaarExpand = null; // welke jaar-tegel in Hypotheek is uitgeklapt, of null
@@ -4386,11 +4400,25 @@ function renderVermogenChart(series, idLabel){
     </linearGradient></defs>
     <path d="${areaPath}" fill="url(#${idLabel})"/>${zeroLine}<path d="${linePath}" fill="none" stroke="#c9a227" stroke-width="2"/></svg>`;
 }
+// Rob, 27-08-2026: sleepbalk gegeneraliseerd — voorheen alleen op de Potjes-grafiek (renderPotjesChart),
+// nu herbruikbaar voor elke grafiek via renderScrubbaarChart(). unit=null -> waarde als bedrag (fmt()),
+// unit='m³'/'kWh' etc. -> waarde als tarief (€X.XXX/eenheid, 3 decimalen) — dekt zowel Potjes/Energie-totalen
+// als de Tarief-gas/stroom-grafieken. scrubKey moet uniek zijn binnen de pagina (meerdere grafieken kunnen
+// tegelijk op één scherm staan, elk met een eigen scrubKey + bijbehorend data-scrub-readout-element).
+function renderScrubbaarChart(series, labels, idLabel, scrubKey, unit){
+  const svg = renderVermogenChart(series, idLabel);
+  const labelsJson = JSON.stringify(labels).replace(/"/g,'&quot;');
+  const valuesJson = JSON.stringify(series).replace(/"/g,'&quot;');
+  return `<div class="potjes-chart-wrap" data-scrub-chart="${scrubKey}" data-labels="${labelsJson}" data-values="${valuesJson}" ${unit?`data-unit="${unit}"`:''} style="position:relative;touch-action:pan-y;">
+    ${svg}
+    <div class="potjes-scrub-line" style="position:absolute;top:0;bottom:0;width:1px;background:var(--paper);opacity:0;pointer-events:none;"></div>
+    <div class="potjes-scrub-dot" style="position:absolute;width:8px;height:8px;margin-left:-4px;margin-top:-4px;border-radius:50%;background:#c9a227;border:2px solid var(--bg);opacity:0;pointer-events:none;"></div>
+  </div>`;
+}
 function renderPotjesChart(maanden){
   // Op Robs verzoek (14-08-2026): de grafiek toont de SOM van de potjes over tijd, niet 3 losse lijnen —
   // hergebruikt daarom gewoon de bestaande renderVermogenChart (1 lijn, zelfde stijl als de rest van de app).
   const totalen = maanden.map(r=>(r.c3s||0)+POTJES_TRIP_IDS.reduce((s,id)=>s+(r[id]||0),0));
-  const chart = renderVermogenChart(totalen, 'vGradPotjes');
   // X-as: op Robs verzoek toegevoegd — renderVermogenChart zelf toont geen asbeschriftingen. Toont om de
   // ~12 maanden het jaartal (voorkomt een onleesbare, te dichte rij labels over 108 maanden).
   const n = maanden.length;
@@ -4403,12 +4431,9 @@ function renderPotjesChart(maanden){
   // toegevoegd. Geen losse library, puur een doorzichtige overlay-div over de bestaande SVG die bij aanraken/
   // slepen de dichtstbijzijnde maand+bedrag toont via een verticale lijn + label (rechtstreekse DOM-updates in
   // attachPotjesChartScrub(), geen volledige re-render per beweging — dat zou hakkelen bij het slepen).
-  const labelsJson = JSON.stringify(maanden.map(r=>r.label)).replace(/"/g,'&quot;');
-  const valuesJson = JSON.stringify(totalen).replace(/"/g,'&quot;');
-  return `<div class="potjes-chart-wrap" data-potjes-chart="1" data-labels="${labelsJson}" data-values="${valuesJson}" data-default-label="Potjes — som over tijd, vanaf ${maanden[0].label}" style="position:relative;touch-action:pan-y;">
-    ${chart}
-    <div class="potjes-scrub-line" style="position:absolute;top:0;bottom:0;width:1px;background:var(--paper);opacity:0;pointer-events:none;"></div>
-    <div class="potjes-scrub-dot" style="position:absolute;width:8px;height:8px;margin-left:-4px;margin-top:-4px;border-radius:50%;background:#c9a227;border:2px solid var(--bg);opacity:0;pointer-events:none;"></div>
+  const labelsArr = maanden.map(r=>r.label);
+  return `<div class="potjes-chart-wrap-outer">
+    ${renderScrubbaarChart(totalen, labelsArr, 'vGradPotjes', 'potjes', null)}
   </div>
   ${asHtml}`;
 }
@@ -5086,7 +5111,7 @@ function renderPotjesView(maandelijksBedragFn, theorieFn){
       </div>
     </div>
     ${vermogenAflosDetailOpen ? '' : `<div class="card trend-card vermogen-trend-sticky">
-      <div class="card-label" data-potjes-readout="1">Potjes — som over tijd, vanaf ${nuPotjes.label}</div>
+      <div class="card-label" data-scrub-readout="potjes" data-default-label="Potjes — som over tijd, vanaf ${nuPotjes.label}">Potjes — som over tijd, vanaf ${nuPotjes.label}</div>
       ${renderPotjesChart(potjesMaanden)}
     </div>`}
     <div class="card-label" style="margin:18px 0 8px;">Per maand (tik voor de transacties)</div>
@@ -5920,27 +5945,6 @@ function energieJaarTotaal(jaar, totm){
   const recs = ENERGIE_DATA[jaar].slice(0, totm||12);
   return recs.reduce((s,r)=>s+(r.totaal||0),0);
 }
-function renderTweeLijnenChart(seriesA, seriesB, labelA, labelB){
-  const w=900,h=200,pad=10;
-  const n = seriesA.length;
-  const alle = [...seriesA, ...seriesB];
-  const max = Math.max(...alle)*1.05;
-  const min = Math.min(0, Math.min(...alle)*1.05);
-  const stepX = (w-pad*2)/(n-1);
-  const toPts = (series)=>series.map((v,i)=>{ const x=pad+i*stepX; const y=h-pad-((v-min)/(max-min||1))*(h-pad*2); return [x,y]; });
-  const toPath = (pts)=>pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
-  const ptsA = toPts(seriesA), ptsB = toPts(seriesB);
-  return `<svg viewBox="0 0 ${w} ${h+20}" preserveAspectRatio="none">
-    <path d="${toPath(ptsB)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5,4"/>
-    <path d="${toPath(ptsA)}" fill="none" stroke="#c9a227" stroke-width="2.5"/>
-    <g transform="translate(${pad},${h+14})" font-size="12">
-      <line x1="0" y1="-4" x2="16" y2="-4" stroke="#c9a227" stroke-width="2.5"/>
-      <text x="20" y="0" fill="var(--paper)">${labelA}</text>
-      <line x1="90" y1="-4" x2="106" y2="-4" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5,4"/>
-      <text x="110" y="0" fill="var(--muted)">${labelB}</text>
-    </g>
-  </svg>`;
-}
 function energieWerkelijkTM(jaar){
   return jaar===ENERGIE_JAREN[ENERGIE_JAREN.length-1] ? ENERGIE_HUIDIGE_MAAND_2026 : 12;
 }
@@ -5955,7 +5959,7 @@ function energieAlleTariefSeries(veld, jaren){
 }
 function renderEnergieView(){
   const huidigJaar = ENERGIE_JAREN[ENERGIE_JAREN.length-1]; // "lopende jaar" — bepaalt altijd de bovenste statkaarten, ongeacht welke jaartegel is getikt
-  const jaar = energieJaarSelectie || huidigJaar; // getikte jaartegel bepaalt de grafiek/maanddetail; niets getikt = lopende jaar
+  const jaar = huidigJaar; // altijd het lopende jaar (jaartegel-selectie is verwijderd, zie 27-08-2026-changelog)
   const recs = ENERGIE_DATA[jaar];
   const isHuidigJaar = jaar===huidigJaar;
   const werkelijkTM = energieWerkelijkTM(jaar);
@@ -5965,30 +5969,13 @@ function renderEnergieView(){
   const jaarTotaalVolledig = energieJaarTotaal(huidigJaar, 12);
   const totWerkelijkHuidig = energieJaarTotaal(huidigJaar, werkelijkTMHuidig);
   const gemiddeldeWerkelijk = totWerkelijkHuidig / werkelijkTMHuidig;
-  const vorigeIndexHuidig = ENERGIE_JAREN.indexOf(huidigJaar) - 1;
-  const vsVorigJaar = vorigeIndexHuidig>=0 ? totWerkelijkHuidig - energieJaarTotaal(ENERGIE_JAREN[vorigeIndexHuidig], werkelijkTMHuidig) : null;
-  const vsVorigJaarPct = (vsVorigJaar!=null && energieJaarTotaal(ENERGIE_JAREN[vorigeIndexHuidig], werkelijkTMHuidig)>0)
-    ? (vsVorigJaar / energieJaarTotaal(ENERGIE_JAREN[vorigeIndexHuidig], werkelijkTMHuidig) * 100) : null;
 
   const seriesTotaal = energieWerkelijkeSerie(jaar, 'totaal'); // alleen echte maanden, geen prognose in de grafiek
-  const vergelijkJaar = energieVergelijkJaar;
-  let chart, chartMaandLabels;
-  if(vergelijkJaar){
-    const seriesVergelijk = energieWerkelijkeSerie(vergelijkJaar, 'totaal');
-    const minLen = Math.min(seriesTotaal.length, seriesVergelijk.length); // beide alleen echte maanden, uitgelijnd op de kortste
-    chart = renderTweeLijnenChart(seriesTotaal.slice(0,minLen), seriesVergelijk.slice(0,minLen), jaar, vergelijkJaar);
-    chartMaandLabels = MAAND_KORT_NL.slice(0,minLen);
-  } else {
-    chart = renderVermogenChart(seriesTotaal, 'vGradEnergie'+jaar);
-    chartMaandLabels = MAAND_KORT_NL.slice(0, seriesTotaal.length);
-  }
+  const chartMaandLabels = MAAND_KORT_NL.slice(0, seriesTotaal.length);
+  const chartVolLabels = chartMaandLabels.map(m=>m+' '+jaar); // volledig label (maand+jaar) t.b.v. de sleepbalk-tooltip
+  const chart = renderScrubbaarChart(seriesTotaal, chartVolLabels, 'vGradEnergie'+jaar, 'energieMaand', null);
   const maandAsHtml = `<div style="display:flex;justify-content:space-between;margin-top:2px;">
     ${chartMaandLabels.map(m=>`<span style="font-size:10px;color:var(--muted);">${m}</span>`).join('')}
-  </div>`;
-  const vergelijkTabsHtml = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
-    <span style="font-size:12px;color:var(--muted);align-self:center;">Vergelijk met:</span>
-    ${ENERGIE_JAREN.filter(j=>j!==jaar).map(j=>`<button class="month-tab ${vergelijkJaar===j?'active':''}" data-energie-vergelijk="${j}">${j}</button>`).join('')}
-    ${vergelijkJaar ? `<button class="month-tab" data-energie-vergelijk="${vergelijkJaar}">Uit</button>` : ''}
   </div>`;
 
   // Prijs per eenheid — laatste 2 jaar (2025-2026), voor Rob t.b.v. energiecontract-keuzes. Tegels tonen de
@@ -5996,6 +5983,10 @@ function renderEnergieView(){
   const tariefJaren = ENERGIE_JAREN.slice(-2);
   const tariefGasSeries = energieAlleTariefSeries('tariefGas', tariefJaren);
   const tariefStroomSeries = energieAlleTariefSeries('tariefStroom', tariefJaren);
+  const tariefLabels = tariefJaren.flatMap(j=>{
+    const tm = energieWerkelijkTM(j);
+    return Array.from({length:tm}, (_,m)=>MAAND_KORT_NL[m]+' '+j);
+  }); // zelfde volgorde als energieAlleTariefSeries (jaren.flatMap(werkelijke maanden)) — t.b.v. de sleepbalk-tooltip
   const laatsteFactuur = energieLaatsteFactuurMaand();
   const laatsteTariefGas = ENERGIE_DATA[laatsteFactuur.jaar][laatsteFactuur.maandNr-1].tariefGas;
   const laatsteTariefStroom = ENERGIE_DATA[laatsteFactuur.jaar][laatsteFactuur.maandNr-1].tariefStroom;
@@ -6023,9 +6014,9 @@ function renderEnergieView(){
   const gridRewardsTotaalHuidig = jRecsHuidig.reduce((s,r)=>s+(r.gridRewards||0),0);
   const detailRegelJaar = (label, val) => `<div style="display:flex;justify-content:space-between;"><span>${label}</span><span>${val}</span></div>`;
   const jaarTegelsHtml = `<div class="card">
-    <div style="font-weight:600;font-size:18px;">${huidigJaar}</div>
+    <div class="card-label">${huidigJaar}</div>
+    <div class="stat-figure">${fmt(jaarTotaalVolledig)}</div>
     <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted);">
-      ${detailRegelJaar('Totaal (incl. prognose)', fmt(jaarTotaalVolledig))}
       ${detailRegelJaar('Gemiddelde/mnd (werkelijk)', fmt(gemiddeldeWerkelijk))}
       ${detailRegelJaar('Gas', gasTotaalHuidig.toLocaleString('nl-NL')+' m³')}
       ${detailRegelJaar('Electra verbruikt', electraTotaalHuidig.toLocaleString('nl-NL')+' kWh')}
@@ -6041,14 +6032,14 @@ function renderEnergieView(){
   const rows = recs.map((r,i)=>{
     const prognose = isHuidigJaar && i>=werkelijkTM;
     const jm = jaar+'-'+String(i+1).padStart(2,'0');
-    const expanded = energieMaandExpand === jm;
+    const expanded = energieOpenTegel === 'maand-'+jm;
     const autoIsOverride = energieAutoOverrides[jm] != null;
     const autoWaarde = autoIsOverride ? energieAutoOverrides[jm] : r.stroomAuto;
     const autoEditing = energieAutoEditOpen === jm;
     const verbeterd = prognose ? energieMaandBedragPrognose(jaar, i+1) : null;
     const weergaveBedrag = prognose ? verbeterd.bedrag : r.totaal;
     const detailRegel = (label, val) => `<div style="display:flex;justify-content:space-between;"><span>${label}</span><span>${val}</span></div>`;
-    return `<div class="card" data-energie-maand-toggle="${jm}" style="cursor:pointer;margin-bottom:8px;${prognose?'border-style:dashed;':''}">
+    return `<div class="card" data-energie-maand-toggle="${jm}" style="cursor:pointer;margin-bottom:8px;${prognose?'border-style:dashed;':''}${expanded?'border-color:var(--brass);border-width:2px;':''}">
       <div style="display:flex;justify-content:space-between;align-items:baseline;">
         <span style="font-weight:600;">${MAAND_KORT_NL[i]}${prognose?' <span style="color:var(--brass);font-size:11px;">(prognose)</span>':''}</span>
         <span style="display:flex;align-items:center;gap:8px;"><span class="bar-amt">${fmt(weergaveBedrag)}</span><span style="color:var(--muted);font-size:12px;">${expanded?'▾':'▸'}</span></span>
@@ -6078,58 +6069,43 @@ function renderEnergieView(){
   }).join('');
 
   return `
-    <div class="hero4">
-      <div class="card">
-        <div class="card-label">Totaal ${huidigJaar}${huidigJaar===ENERGIE_JAREN[ENERGIE_JAREN.length-1]?' (incl. prognose)':''}</div>
-        <div class="stat-figure">${fmt(jaarTotaalVolledig)}</div>
-      </div>
-      <div class="card">
-        <div class="card-label">Gemiddelde/mnd (werkelijk, t/m ${MAAND_KORT_NL[werkelijkTMHuidig-1]})</div>
-        <div class="stat-figure">${fmt(gemiddeldeWerkelijk)}</div>
-      </div>
-      <div class="card">
-        <div class="card-label">T.o.v. ${vorigeIndexHuidig>=0?ENERGIE_JAREN[vorigeIndexHuidig]:'—'} (zelfde periode)</div>
-        <div class="stat-figure ${vsVorigJaar>0?'neg':(vsVorigJaar<0?'pos':'')}">${vsVorigJaar!=null?fmt(vsVorigJaar):'—'}${vsVorigJaarPct!=null?` <span style="font-size:12px;">(${vsVorigJaarPct>0?'+':''}${vsVorigJaarPct.toFixed(0)}%)</span>`:''}</div>
-      </div>
-    </div>
-
     <div class="card-label" style="margin:16px 0 8px;">Dit jaar</div>
     <div style="display:flex;flex-direction:column;gap:8px;">${jaarTegelsHtml}</div>
 
-    <div class="card" data-energie-chart-toggle="1" style="cursor:pointer;margin-top:16px;">
+    <div class="card" data-energie-chart-toggle="1" style="cursor:pointer;margin-top:16px;${energieOpenTegel==='chart'?'border-color:var(--brass);border-width:2px;':''}">
       <div style="display:flex;justify-content:space-between;align-items:baseline;">
-        <div class="card-label">Verloop per maand — ${jaar}${energieJaarSelectie?'':' (lopend jaar)'}</div>
-        <span style="color:var(--muted);font-size:12px;">${energieChartExpand?'▾':'▸'}</span>
+        <div class="card-label">Verloop per maand — ${jaar} (lopend jaar)</div>
+        <span style="color:var(--muted);font-size:12px;">${energieOpenTegel==='chart'?'▾':'▸'}</span>
       </div>
-      ${energieChartExpand ? `<div style="margin-top:10px;" onclick="event.stopPropagation()">
+      ${energieOpenTegel==='chart' ? `<div style="margin-top:10px;" onclick="event.stopPropagation()">
+        <div class="card-label" data-scrub-readout="energieMaand" data-default-label="Verloop per maand — ${jaar}" style="margin-bottom:4px;">Verloop per maand — ${jaar}</div>
         ${chart}
         ${maandAsHtml}
-        ${vergelijkTabsHtml}
       </div>` : ''}
     </div>
 
     <div class="hero" style="margin-top:16px;">
-      <div class="card" data-energie-tarief-toggle="gas" style="cursor:pointer;">
+      <div class="card" data-energie-tarief-toggle="gas" style="cursor:pointer;${energieOpenTegel==='tarief-gas'?'border-color:var(--brass);border-width:2px;':''}">
         <div style="display:flex;justify-content:space-between;align-items:baseline;">
           <div class="card-label">Tarief gas (laatste factuur, ${MAAND_KORT_NL[laatsteFactuur.maandNr-1]})</div>
-          <span style="color:var(--muted);font-size:12px;">${energieTariefExpand==='gas'?'▾':'▸'}</span>
+          <span style="color:var(--muted);font-size:12px;">${energieOpenTegel==='tarief-gas'?'▾':'▸'}</span>
         </div>
         <div class="stat-figure" style="font-size:20px;">€${laatsteTariefGas.toFixed(3)}/m³</div>
-        ${energieTariefExpand==='gas' ? `<div style="margin-top:10px;">
-          <div class="card-label" style="margin-bottom:4px;">Verloop ${tariefJaren.join('–')}</div>
-          ${renderVermogenChart(tariefGasSeries, 'vGradTariefGas')}
+        ${energieOpenTegel==='tarief-gas' ? `<div style="margin-top:10px;">
+          <div class="card-label" data-scrub-readout="tariefGas" data-default-label="Verloop ${tariefJaren.join('–')}" style="margin-bottom:4px;">Verloop ${tariefJaren.join('–')}</div>
+          ${renderScrubbaarChart(tariefGasSeries, tariefLabels, 'vGradTariefGas', 'tariefGas', 'm³')}
           ${tariefAsHtml}
         </div>` : ''}
       </div>
-      <div class="card" data-energie-tarief-toggle="stroom" style="cursor:pointer;">
+      <div class="card" data-energie-tarief-toggle="stroom" style="cursor:pointer;${energieOpenTegel==='tarief-stroom'?'border-color:var(--brass);border-width:2px;':''}">
         <div style="display:flex;justify-content:space-between;align-items:baseline;">
           <div class="card-label">Tarief stroom (laatste factuur, ${MAAND_KORT_NL[laatsteFactuur.maandNr-1]})</div>
-          <span style="color:var(--muted);font-size:12px;">${energieTariefExpand==='stroom'?'▾':'▸'}</span>
+          <span style="color:var(--muted);font-size:12px;">${energieOpenTegel==='tarief-stroom'?'▾':'▸'}</span>
         </div>
         <div class="stat-figure" style="font-size:20px;">€${laatsteTariefStroom.toFixed(3)}/kWh</div>
-        ${energieTariefExpand==='stroom' ? `<div style="margin-top:10px;">
-          <div class="card-label" style="margin-bottom:4px;">Verloop ${tariefJaren.join('–')}</div>
-          ${renderVermogenChart(tariefStroomSeries, 'vGradTariefStroom')}
+        ${energieOpenTegel==='tarief-stroom' ? `<div style="margin-top:10px;">
+          <div class="card-label" data-scrub-readout="tariefStroom" data-default-label="Verloop ${tariefJaren.join('–')}" style="margin-bottom:4px;">Verloop ${tariefJaren.join('–')}</div>
+          ${renderScrubbaarChart(tariefStroomSeries, tariefLabels, 'vGradTariefStroom', 'tariefStroom', 'kWh')}
           ${tariefAsHtml}
         </div>` : ''}
       </div>
@@ -6193,17 +6169,6 @@ function render(){
   document.querySelectorAll('[data-go-home]').forEach(el=>el.addEventListener('click',()=>{ if(view==='salaris-rob'||view==='salaris-lindy'){ view='salaris'; } else { screen='home'; } quickSwitchOpen=false; render(); }));
   document.querySelectorAll('[data-toggle-switch]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); quickSwitchOpen=!quickSwitchOpen; render(); }));
   document.querySelectorAll('.month-tab[data-month]').forEach(b=>b.addEventListener('click',()=>{ selectedMonth=b.dataset.month; render(); }));
-  document.querySelectorAll('[data-energie-jaar]').forEach(b=>b.addEventListener('click',()=>{
-    const j = b.dataset.energieJaar;
-    energieJaarSelectie = (energieJaarSelectie===j) ? null : j; // toggle: nogmaals tikken sluit de tegel weer (terug naar lopende jaar)
-    energieVergelijkJaar=null;
-    render();
-  }));
-  document.querySelectorAll('[data-energie-vergelijk]').forEach(b=>b.addEventListener('click',()=>{
-    const j = b.dataset.energieVergelijk;
-    energieVergelijkJaar = (energieVergelijkJaar===j) ? null : j;
-    render();
-  }));
   document.querySelectorAll('[data-edit-energie-auto]').forEach(el=>el.addEventListener('click',(e)=>{
     e.stopPropagation();
     const jm = el.dataset.editEnergieAuto;
@@ -6212,18 +6177,23 @@ function render(){
   }));
   document.querySelectorAll('[data-energie-maand-toggle]').forEach(el=>el.addEventListener('click',()=>{
     const jm = el.dataset.energieMaandToggle;
-    energieMaandExpand = (energieMaandExpand===jm) ? null : jm;
+    const key = 'maand-'+jm;
+    energieOpenTegel = (energieOpenTegel===key) ? null : key;
     energieAutoEditOpen = null;
     render();
+    scrollC3sNaarKop('[data-energie-maand-toggle="'+jm+'"]');
   }));
   document.querySelectorAll('[data-energie-tarief-toggle]').forEach(el=>el.addEventListener('click',()=>{
     const which = el.dataset.energieTariefToggle;
-    energieTariefExpand = (energieTariefExpand===which) ? null : which;
+    const key = 'tarief-'+which;
+    energieOpenTegel = (energieOpenTegel===key) ? null : key;
     render();
+    scrollC3sNaarKop('[data-energie-tarief-toggle="'+which+'"]');
   }));
   document.querySelectorAll('[data-energie-chart-toggle]').forEach(el=>el.addEventListener('click',()=>{
-    energieChartExpand = !energieChartExpand;
+    energieOpenTegel = (energieOpenTegel==='chart') ? null : 'chart';
     render();
+    scrollC3sNaarKop('[data-energie-chart-toggle]');
   }));
   document.querySelectorAll('[data-save-energie-auto]').forEach(el=>el.addEventListener('click',(e)=>{
     e.stopPropagation();
@@ -6498,10 +6468,16 @@ function render(){
   // vinger zat er precies overheen — onleesbaar op een telefoon. Nu géén tekst meer bij de vinger; de lijn+stip
   // blijven op de grafiek staan (laten zien WAAR je zit), maar het leesbare cijfer verschijnt in het vaste
   // label-regeltje boven de grafiek ("Potjes — som over tijd, vanaf ..."), dat nooit door een vinger bedekt wordt.
-  document.querySelectorAll('[data-potjes-chart]').forEach(wrap=>{
+  // Rob, 27-08-2026: sleepbalk nu op élke grafiek in de app (was alleen Potjes) — data-scrub-chart="<key>"
+  // koppelt aan het bijbehorende data-scrub-readout="<key>"-element, zodat meerdere grafieken tegelijk op
+  // één scherm (zoals Energie: hoofdgrafiek + tarief gas + tarief stroom) elk hun eigen sleepbalk hebben
+  // zonder elkaars readout te overschrijven. data-unit (bv. "m³"/"kWh") schakelt om naar tarief-opmaak
+  // (€X,XXX/eenheid); zonder data-unit blijft het een bedrag (fmt()).
+  document.querySelectorAll('[data-scrub-chart]').forEach(wrap=>{
     const labels = JSON.parse(wrap.dataset.labels);
     const values = JSON.parse(wrap.dataset.values);
-    const defaultLabel = wrap.dataset.defaultLabel;
+    const unit = wrap.dataset.unit || null;
+    const key = wrap.dataset.scrubChart;
     const n = values.length;
     const w=900, h=200, pad=10;
     const max = Math.max(...values)*1.05;
@@ -6509,7 +6485,9 @@ function render(){
     const stepX = (w-pad*2)/(n-1);
     const lijn = wrap.querySelector('.potjes-scrub-line');
     const dot = wrap.querySelector('.potjes-scrub-dot');
-    const readout = document.querySelector('[data-potjes-readout]');
+    const readout = document.querySelector('[data-scrub-readout="'+key+'"]');
+    const defaultLabel = readout ? (readout.dataset.defaultLabel || readout.textContent) : null;
+    const waardeTekst = (v)=> unit ? ('€'+v.toFixed(3).replace('.', ',')+'/'+unit) : fmt(v);
     const update = (clientX)=>{
       const rect = wrap.getBoundingClientRect();
       const frac = Math.min(1, Math.max(0, (clientX-rect.left)/rect.width));
@@ -6520,7 +6498,7 @@ function render(){
       const yPct = (yVal/h)*100;
       lijn.style.left = xPct+'%'; lijn.style.opacity = '0.5';
       dot.style.left = xPct+'%'; dot.style.top = yPct+'%'; dot.style.opacity = '1';
-      if(readout) readout.textContent = `${labels[i]} · ${fmt(values[i])}`;
+      if(readout) readout.textContent = `${labels[i]} · ${waardeTekst(values[i])}`;
     };
     const hide = ()=>{
       lijn.style.opacity='0'; dot.style.opacity='0';
