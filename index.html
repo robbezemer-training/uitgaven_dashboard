@@ -1175,7 +1175,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-09-21a - Op Robs verzoek ("een knop binnen zzp die aan het eind van het jaar een balans/jaarrekening voorstelt"): in de ZZP-tegel komt een tabblad Jaarrekening met per jaar een winst- en verliesrekening (omzet per handelsnaam, afschrijving, kosten onder drempel, reiskosten en parkeren, resultaat; zelfde uitkomst als de IB), een balans per 31-12 (vaste activa als boekwaarde uit het afschrijvingsplan, btw te betalen of te vorderen, eigen vermogen) en de ontwikkeling van het eigen vermogen (begin, resultaat, privé, eind). De btw op de balans is wat per 31-12 nog open staat: het advies over alle kwartalen t/m Q4 min wat over de kwartalen t/m Q3 is aangegeven. Lopend jaar staat als loopt, een afgelopen jaar (en december) als voorstel. Debiteuren en crediteuren staan er niet op: betaald_datum wordt in zzp_omzet en zzp_inkoop niet bijgehouden. Bevat ook 2026-09-20d.';
+const DASHBOARD_VERSION = '2026-09-21b - Op Robs verzoek ("vaststellen kan zeker, bevestigen kan in de chat"): het tabblad Jaarrekening toont zodra een jaar is vastgesteld drie kolommen (vastgesteld, actueel, verschil) en in de kaartkop de vaststeldatum. Vaststellen gebeurt niet in de app maar op Robs bevestiging in de chat: dan komt een rij in de nieuwe tabel zzp_jaarrekening_vastgesteld (append-only, de laatste rij per jaar geldt). View zzp_jaarrekening_advies in Supabase rekent dezelfde cijfers als het tabblad. Bevat ook 2026-09-21a.';
+const DASHBOARD_VERSION_PREV_2026_09_21a = '2026-09-21a - Op Robs verzoek ("een knop binnen zzp die aan het eind van het jaar een balans/jaarrekening voorstelt"): in de ZZP-tegel komt een tabblad Jaarrekening met per jaar een winst- en verliesrekening (omzet per handelsnaam, afschrijving, kosten onder drempel, reiskosten en parkeren, resultaat; zelfde uitkomst als de IB), een balans per 31-12 (vaste activa als boekwaarde uit het afschrijvingsplan, btw te betalen of te vorderen, eigen vermogen) en de ontwikkeling van het eigen vermogen (begin, resultaat, privé, eind). De btw op de balans is wat per 31-12 nog open staat: het advies over alle kwartalen t/m Q4 min wat over de kwartalen t/m Q3 is aangegeven. Lopend jaar staat als loopt, een afgelopen jaar (en december) als voorstel. Debiteuren en crediteuren staan er niet op: betaald_datum wordt in zzp_omzet en zzp_inkoop niet bijgehouden. Bevat ook 2026-09-20d.';
 const DASHBOARD_VERSION_PREV_2026_09_20d = '2026-09-20d - Op Robs verzoek ("meer kunnen zien hoe afschrijving in elkaar zit en wat komende jaren nog rolt" en "facturen op datum sorteren, vast"): op het tabblad IB komt onder de jaarkaart een kaart Afschrijving met per activum de aankoopdatum, kostprijs, het bedrag in dat jaar en de restwaarde, en een kaart Afschrijving komende jaren met per activum en per jaar het bedrag, het totaal en de boekwaarde tot het laatste afschrijvingsjaar. De jaartotalen rekenen met dezelfde formules als eerder (zzpAfschrijvingsplan, zzpAfschrijvingPerJaar leest daaruit). De lijst Facturen staat nu vast op factuurdatum, nieuwste bovenaan. Bevat ook 2026-09-20c (parkeerlijst in de IB).';
 const DASHBOARD_VERSION_PREV_2026_09_20c = '2026-09-20c - Op Robs mededeling dat de kilometers voor de fotografiecursus zijn (dus bedrijfskosten): de ZZP-tegel neemt de parkeerlijst (zzp_parkeren, kilometers x km_tarief plus parkeerkosten) mee in de IB per jaar, onder Reiskosten en parkeren; heeft een jaar geen ritten in de lijst, dan gelden de doorbelaste kosten uit de omzet (2025). Dubbeltelling is uitgesloten. IB 2026 tot nu toe: reiskosten en parkeren 100, resultaat -1380. View zzp_ib_jaar_advies in Supabase gelijkgetrokken.';
 const DASHBOARD_VERSION_PREV_2026_09_20b = '2026-09-20b - Op Robs verzoek ("dit moet een tegel worden in het financiële systeem"): nieuwe tegel ZZP (Bezemer ACC, Rob Bezemer Photography, BZM Educatie, Casa Tre Sorelle) met de tabbladen Btw, IB, Facturen en Punten. De tegel leest de zzp_*-tabellen uit Supabase (facturen, omzet, ingediende aangiften, verdeelsleutel, parameters) en rekent in code: per kwartaal wat er in rubriek 1a en 5b moet naast wat is ingediend, plus de correctie van eerdere jaren op het eerstvolgende kwartaal; per jaar de IB (inkomsten, afschrijving, kosten, doorbelaste kosten); en per factuur de aansluiting op een banktransactie. Alleen zichtbaar voor Rob. Uitkomst gecontroleerd tegen de views zzp_btw_kwartaal_advies en zzp_ib_jaar_advies in Supabase. OVERRIDES_FALLBACK ververst (Drukwerkdeal 23-06 naar Wonen).';
@@ -7451,12 +7452,12 @@ function renderEnergieView(){
    handelsnaam van de factuur zelf. Activum vanaf zzp_parameter.drempel_activeren (excl. btw), lineair over
    zzp_parameter.afschrijving_jaren, pro rata naar maand; willekeurig_pct = direct afgeschreven deel in het
    aankoopjaar. Btw per kwartaal in hele euro's: omzet-btw afgerond, voorbelasting naar boven afgerond. */
-let ZZP = {inkoop:[], omzet:[], btw:[], ib:[], sleutel:[], punten:[], parkeren:[], param:{}, geladen:false};
+let ZZP = {inkoop:[], omzet:[], btw:[], ib:[], sleutel:[], punten:[], parkeren:[], vast:[], param:{}, geladen:false};
 let zzpTab = 'btw', zzpJaar = null, zzpIbJaar = null, zzpFacJaar = null, zzpJrJaar = null;
 async function loadZzpTables(){
   const get = async (pad)=>{ const r = await fetch(SUPABASE_URL+'/rest/v1/'+pad, {headers: SUPABASE_HEADERS}); return r.ok ? await r.json() : null; };
   try{
-    const [inkoop, omzet, btw, ib, sleutel, punten, param, parkeren] = await Promise.all([
+    const [inkoop, omzet, btw, ib, sleutel, punten, param, parkeren, vast] = await Promise.all([
       get('zzp_inkoop?select=nummer,datum,crediteur,notities,bedrag_incl,btw,jaar,activiteit,zakelijk_pct,verdeling,willekeurig_pct,kostenjaar&order=datum.asc,nummer.asc'),
       get('zzp_omzet?select=nummer,datum,activiteit,bedrag_excl,btw_pct,bedrag_km,advies_btw_pct,doorbelast_overig&order=datum.asc'),
       get('zzp_btw_aangifte?select=jaar,kwartaal,status,omzet_1a,btw_1a,omzet_1e,voorbelasting_5b,saldo'),
@@ -7465,9 +7466,10 @@ async function loadZzpTables(){
       get('zzp_herinnering?select=omschrijving,jaar,status,deadline&order=deadline.asc.nullslast,created_at.asc'),
       get('zzp_parameter?select=naam,waarde'),
       get('zzp_parkeren?select=datum,km,bedrag_incl'),
+      get('zzp_jaarrekening_vastgesteld?select=jaar,vastgesteld_op,omzet,afschrijving,kosten_onder_drempel,reiskosten_parkeren,resultaat,vaste_activa,btw_saldo,eigen_vermogen_begin,prive,eigen_vermogen&order=jaar.asc,created_at.asc'),
     ]);
     if(!inkoop || !omzet || !btw || !ib || !sleutel || !punten || !param || !parkeren) return;
-    ZZP.inkoop = inkoop; ZZP.omzet = omzet; ZZP.btw = btw; ZZP.ib = ib; ZZP.sleutel = sleutel; ZZP.punten = punten; ZZP.parkeren = parkeren;
+    ZZP.inkoop = inkoop; ZZP.omzet = omzet; ZZP.btw = btw; ZZP.ib = ib; ZZP.sleutel = sleutel; ZZP.punten = punten; ZZP.parkeren = parkeren; ZZP.vast = vast || [];
     ZZP.param = {}; param.forEach(p=>{ ZZP.param[p.naam] = p.waarde; });
     ZZP.geladen = true;
   }catch(e){ /* offline: tegel toont dan niets tot de volgende succesvolle load */ }
@@ -7701,7 +7703,7 @@ function zzpIbTab(){
    uit dezelfde bronnen als de IB en de btw: resultaat = zzpIbJaren (inkomsten min afschrijving, kosten onder drempel en reiskosten/parkeren);
    vaste activa = boekwaarde uit zzpAfschrijvingsplan; btw = wat per 31-12 nog open staat (advies over alle kwartalen t/m Q4 min wat over de
    kwartalen t/m Q3 is aangegeven; positief = te betalen); eigen vermogen = activa min schulden; priv\u00e9 = wat er na het resultaat overblijft
-   tussen begin en eind eigen vermogen. Debiteuren/crediteuren ontbreken: betaald_datum wordt niet bijgehouden. */
+   tussen begin en eind eigen vermogen. Debiteuren/crediteuren ontbreken: betaald_datum wordt niet bijgehouden. Vastgesteld: zzp_jaarrekening_vastgesteld (append-only, laatste rij per jaar geldt) toont naast het actuele voorstel de vastgestelde cijfers en het verschil; view zzp_jaarrekening_advies in Supabase rekent hetzelfde. */
 function zzpBtwSchuld(kw, j){
   let advies = 0, betaald = 0;
   kw.forEach(k=>{
@@ -7730,33 +7732,48 @@ function zzpJaarTab(){
   const jaren = zzpIbJaren().map(x=>x.j), nuDatum = new Date();
   if(zzpJrJaar===null){ const tot = jaren.filter(y=>y<=nuDatum.getFullYear()); zzpJrJaar = tot.length ? tot[tot.length-1] : jaren[jaren.length-1]; }
   const j = zzpJrJaar, r = zzpJaarrekening(j), i = r.i;
+  const vs = ZZP.vast.filter(x=>Number(x.jaar)===j), v = vs.length ? vs[vs.length-1] : null;
   const klaar = j < nuDatum.getFullYear() || (j===nuDatum.getFullYear() && nuDatum.getMonth()===11);
+  const status = v ? 'vastgesteld '+String(v.vastgesteld_op).split('-').reverse().join('-') : (klaar ? 'voorstel' : 'loopt');
   const act = {'Bezemer ACC':'ACC', 'Rob Bezemer Photography':'Photography', 'BZM Educatie':'BZM', 'Casa Tre Sorelle':'Casa'};
-  const res = v=>v<0 ? 'verlies '+zzpE0(-v) : 'winst '+zzpE0(v);
+  const res = x=>x<0 ? 'verlies '+zzpE0(-x) : 'winst '+zzpE0(x);
   const kaart = (titel, rechts, inhoud)=>`<div class="card ledger-card"><div class="card-label"><span>${titel}</span><span class="ledger-count">${rechts}</span></div>${inhoud}</div>`;
+  const n = k=> v ? Number(v[k]) : null;
+  const kop = v ? zzpKop3('vastgesteld', 'actueel', 'verschil') : '';
+  const rij = (l, actueel, vast, o, f)=>{
+    f = f || zzpE0;
+    if(!v) return zzpRij(l, f(actueel), o);
+    const d = actueel - vast;
+    return zzpRij3(l, f(vast), f(actueel), zzpE0(d), Object.assign({}, o||{}, {kleur: zzpVerschilKleur(d)}));
+  };
   const vord = r.nu.s<0 ? -r.nu.s : 0, schuld = r.nu.s>0 ? r.nu.s : 0;
-  const wv = Object.keys(r.perAct).sort().map(a=>zzpRij('Omzet '+(act[a]||a), zzpE0(r.perAct[a]))).join('')
-    + zzpRij('Omzet', zzpE0(i.ink), {sterk:true, rand:true})
-    + zzpRij('Afschrijving', zzpE0(i.afs))
-    + zzpRij('Kosten onder drempel', zzpE0(i.dir))
-    + zzpRij('Reiskosten en parkeren', zzpE0(i.door))
-    + zzpRij('Resultaat', res(r.res), {sterk:true, rand:true});
-  const activa = zzpRij('Vaste activa', zzpE0(r.nu.va))
-    + (vord ? zzpRij('Btw te vorderen', zzpE0(vord)) : '')
-    + zzpRij('Totaal', zzpE0(r.nu.va+vord), {sterk:true, rand:true});
-  const passiva = zzpRij('Eigen vermogen', zzpE0(r.nu.ev))
-    + (schuld ? zzpRij('Btw te betalen', zzpE0(schuld)) : '')
-    + zzpRij('Totaal', zzpE0(r.nu.ev+schuld), {sterk:true, rand:true});
-  const vermogen = zzpRij('Begin', zzpE0(r.voor.ev))
-    + zzpRij('Resultaat', zzpE0(r.res))
-    + zzpRij('Priv\u00e9', zzpE0(r.prive))
-    + zzpRij('Eind', zzpE0(r.nu.ev), {sterk:true, rand:true});
+  const vVord = v ? Math.max(0, -n('btw_saldo')) : 0, vSchuld = v ? Math.max(0, n('btw_saldo')) : 0;
+  const wv = kop
+    + Object.keys(r.perAct).sort().map(a=> v ? zzpRij3('Omzet '+(act[a]||a), '\u2013', zzpE0(r.perAct[a]), '') : zzpRij('Omzet '+(act[a]||a), zzpE0(r.perAct[a]))).join('')
+    + rij('Omzet', Math.round(i.ink), n('omzet'), {sterk:true, rand:true})
+    + rij('Afschrijving', Math.round(i.afs), n('afschrijving'))
+    + rij('Kosten onder drempel', Math.round(i.dir), n('kosten_onder_drempel'))
+    + rij('Reiskosten en parkeren', Math.round(i.door), n('reiskosten_parkeren'))
+    + rij('Resultaat', r.res, n('resultaat'), {sterk:true, rand:true}, res);
+  const activa = kop
+    + rij('Vaste activa', r.nu.va, n('vaste_activa'))
+    + ((vord || vVord) ? rij('Btw te vorderen', vord, vVord) : '')
+    + rij('Totaal', r.nu.va+vord, v ? n('vaste_activa')+vVord : null, {sterk:true, rand:true});
+  const passiva = kop
+    + rij('Eigen vermogen', r.nu.ev, n('eigen_vermogen'))
+    + ((schuld || vSchuld) ? rij('Btw te betalen', schuld, vSchuld) : '')
+    + rij('Totaal', r.nu.ev+schuld, v ? n('eigen_vermogen')+vSchuld : null, {sterk:true, rand:true});
+  const vermogen = kop
+    + rij('Begin', r.voor.ev, n('eigen_vermogen_begin'))
+    + rij('Resultaat', r.res, n('resultaat'))
+    + rij('Priv\u00e9', r.prive, n('prive'))
+    + rij('Eind', r.nu.ev, n('eigen_vermogen'), {sterk:true, rand:true});
   const stand = '31-12-'+j;
   return zzpJaarKeuze('jrjaar', jaren, j)
-    + kaart('Winst- en verliesrekening '+j, klaar ? 'voorstel' : 'loopt', wv)
+    + kaart('Winst- en verliesrekening '+j, status, wv)
     + kaart('Activa', stand, activa)
     + kaart('Passiva', stand, passiva)
-    + kaart('Eigen vermogen '+j, klaar ? 'voorstel' : 'loopt', vermogen);
+    + kaart('Eigen vermogen '+j, status, vermogen);
 }
 function zzpFacturenTab(){
   const rows = zzpInkoopBerekend(), jaren = [...new Set(rows.map(r=>r.jaar))].sort();
