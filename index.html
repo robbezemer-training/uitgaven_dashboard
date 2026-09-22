@@ -1175,7 +1175,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-09-22a - ECHTE BUG gevonden en gefixt (Rob: "je budget past zich aan als er meer kosten worden gemaakt ... telecom groeit mee met de bedragen die als tx binnen komen"). categorieTrendData()\'s Vast-tak (gebruikt door vastStabiel()/VAST_COMPONENTEN voor Auto/Verzekeringen/Zorgverzekering/Telecom/Abonnementen/Goede doelen/Vakbond/Zakelijk) sloot de lopende, nog niet afgesloten periode nooit uit bij het bepalen van "laatst waargenomen maandbedrag" — in tegenstelling tot Dagelijks (categorieTrendDagelijksVerwachting, sluit de huidige maand al sinds 02g-2026 uit). Zodra de lopende maand zelf al tx had, kon die als "laatste, niet-nul maand" gelden: het net binnengekomen, nog groeiende bedrag van déze maand werd dan letterlijk de verwachting waar diezelfde maand tegen wordt afgezet — vergelijkt zichzelf, kan dus nooit "over budget" tonen, en verandert bovendien bij elke nieuwe tx. Fix: de lopende periode wordt nu, net als bij Dagelijks, expliciet uitgesloten uit de verwachtingsberekening (perMaandRuwAfgesloten) — de verwachting komt voortaan alleen uit reeds afgesloten maanden, ligt dus vast zodra de maand begint en verandert pas weer bij de eerstvolgende maandafsluiting. De trendgrafiek zelf (reeks) toont ongewijzigd het echte, live-groeiende bedrag van de lopende maand — alleen de vergelijkingsmaatstaf (verwachting) staat nu stil. Dagelijks was al goed (categorieTrendDagelijksVerwachting sloot de lopende maand al uit); niet apart aangepast in deze versie.';
+const DASHBOARD_VERSION = '2026-09-22e - Op Robs verzoek ("even opschonen. Ga ervanuit dat alles nu betaald is, dus vul datum zelf in. En factuur betaald ... kan gewoon uit de tx van Rabo of ING komen volledig automatisch, net als Adobe etc"): (1) Opschonen: alle bestaande zzp_inkoop/zzp_omzet-rijen zonder betaald_datum (78 inkoop-, 8 omzetfacturen) hebben nu betaald_datum = hun eigen factuurdatum gekregen, rechtstreeks in Supabase — geen enkele open meer. (2) Vanaf nu automatisch: nieuwe zzpAutoMatchBetalingen() draait na elke ZZP-load, matcht elke nog-onbetaalde factuur tegen de bekende banktransacties (bedrag exact, datum -3 t/m +10 dagen — zelfde tolerantie als de bestaande crediteuren-bank-koppeling, nu ook voor de omzetkant via nieuwe zzpOmzetBankKoppeling()) en zet betaald_datum meteen op de echte tx-datum zodra er een match is, geen handmatige tik meer nodig voor herkenbare terugkerende facturen. Stil overgeslagen voor Lindy (IS_READONLY), geen storende alert bij elke load. Bevat ook 2026-09-22d (betaald_datum-koppeling, Facturen-tab-status, Jaarrekening-pdf-detail).\';\nconst DASHBOARD_VERSION_PREV_2026_09_22d = \'2026-09-22d - Op Robs bevestiging ("vanaf nu kunnen we dat koppelen, omdat we alles registreren"): betaald_datum bleek al als kolom te bestaan op zzp_inkoop/zzp_omzet, alleen nooit geselecteerd of gebruikt — nu overal aangesloten. loadZzpTables() haalt \'m nu op (plus id op beide tabellen en debiteur op zzp_omzet); nieuwe patchZzpBetaald()/toggleZzpBetaald() zetten \'m op vandaag/null. Facturen-tab toont per inkoopfactuur nu een echte tikbare "betaald DD-MM"/"open"-status (edit-only) i.p.v. alleen de bank-koppel-gok, die er als extra aanwijzing naast blijft staan. De Jaarrekening-pdf (22-09-22c) toont nu bij zowel Debiteuren (omzetfacturen) als Crediteuren (inkoopfacturen) een echte open/betaald-status en een openstaand-totaal, met een aangepaste toelichting: facturen zonder betaald_datum tellen als open, ook als dat bij oudere facturen simpelweg betekent dat de datum er nog niet is ingevoerd. Balans/eigen-vermogenberekening zelf (zzpJaarrekening) is bewust ongewijzigd — debiteuren/crediteuren blijven een aparte, zichtbare post i.p.v. automatisch in het eigen vermogen verwerkt.\';\nconst DASHBOARD_VERSION_PREV_2026_09_22c = \'2026-09-22c - Op Robs verzoek ("kan je pdf link maken dat alles in pdf staat maar dan ook op detail niveau (debiteuren, crediteuren, afschrijving systeem, etc)"): nieuwe knop "PDF — detail" in de Jaarrekening-tab (zzpGenereerJaarrekeningPdf), zelfde in-pagina PDF-overlay als de C3S-exports. Bevat winst- en verliesrekening, balans, eigen-vermogenmutatie, het volledige afschrijvings-activaregister (alle jaren, per bedrijfsmiddel), alle omzetfacturen van het jaar en alle inkoopfacturen van het jaar (met bank-koppelstatus). Expliciete kanttekening bovenaan de pdf zelf: dit systeem houdt geen betaaldatum per factuur bij (zie de bestaande 21-09-code-comment bij zzpJaarrekening), dus een klassieke debiteuren/crediteuren-ouderdomsanalyse kan niet gegenereerd worden — de pdf toont in plaats daarvan alle omzet- en inkoopfacturen zelf, voor de inkoopkant met of ze aan een banktransactie gekoppeld konden worden als enige beschikbare afhandelings-indicatie. Bevat ook 2026-09-22b (Energie-maandcarrousel).\';\nconst DASHBOARD_VERSION_PREV_2026_09_22b = \'2026-09-22b - Op Robs verzoek: de Energie-maandenlijst ("Maanddetail") is nu een carrousel — lopende maand (de eerste prognose-maand, werkelijkTM) staat bovenaan, de rest sluit er in kalendervolgorde op aan, en de laatst afgesloten maand staat onderop. Nieuwe maandVolgorde-array roteert alleen de WEERGAVEVOLGORDE van de 12 kaarten; elke kaart blijft rekenen met zijn eigen echte (0-based) maand-index i, dus alle prognose-/bevestigd-logica en de trendgrafiek erboven (die wél gewoon chronologisch blijft, was niet expliciet gevraagd) zijn ongewijzigd. Bevat ook 2026-09-22a (categorieTrendData()-Vast-tak-fix, zie changelog eronder).\';\nconst DASHBOARD_VERSION_PREV_2026_09_22a = \'2026-09-22a - ECHTE BUG gevonden en gefixt (Rob: "je budget past zich aan als er meer kosten worden gemaakt ... telecom groeit mee met de bedragen die als tx binnen komen"). categorieTrendData()\'s Vast-tak (gebruikt door vastStabiel()/VAST_COMPONENTEN voor Auto/Verzekeringen/Zorgverzekering/Telecom/Abonnementen/Goede doelen/Vakbond/Zakelijk) sloot de lopende, nog niet afgesloten periode nooit uit bij het bepalen van "laatst waargenomen maandbedrag" — in tegenstelling tot Dagelijks (categorieTrendDagelijksVerwachting, sluit de huidige maand al sinds 02g-2026 uit). Zodra de lopende maand zelf al tx had, kon die als "laatste, niet-nul maand" gelden: het net binnengekomen, nog groeiende bedrag van déze maand werd dan letterlijk de verwachting waar diezelfde maand tegen wordt afgezet — vergelijkt zichzelf, kan dus nooit "over budget" tonen, en verandert bovendien bij elke nieuwe tx. Fix: de lopende periode wordt nu, net als bij Dagelijks, expliciet uitgesloten uit de verwachtingsberekening (perMaandRuwAfgesloten) — de verwachting komt voortaan alleen uit reeds afgesloten maanden, ligt dus vast zodra de maand begint en verandert pas weer bij de eerstvolgende maandafsluiting. De trendgrafiek zelf (reeks) toont ongewijzigd het echte, live-groeiende bedrag van de lopende maand — alleen de vergelijkingsmaatstaf (verwachting) staat nu stil. Dagelijks was al goed (categorieTrendDagelijksVerwachting sloot de lopende maand al uit); niet apart aangepast in deze versie.';
 const DASHBOARD_VERSION_PREV_2026_09_21b = '2026-09-21b - Op Robs verzoek ("vaststellen kan zeker, bevestigen kan in de chat"): het tabblad Jaarrekening toont zodra een jaar is vastgesteld drie kolommen (vastgesteld, actueel, verschil) en in de kaartkop de vaststeldatum. Vaststellen gebeurt niet in de app maar op Robs bevestiging in de chat: dan komt een rij in de nieuwe tabel zzp_jaarrekening_vastgesteld (append-only, de laatste rij per jaar geldt). View zzp_jaarrekening_advies in Supabase rekent dezelfde cijfers als het tabblad. Bevat ook 2026-09-21a.';
 const DASHBOARD_VERSION_PREV_2026_09_21a = '2026-09-21a - Op Robs verzoek ("een knop binnen zzp die aan het eind van het jaar een balans/jaarrekening voorstelt"): in de ZZP-tegel komt een tabblad Jaarrekening met per jaar een winst- en verliesrekening (omzet per handelsnaam, afschrijving, kosten onder drempel, reiskosten en parkeren, resultaat; zelfde uitkomst als de IB), een balans per 31-12 (vaste activa als boekwaarde uit het afschrijvingsplan, btw te betalen of te vorderen, eigen vermogen) en de ontwikkeling van het eigen vermogen (begin, resultaat, privé, eind). De btw op de balans is wat per 31-12 nog open staat: het advies over alle kwartalen t/m Q4 min wat over de kwartalen t/m Q3 is aangegeven. Lopend jaar staat als loopt, een afgelopen jaar (en december) als voorstel. Debiteuren en crediteuren staan er niet op: betaald_datum wordt in zzp_omzet en zzp_inkoop niet bijgehouden. Bevat ook 2026-09-20d.';
 const DASHBOARD_VERSION_PREV_2026_09_20d = '2026-09-20d - Op Robs verzoek ("meer kunnen zien hoe afschrijving in elkaar zit en wat komende jaren nog rolt" en "facturen op datum sorteren, vast"): op het tabblad IB komt onder de jaarkaart een kaart Afschrijving met per activum de aankoopdatum, kostprijs, het bedrag in dat jaar en de restwaarde, en een kaart Afschrijving komende jaren met per activum en per jaar het bedrag, het totaal en de boekwaarde tot het laatste afschrijvingsjaar. De jaartotalen rekenen met dezelfde formules als eerder (zzpAfschrijvingsplan, zzpAfschrijvingPerJaar leest daaruit). De lijst Facturen staat nu vast op factuurdatum, nieuwste bovenaan. Bevat ook 2026-09-20c (parkeerlijst in de IB).';
@@ -7280,7 +7280,14 @@ function renderEnergieView(){
     <div style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:8px;">peildatum ${energiePeildatumHuidig}</div>
   </div>`;
 
-  const rows = recs.map((r,i)=>{
+  // Rob, 22-09-2026 ("maak de volgorde een carrousel — lopende maand boven, de rest sluit aan, afgelopen
+  // maand onderop"): i blijft de echte (0-based) kalendermaand-index — alle prognose/bevestigd-logica hieronder
+  // blijft daarop rekenen, dus alleen de WEERGAVEVOLGORDE draait — een cirkel die bij de lopende maand
+  // (werkelijkTM, het eerste prognose-punt) begint, doorloopt tot december/januari, en eindigt bij de
+  // laatst afgesloten maand (werkelijkTM-1, mod 12) onderaan.
+  const maandVolgorde = Array.from({length:12}, (_,k) => (werkelijkTM + k) % 12);
+  const rows = maandVolgorde.map(i=>{
+    const r = recs[i];
     const prognose = isHuidigJaar && i>=werkelijkTM;
     const jm = jaar+'-'+String(i+1).padStart(2,'0');
     const expanded = energieOpenTegel === 'maand-'+jm;
@@ -7474,8 +7481,8 @@ async function loadZzpTables(){
   const get = async (pad)=>{ const r = await fetch(SUPABASE_URL+'/rest/v1/'+pad, {headers: SUPABASE_HEADERS}); return r.ok ? await r.json() : null; };
   try{
     const [inkoop, omzet, btw, ib, sleutel, punten, param, parkeren, vast] = await Promise.all([
-      get('zzp_inkoop?select=nummer,datum,crediteur,notities,bedrag_incl,btw,jaar,activiteit,zakelijk_pct,verdeling,willekeurig_pct,kostenjaar&order=datum.asc,nummer.asc'),
-      get('zzp_omzet?select=nummer,datum,activiteit,bedrag_excl,btw_pct,bedrag_km,advies_btw_pct,doorbelast_overig&order=datum.asc'),
+      get('zzp_inkoop?select=id,nummer,datum,crediteur,notities,bedrag_incl,btw,jaar,activiteit,zakelijk_pct,verdeling,willekeurig_pct,kostenjaar,betaald_datum&order=datum.asc,nummer.asc'),
+      get('zzp_omzet?select=id,nummer,datum,debiteur,activiteit,bedrag_excl,btw_pct,bedrag_km,advies_btw_pct,doorbelast_overig,betaald_datum&order=datum.asc'),
       get('zzp_btw_aangifte?select=jaar,kwartaal,status,omzet_1a,btw_1a,omzet_1e,voorbelasting_5b,saldo'),
       get('zzp_ib_aangifte?select=jaar,inkomsten,afschrijving,overige_kosten,resultaat'),
       get('zzp_verdeelsleutel?select=jaar,activiteit,gewicht'),
@@ -7488,7 +7495,51 @@ async function loadZzpTables(){
     ZZP.inkoop = inkoop; ZZP.omzet = omzet; ZZP.btw = btw; ZZP.ib = ib; ZZP.sleutel = sleutel; ZZP.punten = punten; ZZP.parkeren = parkeren; ZZP.vast = vast || [];
     ZZP.param = {}; param.forEach(p=>{ ZZP.param[p.naam] = p.waarde; });
     ZZP.geladen = true;
+    zzpAutoMatchBetalingen();
   }catch(e){ /* offline: tegel toont dan niets tot de volgende succesvolle load */ }
+}
+// Rob, 22-09-2026 ("factuur betaald ... kan gewoon uit de tx van Rabo of ING komen volledig automatisch, net
+// als Adobe etc."): draait automatisch na elke succesvolle ZZP-load. Matcht elke nog-onbetaalde inkoop-/
+// omzetfactuur tegen de bekende banktransacties (zelfde tolerantie als de bestaande crediteuren-koppeling:
+// bedrag exact, datum -3 t/m +10 dagen) en zet betaald_datum meteen op de echte tx-datum zodra er een match
+// is — geen handmatige tik meer nodig voor nieuwe, herkenbare facturen (Adobe/Anthropic/HP/etc., precies zoals
+// de vendor_rules-categorisatie dat elders ook al automatisch doet). Stil overgeslagen voor Lindy (IS_READONLY)
+// — geen alert() bij elke load, gewoon geen auto-write voor een account dat toch niet mag schrijven.
+function zzpOmzetBankKoppeling(){
+  const tx = alleBekendeTransacties().filter(t=>t.amount>0).map(t=>({...t, gebruikt:false}));
+  const dagen = (a,b)=>Math.round((new Date(a)-new Date(b))/86400000);
+  const uit = {};
+  ZZP.omzet.slice().sort((a,b)=>a.datum<b.datum?-1:1).forEach(o=>{
+    const pct = o.advies_btw_pct!=null ? Number(o.advies_btw_pct) : Number(o.btw_pct||0);
+    const incl = Number(o.bedrag_excl)*(1+pct/100) + Number(o.bedrag_km||0) + Number(o.doorbelast_overig||0);
+    let best = null, bestD = 99;
+    tx.forEach(t=>{
+      if(t.gebruikt || Math.abs(t.amount - incl) >= 0.01) return;
+      const d = dagen(t.date, o.datum);
+      if(d < -3 || d > 10) return;
+      if(Math.abs(d) < bestD){ best = t; bestD = Math.abs(d); }
+    });
+    if(best){ best.gebruikt = true; uit[o.id] = best; }
+  });
+  return uit;
+}
+async function zzpAutoMatchBetalingen(){
+  if(IS_READONLY) return;
+  let gewijzigd = false;
+  const koppelInkoop = zzpBankKoppeling(zzpInkoopBerekend());
+  ZZP.inkoop.forEach(r=>{
+    if(r.betaald_datum) return;
+    const jaar = Number(r.jaar!=null ? r.jaar : r.datum.slice(0,4));
+    const t = koppelInkoop[jaar+'|'+r.nummer];
+    if(t){ r.betaald_datum = t.date; patchZzpBetaald('zzp_inkoop', r.id, t.date); gewijzigd = true; }
+  });
+  const koppelOmzet = zzpOmzetBankKoppeling();
+  ZZP.omzet.forEach(o=>{
+    if(o.betaald_datum) return;
+    const t = koppelOmzet[o.id];
+    if(t){ o.betaald_datum = t.date; patchZzpBetaald('zzp_omzet', o.id, t.date); gewijzigd = true; }
+  });
+  if(gewijzigd) render();
 }
 function zzpInkoopBerekend(){
   const bzmStart = ZZP.param.bzm_start || '2025-09-01';
@@ -7504,10 +7555,10 @@ function zzpInkoopBerekend(){
     if(r.verdeling==='sleutel'){ const k = sleutel[jaar]; f = (r.datum < bzmStart) ? 1 : ((k && k.tot) ? k.belast/k.tot : 1); }
     else f = (r.activiteit==='BZM Educatie' || r.activiteit==='Casa Tre Sorelle') ? 0 : 1;
     return {
-      nummer:r.nummer, datum:r.datum, crediteur:r.crediteur, naam:(String(r.notities||'').split(/;| \(/)[0].trim() || r.crediteur), activiteit:r.activiteit, verdeling:r.verdeling, jaar,
+      id: r.id, nummer:r.nummer, datum:r.datum, crediteur:r.crediteur, naam:(String(r.notities||'').split(/;| \(/)[0].trim() || r.crediteur), activiteit:r.activiteit, verdeling:r.verdeling, jaar,
       kwartaal: Math.ceil(Number(r.datum.slice(5,7))/3), kostenjaar: r.kostenjaar!=null ? Number(r.kostenjaar) : jaar,
       incl, btw, excl, zp, f, w: Number(r.willekeurig_pct||0), activum: excl >= drempel,
-      btwAftrek: btw*zp*f, kostprijs: excl*zp + btw*zp*(1-f)
+      btwAftrek: btw*zp*f, kostprijs: excl*zp + btw*zp*(1-f), betaaldDatum: r.betaald_datum||null
     };
   });
 }
@@ -7601,6 +7652,31 @@ function zzpBankKoppeling(rows){
 }
 const zzpE0 = n=>(Math.round(n)<0 ? '\u2212' : '') + '\u20ac' + Math.abs(Math.round(n)).toLocaleString('nl-NL');
 const zzpSaldo = v=>Math.round(v)===0 ? '\u20ac0' : (v>0 ? zzpE0(v)+' betalen' : zzpE0(-v)+' ontvangen');
+// Rob, 22-09-2026 ("vanaf nu kunnen we dat koppelen, omdat we alles registreren"): betaald_datum bestaat al
+// als kolom op zzp_inkoop/zzp_omzet (stond er al, werd tot nu toe alleen nergens geselecteerd/getoond) —
+// vanaf nu wordt die vastgelegd zodra een factuur echt is betaald, zodat Facturen/de jaarrekening-pdf een
+// echte debiteuren/crediteuren-status per factuur kunnen tonen i.p.v. alleen de bank-koppel-gok. Oudere
+// facturen zonder deze datum tellen gewoon als "open" totdat er alsnog een datum wordt vastgelegd.
+async function patchZzpBetaald(tabel, id, waarde){
+  if(readOnlyBlocked()) return;
+  try{
+    await fetch(SUPABASE_URL+`/rest/v1/${tabel}?id=eq.${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: {...SUPABASE_HEADERS, 'Prefer':'return=minimal'},
+      body: JSON.stringify({betaald_datum: waarde})
+    });
+  }catch(e){ /* offline: verandering blijft lokaal staan tot volgende succesvolle save */ }
+}
+async function toggleZzpBetaald(tabel, id){
+  if(readOnlyBlocked()) return;
+  const lijst = tabel==='zzp_inkoop' ? ZZP.inkoop : ZZP.omzet;
+  const rij = lijst.find(x=>x.id===id);
+  if(!rij) return;
+  const nieuw = rij.betaald_datum ? null : new Date().toISOString().slice(0,10);
+  rij.betaald_datum = nieuw;
+  await patchZzpBetaald(tabel, id, nieuw);
+  render();
+}
 function zzpRij(l, r, o){
   o = o || {};
   return `<div style="display:flex;justify-content:space-between;gap:12px;padding:${o.rand?'9px 0 3px':'4px 0'};font-size:13px;${o.rand?'border-top:1px solid var(--rule);margin-top:6px;':''}${o.sterk?'font-weight:600;':'color:var(--paper-dim);'}"><span>${l}</span><span style="font-family:'IBM Plex Mono',monospace;white-space:nowrap;${o.kleur?'color:'+o.kleur+';':''}">${r}</span></div>`;
@@ -7719,7 +7795,7 @@ function zzpIbTab(){
    uit dezelfde bronnen als de IB en de btw: resultaat = zzpIbJaren (inkomsten min afschrijving, kosten onder drempel en reiskosten/parkeren);
    vaste activa = boekwaarde uit zzpAfschrijvingsplan; btw = wat per 31-12 nog open staat (advies over alle kwartalen t/m Q4 min wat over de
    kwartalen t/m Q3 is aangegeven; positief = te betalen); eigen vermogen = activa min schulden; priv\u00e9 = wat er na het resultaat overblijft
-   tussen begin en eind eigen vermogen. Debiteuren/crediteuren ontbreken: betaald_datum wordt niet bijgehouden. Vastgesteld: zzp_jaarrekening_vastgesteld (append-only, laatste rij per jaar geldt) toont naast het actuele voorstel de vastgestelde cijfers en het verschil; view zzp_jaarrekening_advies in Supabase rekent hetzelfde. */
+   tussen begin en eind eigen vermogen. Debiteuren/crediteuren zelf tellen bewust niet mee in dit balanscijfer — Rob wil ze zichtbaar houden als eigen post (zie de PDF-export en Facturen-tab, betaald_datum sinds 22-09-2026), niet automatisch in het eigen vermogen verwerkt. Vastgesteld: zzp_jaarrekening_vastgesteld (append-only, laatste rij per jaar geldt) toont naast het actuele voorstel de vastgestelde cijfers en het verschil; view zzp_jaarrekening_advies in Supabase rekent hetzelfde. */
 function zzpBtwSchuld(kw, j){
   let advies = 0, betaald = 0;
   kw.forEach(k=>{
@@ -7786,27 +7862,166 @@ function zzpJaarTab(){
     + rij('Eind', r.nu.ev, n('eigen_vermogen'), {sterk:true, rand:true});
   const stand = '31-12-'+j;
   return zzpJaarKeuze('jrjaar', jaren, j)
+    + `<div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><button class="month-tab" data-zzp-export="${j}">PDF — detail (jaarrekening, activa, facturen)</button></div>`
     + kaart('Winst- en verliesrekening '+j, status, wv)
     + kaart('Activa', stand, activa)
     + kaart('Passiva', stand, passiva)
     + kaart('Eigen vermogen '+j, status, vermogen);
 }
+// Rob, 22-09-2026 ("kan je pdf link maken dat alles in pdf staat maar dan ook op detail niveau (debiteuren,
+// crediteuren, afschrijving systeem, etc)"): volledige detail-pdf naast de al bestaande C3S-pdf's, zelfde
+// c3sToonPdfOverlay()-mechanisme (werkt voor iedere HTML-string, niet alleen C3S). Belangrijke kanttekening,
+// ook zichtbaar IN de pdf zelf (zie de code-comment bij zzpJaarrekening hierboven, 21-09-2026): dit systeem
+// houdt geen betaald_datum per factuur bij, dus een klassieke debiteuren/crediteuren-ouderdomsanalyse (wie
+// heeft nog niet betaald, hoe lang al) kan hier niet uit gegenereerd worden — dat zou gefingeerde data zijn.
+// In plaats daarvan toont de pdf alle omzet- (verkoop, "debiteuren"-kant) en inkoopfacturen ("crediteuren"-
+// kant) van het jaar stuk voor stuk, met voor de inkoopkant de bank-koppelstatus (zzpBankKoppeling) als enige
+// beschikbare aanwijzing of een factuur al is afgehandeld.
+function zzpGenereerJaarrekeningPdf(j){
+  const r = zzpJaarrekening(j), i = r.i;
+  const vs = ZZP.vast.filter(x=>Number(x.jaar)===j), v = vs.length ? vs[vs.length-1] : null;
+  const act = {'Bezemer ACC':'Bezemer ACC', 'Rob Bezemer Photography':'Rob Bezemer Photography', 'BZM Educatie':'BZM Educatie', 'Casa Tre Sorelle':'Casa Tre Sorelle'};
+  const resTekst = x=>x<0 ? 'verlies '+zzpE0(-x) : 'winst '+zzpE0(x);
+  const rows2 = (l,a,o)=>`<tr><td>${l}</td><td style="text-align:right;${o&&o.sterk?'font-weight:700;border-top:2px solid #333;':''}">${a}</td></tr>`;
+
+  // Winst- en verliesrekening
+  const wvRows = Object.keys(r.perAct).sort().map(a=>rows2('Omzet '+(act[a]||a), zzpE0(r.perAct[a]))).join('')
+    + rows2('Totale omzet', zzpE0(Math.round(i.ink)), {sterk:true})
+    + rows2('Afschrijving', '\u2212'+zzpE0(Math.round(i.afs)))
+    + rows2('Kosten onder drempel (' + zzpN0(ZZP.param.drempel_activeren||450) + ' excl. btw)', '\u2212'+zzpE0(Math.round(i.dir)))
+    + rows2('Reiskosten en parkeren (doorbelast)', '\u2212'+zzpE0(Math.round(i.door)))
+    + rows2('Resultaat', resTekst(r.res), {sterk:true});
+
+  // Balans + eigen vermogen
+  const vord = r.nu.s<0 ? -r.nu.s : 0, schuld = r.nu.s>0 ? r.nu.s : 0;
+  const activaRows = rows2('Vaste activa (boekwaarde)', zzpE0(r.nu.va)) + (vord?rows2('Btw te vorderen', zzpE0(vord)):'') + rows2('Totaal activa', zzpE0(r.nu.va+vord), {sterk:true});
+  const passivaRows = rows2('Eigen vermogen', zzpE0(r.nu.ev)) + (schuld?rows2('Btw te betalen', zzpE0(schuld)):'') + rows2('Totaal passiva', zzpE0(r.nu.ev+schuld), {sterk:true});
+  const vermogenRows = rows2('Eigen vermogen begin '+j, zzpE0(r.voor.ev)) + rows2('Resultaat', resTekst(r.res)) + rows2('Priv\u00e9-onttrekking/storting', zzpE0(r.prive)) + rows2('Eigen vermogen eind '+j, zzpE0(r.nu.ev), {sterk:true});
+  const vastgesteldHtml = v ? `<div class="sub">Vastgesteld op ${String(v.vastgesteld_op).split('-').reverse().join('-')} — bovenstaande cijfers zijn het actuele, live voorstel; bij afwijking t.o.v. het vastgestelde cijfer geldt het vastgestelde als officieel.</div>` : `<div class="sub">Nog niet vastgesteld — dit is het actuele voorstel op basis van de tot nu toe verwerkte data.</div>`;
+
+  // Afschrijvingssysteem — volledig activaregister, alle jaren
+  const plan = zzpAfschrijvingsplan(zzpInkoopBerekend());
+  let afschrijvingHtml = '<div class="sub">Geen geactiveerde bedrijfsmiddelen bekend.</div>';
+  if(plan.length){
+    const jMin = Math.min(...plan.map(p=>p.a.jaar)), jMax = Math.max(...plan.map(p=>p.a.jaar+p.n));
+    const jaren2 = []; for(let y=jMin; y<=jMax; y++) jaren2.push(y);
+    const cel = v2=>Math.round(v2)===0 ? '\u2013' : zzpN0(v2);
+    const assetRows = plan.map(p=>{
+      const a = p.a;
+      const perJaarCellen = jaren2.map(y=>`<td style="text-align:right;">${cel(p.per[y]||0)}</td>`).join('');
+      return `<tr><td>${a.naam}${a.crediteur&&a.crediteur!==a.naam?' <span style="color:#888;">('+a.crediteur+')</span>':''}</td><td>${a.datum.split('-').reverse().join('-')}</td><td>${act[a.activiteit]||a.activiteit}</td><td style="text-align:right;">${zzpE0(a.kostprijs)}</td><td style="text-align:right;">${a.w>0?Math.round(a.w*100)+'%':'\u2013'}</td><td style="text-align:right;">${p.n} jr</td>${perJaarCellen}</tr>`;
+    }).join('');
+    const totRow = jaren2.map(y=>plan.reduce((s,p)=>s+(p.per[y]||0),0));
+    const boekRow = jaren2.map(y=>plan.filter(p=>p.a.jaar<=y).reduce((t,p)=>{ let rest=p.a.kostprijs; for(let k=p.a.jaar;k<=y;k++) rest -= (p.per[k]||0); return t+Math.max(0,rest); },0));
+    afschrijvingHtml = `<table><thead><tr><th>Bedrijfsmiddel</th><th>Aanschaf</th><th>Activiteit</th><th style="text-align:right;">Kostprijs (zakelijk)</th><th style="text-align:right;">Direct (willekeurig)</th><th style="text-align:right;">Looptijd</th>${jaren2.map(y=>`<th style="text-align:right;">${y}</th>`).join('')}</tr></thead>
+    <tbody>${assetRows}</tbody>
+    <tfoot>
+      <tr><td colspan="6"><b>Afschrijving per jaar</b></td>${totRow.map(v2=>`<td style="text-align:right;"><b>${cel(v2)}</b></td>`).join('')}</tr>
+      <tr><td colspan="6">Boekwaarde per 31-12</td>${boekRow.map(v2=>`<td style="text-align:right;">${cel(v2)}</td>`).join('')}</tr>
+    </tfoot></table>`;
+  }
+
+  // Omzetfacturen (debiteuren-kant) van jaar j — nu met echte betaald_datum-status i.p.v. alleen het bedrag
+  const omzetJ = ZZP.omzet.filter(o=>Number(o.datum.slice(0,4))===j).sort((a,b)=>a.datum.localeCompare(b.datum));
+  const omzetRows = omzetJ.map(o=>{
+    const pct = o.advies_btw_pct!=null ? Number(o.advies_btw_pct) : Number(o.btw_pct||0);
+    const statusLabel = o.betaald_datum ? 'betaald '+o.betaald_datum.split('-').reverse().join('-') : 'open';
+    return `<tr><td>${o.datum.split('-').reverse().join('-')}</td><td>${o.nummer||''}</td><td>${o.debiteur||''}</td><td>${act[o.activiteit]||o.activiteit||''}</td><td style="text-align:right;">${zzpE0(Number(o.bedrag_excl))}</td><td style="text-align:right;">${pct?pct+'%':'vrijgesteld'}</td><td style="text-align:right;">${zzpE0(Number(o.bedrag_km||0)+Number(o.doorbelast_overig||0))}</td><td style="color:${o.betaald_datum?'#1e8a4c':'#c0392b'};">${statusLabel}</td></tr>`;
+  }).join('') || '<tr><td colspan="8" style="color:#888;">Geen omzetfacturen dit jaar.</td></tr>';
+  const omzetTotExcl = omzetJ.reduce((s,o)=>s+Number(o.bedrag_excl),0);
+  const debiteurenOpenstaand = omzetJ.filter(o=>!o.betaald_datum).reduce((s,o)=>s+Number(o.bedrag_excl),0);
+  const debiteurenOpenAantal = omzetJ.filter(o=>!o.betaald_datum).length;
+
+  // Inkoopfacturen (crediteuren-kant) van jaar j — betaald_datum is de echte status; bank-koppeling blijft
+  // als extra controle-aanwijzing ernaast staan (nuttig om te zien of een als-betaald gemarkeerde factuur ook
+  // echt in de bank terug te vinden is)
+  const rowsAll = zzpInkoopBerekend();
+  const inkoopJ = rowsAll.filter(x=>x.jaar===j).sort((a,b)=>a.datum.localeCompare(b.datum));
+  const koppel = zzpBankKoppeling(rowsAll);
+  const inkoopRows = inkoopJ.map(x=>{
+    const bank = koppel[x.jaar+'|'+x.nummer];
+    const statusLabel = x.betaaldDatum ? 'betaald '+x.betaaldDatum.split('-').reverse().join('-') : 'open';
+    return `<tr><td>${x.datum.split('-').reverse().join('-')}</td><td>${x.crediteur}</td><td>${x.naam!==x.crediteur?x.naam:''}</td><td>${act[x.activiteit]||x.activiteit}</td><td style="text-align:right;">${zzpE0(x.incl)}</td><td style="text-align:right;">${zzpE0(x.btw)}</td><td style="text-align:right;">${Math.round(x.zp*100)}%</td><td style="text-align:right;">${zzpE0(x.btwAftrek)}</td><td style="text-align:right;">${x.activum?'activum ('+Number(ZZP.param.afschrijving_jaren||5)+'j)':'direct'}</td><td style="color:${x.betaaldDatum?'#1e8a4c':'#c0392b'};">${statusLabel}</td><td>${bank?'bank '+bank.source:'geen bank'}</td></tr>`;
+  }).join('') || '<tr><td colspan="11" style="color:#888;">Geen inkoopfacturen dit jaar.</td></tr>';
+  const inkoopTotIncl = inkoopJ.reduce((s,x)=>s+x.incl,0), inkoopTotAftrek = inkoopJ.reduce((s,x)=>s+x.btwAftrek,0);
+  const crediteurenOpenstaand = inkoopJ.filter(x=>!x.betaaldDatum).reduce((s,x)=>s+x.incl,0);
+  const crediteurenOpenAantal = inkoopJ.filter(x=>!x.betaaldDatum).length;
+
+  // Btw per kwartaal van jaar j
+  const kwJ = zzpBtwKwartalen().filter(k=>k.j===j);
+  const kwRows = kwJ.map(k=>{
+    const ag = k.ag;
+    return `<tr><td>Q${k.q}</td><td>${ag?ag.status:'nog te doen'}</td><td style="text-align:right;">${zzpE0(ag?ag.om:k.om)}</td><td style="text-align:right;">${zzpE0(ag?ag.b1a:k.b1a)}</td><td style="text-align:right;">${zzpE0(ag?ag.vb:k.vb)}</td><td style="text-align:right;">${zzpSaldo(ag?ag.saldo:k.saldo)}</td></tr>`;
+  }).join('');
+
+  c3sToonPdfOverlay(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>Jaarrekening ${j} — detail</title>
+  <style>
+    html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+    body{font-family:'Helvetica Neue',Arial,sans-serif;color:#111;padding:24px;font-size:12px;}
+    h1{font-size:20px;margin-bottom:2px;}
+    .sub{color:#666;font-size:11px;margin:4px 0 8px;}
+    h2{font-size:14px;margin-top:26px;border-bottom:1px solid #333;padding-bottom:4px;}
+    table{width:100%;border-collapse:collapse;margin-top:6px;font-size:10.5px;}
+    th,td{padding:4px 6px;border-bottom:1px solid #ddd;text-align:left;white-space:nowrap;}
+    thead th{background:#eee;}
+    tfoot td{border-top:2px solid #333;}
+    .c3s-print-btn{position:fixed;top:12px;right:12px;background:#111;color:#fff;border:none;border-radius:6px;padding:10px 16px;font-size:13px;cursor:pointer;}
+    .let{background:#fff8e6;border:1px solid #e6d28a;padding:8px 10px;border-radius:6px;font-size:11px;color:#5a4a12;margin:10px 0 4px;}
+    @media print{ body{padding:0;} .c3s-print-btn{display:none;} table{font-size:9.5px;} }
+  </style></head><body>
+  <button class="c3s-print-btn" onclick="window.print()">🖨 Print / Opslaan als PDF</button>
+  <h1>Jaarrekening ${j} — ZZP-administratie (detail)</h1>
+  <div class="sub">Gegenereerd ${new Date().toLocaleDateString('nl-NL')}. Bron: Bezemer_ACC_2026 (zzp_omzet, zzp_inkoop, zzp_btw_aangifte, zzp_ib_aangifte, zzp_jaarrekening_vastgesteld).</div>
+  <div class="let">Debiteuren/crediteuren op basis van betaald_datum per factuur (sinds 22-09-2026 vastgelegd zodra een factuur echt is voldaan). Facturen zonder deze datum tellen hieronder als "open" — voor oudere, nog niet nagelopen facturen kan dat dus ook betekenen dat de datum er simpelweg nog niet is ingevoerd, niet per se dat er nog niet is betaald. Voor de crediteurenkant staat de bank-koppeling er nog naast als extra controle.</div>
+
+  <h2>Winst- en verliesrekening ${j}</h2>
+  ${vastgesteldHtml}
+  <table><tbody>${wvRows}</tbody></table>
+
+  <h2>Balans per 31-12-${j}</h2>
+  <table style="display:inline-table;width:48%;"><thead><tr><th colspan="2">Activa</th></tr></thead><tbody>${activaRows}</tbody></table>
+  <table style="display:inline-table;width:48%;margin-left:2%;"><thead><tr><th colspan="2">Passiva</th></tr></thead><tbody>${passivaRows}</tbody></table>
+
+  <h2>Eigen vermogen — mutatie ${j}</h2>
+  <table><tbody>${vermogenRows}</tbody></table>
+
+  <h2>Afschrijvingssysteem — activaregister (alle jaren)</h2>
+  ${afschrijvingHtml}
+
+  <h2>Debiteuren — omzetfacturen ${j} — ${omzetJ.length} facturen, ${debiteurenOpenAantal} open (${zzpE0(debiteurenOpenstaand)})</h2>
+  <table><thead><tr><th>Datum</th><th>Nr.</th><th>Debiteur</th><th>Activiteit</th><th style="text-align:right;">Bedrag excl. btw</th><th style="text-align:right;">Btw%</th><th style="text-align:right;">Km/doorbelast</th><th>Status</th></tr></thead>
+  <tbody>${omzetRows}</tbody>
+  <tfoot><tr><td colspan="4"><b>Totaal</b></td><td style="text-align:right;"><b>${zzpE0(omzetTotExcl)}</b></td><td></td><td></td><td style="color:#c0392b;"><b>${zzpE0(debiteurenOpenstaand)} open</b></td></tr></tfoot></table>
+
+  <h2>Crediteuren — inkoopfacturen ${j} — ${inkoopJ.length} facturen, ${crediteurenOpenAantal} open (${zzpE0(crediteurenOpenstaand)})</h2>
+  <table><thead><tr><th>Datum</th><th>Crediteur</th><th>Omschrijving</th><th>Activiteit</th><th style="text-align:right;">Incl. btw</th><th style="text-align:right;">Btw</th><th style="text-align:right;">Zakelijk%</th><th style="text-align:right;">Btw-aftrek</th><th>Verwerking</th><th>Status</th><th>Bank</th></tr></thead>
+  <tbody>${inkoopRows}</tbody>
+  <tfoot><tr><td colspan="4"><b>Totaal</b></td><td style="text-align:right;"><b>${zzpE0(inkoopTotIncl)}</b></td><td></td><td></td><td style="text-align:right;"><b>${zzpE0(inkoopTotAftrek)}</b></td><td></td><td style="color:#c0392b;"><b>${zzpE0(crediteurenOpenstaand)} open</b></td><td></td></tr></tfoot></table>
+
+  <h2>Btw per kwartaal ${j}</h2>
+  <table><thead><tr><th>Kwartaal</th><th>Status</th><th style="text-align:right;">Omzet 1a</th><th style="text-align:right;">Btw 1a</th><th style="text-align:right;">Voorbelasting 5b</th><th style="text-align:right;">Saldo</th></tr></thead>
+  <tbody>${kwRows}</tbody></table>
+  </body></html>`);
+}
 function zzpFacturenTab(){
+
   const rows = zzpInkoopBerekend(), jaren = [...new Set(rows.map(r=>r.jaar))].sort();
   if(zzpFacJaar===null) zzpFacJaar = jaren[jaren.length-1];
   const kop = rows.filter(r=>r.jaar===zzpFacJaar).sort((x,y)=> x.datum===y.datum ? String(y.nummer).localeCompare(String(x.nummer), 'nl', {numeric:true}) : (x.datum<y.datum ? 1 : -1));
   const koppel = zzpBankKoppeling(rows);
-  const gek = kop.filter(r=>koppel[r.jaar+'|'+r.nummer]).length;
+  const openCount = kop.filter(r=>!r.betaaldDatum).length;
   const act = {'Bezemer ACC':'ACC', 'Rob Bezemer Photography':'Photography', 'BZM Educatie':'BZM', 'Casa Tre Sorelle':'Casa'};
   const lijst = kop.map(r=>{
     const t = koppel[r.jaar+'|'+r.nummer];
     const meta = [r.datum.slice(8,10)+'-'+r.datum.slice(5,7), act[r.activiteit]||'algemeen', Math.round(r.zp*100)+'%'].join(' \u00b7 ');
+    const statusLabel = r.betaaldDatum ? 'betaald '+r.betaaldDatum.slice(8,10)+'-'+r.betaaldDatum.slice(5,7) : 'open';
+    const statusKleur = r.betaaldDatum ? 'var(--dot-ok)' : 'var(--brass)';
     return `<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--rule);">
-      <span style="min-width:0;"><span style="font-size:13px;">${r.crediteur}</span><br><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);">${meta}</span></span>
-      <span style="text-align:right;white-space:nowrap;"><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;">${fmt(r.incl)}</span><br><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:${t?'var(--teal)':'var(--muted)'};">${t?'bank '+t.source:'geen bank'} \u00b7 aftrek ${fmt(r.btwAftrek)}</span></span></div>`;
+      <span style="min-width:0;"><span style="font-size:13px;">${r.crediteur}</span><br><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);">${meta}${t?' \u00b7 bank '+t.source:''}</span></span>
+      <span style="text-align:right;white-space:nowrap;"><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;">${fmt(r.incl)}</span><br><span class="edit-only" data-zzp-betaald-toggle="zzp_inkoop|${r.id}" style="cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:${statusKleur};">${statusLabel}</span></span></div>`;
   }).join('');
   return zzpJaarKeuze('facjaar', jaren, zzpFacJaar)
-    + `<div class="card ledger-card"><div class="card-label"><span>Facturen ${zzpFacJaar}</span><span class="ledger-count">${gek}/${kop.length} met bank</span></div>${lijst}</div>`;
+    + `<div class="card ledger-card"><div class="card-label"><span>Facturen ${zzpFacJaar}</span><span class="ledger-count">${openCount} open van ${kop.length}</span></div>${lijst}</div>`;
 }
 function zzpPuntenTab(){
   const open = ZZP.punten.filter(p=>p.status==='open');
@@ -7890,6 +8105,12 @@ function render(){
   document.querySelectorAll('[data-zzp-ibjaar]').forEach(el=>el.addEventListener('click',()=>{ zzpIbJaar = Number(el.dataset.zzpIbjaar); render(); }));
   document.querySelectorAll('[data-zzp-jrjaar]').forEach(el=>el.addEventListener('click',()=>{ zzpJrJaar = Number(el.dataset.zzpJrjaar); render(); }));
   document.querySelectorAll('[data-zzp-facjaar]').forEach(el=>el.addEventListener('click',()=>{ zzpFacJaar = Number(el.dataset.zzpFacjaar); render(); }));
+  document.querySelectorAll('[data-zzp-export]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); zzpGenereerJaarrekeningPdf(Number(el.dataset.zzpExport)); }));
+  document.querySelectorAll('[data-zzp-betaald-toggle]').forEach(el=>el.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const [tabel, id] = el.dataset.zzpBetaaldToggle.split('|');
+    toggleZzpBetaald(tabel, id);
+  }));
   document.querySelectorAll('[data-toggle-switch]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); quickSwitchOpen=!quickSwitchOpen; render(); }));
   document.querySelectorAll('.month-tab[data-month]').forEach(b=>b.addEventListener('click',()=>{ selectedMonth=b.dataset.month; render(); }));
   document.querySelectorAll('[data-energie-maand-toggle]').forEach(el=>el.addEventListener('click',()=>{
