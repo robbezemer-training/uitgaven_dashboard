@@ -490,7 +490,7 @@ const ING_TX = [{"date": "2026-05-22", "vendor": "R. Bezemer eo L. van Wanum", "
 
 const SRC_COLOR_ALL = {RABO:'var(--brass)', ING:'var(--teal)', AMEX:'var(--rose)', 'ING CC':'var(--ingcc)'};
 const CATEGORY_COLORS = {
-  "Abonnementen": "var(--c-abonnementen)", "Reizen": "var(--c-reizen)", "Vervoer": "var(--c-vervoer)",
+  "Abonnementen": "var(--c-abonnementen)", "Reizen": "var(--c-reizen)", "Trip": "var(--c-reizen)", "Vervoer": "var(--c-vervoer)",
   "Shopping": "var(--c-shopping)", "Kleding": "var(--c-kleding)", "Wonen": "var(--c-wonen)",
   "Entertainment": "var(--c-entertainment)", "Bankkosten": "var(--c-bankkosten)", "Persoonlijk": "var(--c-persoonlijk)",
   "Zakelijk": "var(--c-zakelijk)", "Eten & drinken": "var(--c-eten)", "Goede doelen": "var(--c-goededoelen)",
@@ -868,7 +868,7 @@ const JUL_VASTE_LASTEN_CATS = ["Hypotheek","Auto","Verzekeringen","Zorgverzekeri
 // Let op: "Paardrijden" bewust NIET in deze lijst. Binnen die categorie is vast/dagelijks per leverancier
 // bepaald via vendorBucketOverrides (De Flemming B.V. + Professioneel Platform Hippische Ondernemers = vast,
 // alle andere Paardrijden-vendors default dagelijks) — zie effectiveBucket(). Bevestigd door Rob 12-08-2026.
-const ALLE_CATEGORIEEN = ["Abonnementen", "Auto", "Autokosten", "Bankkosten", "Belastingafrekening", "Belastingteruggave", "Boodschappen", "Cadeaus", "Casa 3S", "Casa 3S (project)", "Educatie", "Entertainment", "Eten & drinken", "Familie", "Goede doelen", "Hobby", "Hypotheek", "Kleding", "Medisch", "Muziek", "Nutsvoorzieningen", "Overig", "Overig inkomen", "Paardrijden", "Parkeren", "Persoonlijk", "Reizen", "Salaris", "Shopping", "Sparen", "Sport", "Telecom", "Vakbond", "Verzekeringen", "Verzorging", "Vervoer", "Wonen", "Zakelijk", "Zorgverzekering"];
+const ALLE_CATEGORIEEN = ["Abonnementen", "Auto", "Autokosten", "Bankkosten", "Belastingafrekening", "Belastingteruggave", "Boodschappen", "Cadeaus", "Casa 3S", "Casa 3S (project)", "Educatie", "Entertainment", "Eten & drinken", "Familie", "Goede doelen", "Hobby", "Hypotheek", "Kleding", "Medisch", "Muziek", "Nutsvoorzieningen", "Overig", "Overig inkomen", "Paardrijden", "Parkeren", "Persoonlijk", "Reizen", "Salaris", "Shopping", "Sparen", "Sport", "Telecom", "Trip", "Vakbond", "Verzekeringen", "Verzorging", "Vervoer", "Wonen", "Zakelijk", "Zorgverzekering"];
 
 const ENERGIE_PEILDATUM_FALLBACK = '2026-09-03'; // terugval-peildatum voor offline/file://-gebruik (geen live updated_at beschikbaar) — datum van deze HTML-snapshot
 let ENERGIE_DATA = { // FALLBACK/offline-snapshot — bij live gebruik overschreven door loadEnergieTable() uit Supabase-tabel energie_maanden (03-09-2026: migratie afgerond, dit was de laatste hardcoded financiële tabel in de app). Bron oorspronkelijk: Robs Energie.xlsx, herberekend 21-08-2026 met gecorrigeerde Stroom-formule (Electra x Tarief Stroom - Teruggeleverd x Productie stroom tarief, i.p.v. genette kWh x 1 tarief), samen met Rob gevonden en geverifieerd tegen echte facturen. Elke maand: gas/electra/opgewekt/stroomAuto in resp. m3/kWh/kWh/kWh, stroomBetalen/totaal in euro. consumptieBevestigd:true betekent dat gas/electra/teruggeleverd/opgewekt/stroomAuto al met echte meterstanden bevestigd zijn ook al is de maand nog niet financieel afgesloten (tarief/totaal nog schatting) — wordt groen getoond i.p.v. amber/prognose.
@@ -1198,7 +1198,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-09-22m - Rob\'s voorstel (\'bij inkomen verwachting zou wel gewoon de 50% salaris moeten staan en dan komt er te veel binnen, en volgende maand idem maar dan eronder\') bleek al precies te bestaan: lindyNettoVoorMaand() gebruikt voor de verwachting altijd het percentage van de vorige kalendermaand (normale salarisvertraging) -- voor de huishoudperiode \'oktober\' (gevoed door dit septembersalaris) pakt dat dus al septembers eigen percentage (1-9 al 50% in LINDY_PARTTIME_STAPPEN), dus verwacht \u2248 \u20ac2.090,83 terwijl werkelijk \u20ac2.505,83 (de 60%-fout) binnenkomt -- precies de gewenste afwijking, geen enkele codewijziging nodig, alleen de echte transactie en de periode-doorschuif (nog te doen zodra het bankafschrift er is). Wel gevonden: de code-comment IN lindyNettoVoorMaand() zelf bevatte nog dezelfde foute \'oktober-strook\'-aanname als net gecorrigeerd bij LINDY_PARTTIME_STAPPEN (22l) -- rekenlogica ongewijzigd (deed toevallig al het juiste), toelichting rechtgezet: dit is puur de normale betalingsvertraging, geen aparte percentage-zichtbaarheidsvertraging. Bevat ook 2026-09-22l/k/j.';
+const DASHBOARD_VERSION = '2026-09-23c - Reistegel/pdf herindeling op Robs verzoek (\'eigen begroting en dan de kolommen voor RI, later maar zien wie wat betaald\'): kostentabel toont eerst de eigen begroting (Begroot, Rob/Lindy, Maud, Totaal, Open alleen eigen deel) en daarna per medereizigersgroep hun aandeel; kolom Totaal-voor-iedereen en open-voor-iedereen vervallen. Tegel: Begroting-kaart (verschil, begroot, verwacht, open eigen) + kaart per medereizigersgroep. Vorige versie (2026-09-23b - Reisverdeling in de reis-tegel (Totaal reis met uitsplitsing per groep, Begroting eigen groep, per medereizigersgroep nog te betalen) plus PDF reis / PDF per medereiziger, alles live uit reis_*-tabellen; geldt voor elke reis met posten + deelnemers. Vorige versie (2026-09-23a - Trip-categorie (Dagelijks) voor korte tripjes buiten de Reizen-tegel; reisperiode start/eind uit Supabase-tabel reizen; keyword-koppeling aan een reis nooit meer na de einddatum. Vorige versie (2026-09-22m - Rob\'s voorstel (\'bij inkomen verwachting zou wel gewoon de 50% salaris moeten staan en dan komt er te veel binnen, en volgende maand idem maar dan eronder\') bleek al precies te bestaan: lindyNettoVoorMaand() gebruikt voor de verwachting altijd het percentage van de vorige kalendermaand (normale salarisvertraging) -- voor de huishoudperiode \'oktober\' (gevoed door dit septembersalaris) pakt dat dus al septembers eigen percentage (1-9 al 50% in LINDY_PARTTIME_STAPPEN), dus verwacht \u2248 \u20ac2.090,83 terwijl werkelijk \u20ac2.505,83 (de 60%-fout) binnenkomt -- precies de gewenste afwijking, geen enkele codewijziging nodig, alleen de echte transactie en de periode-doorschuif (nog te doen zodra het bankafschrift er is). Wel gevonden: de code-comment IN lindyNettoVoorMaand() zelf bevatte nog dezelfde foute \'oktober-strook\'-aanname als net gecorrigeerd bij LINDY_PARTTIME_STAPPEN (22l) -- rekenlogica ongewijzigd (deed toevallig al het juiste), toelichting rechtgezet: dit is puur de normale betalingsvertraging, geen aparte percentage-zichtbaarheidsvertraging. Bevat ook 2026-09-22l/k/j.';
 const DASHBOARD_VERSION_PREV_2026_09_22l = '2026-09-22l - Correctie op eerdere aanname: Rob wees erop dat de septemberstrook 2026 (die al 50% deeltijd had moeten tonen, ingangsdatum 1-9) niet hoort te wachten op een \'oktoberstrook\' -- die eerdere redenering verwarde de loonstrook-periode zelf met de aparte, losstaande budgetterings-vertraging die het huishouden al gebruikt (leven van het septembersalaris in de periode die intern \'oktober\' heet, zie lindyNettoVoorMaand). LINDY_PARTTIME_STAPPEN-comment gecorrigeerd: de septemberstrook toonde in werkelijkheid nog 60%, dat is dus een echte SARO-fout, geen normaal verwerkingsritme. Geen logica gewijzigd (pct-waarden en -data waren al correct), puur de toelichting rechtgezet zodat een volgende sessie niet dezelfde denkfout maakt. Bevat ook 2026-09-22k (formulier bovenaan/opgeschoond, meer codes) en 2026-09-22j (zzp_inkoop_bestand).';
 const DASHBOARD_VERSION_PREV_2026_09_22k = '2026-09-22k - Rob zag overlappende velden op het nieuwe-factuurformulier (screenshot: het datumveld toonde als het native lichte iOS-pilletje, negeerde de donkere .zzp-nf-input styling, en overlapte daardoor het ernaast liggende Nummer-veld / de Soort-regel-select). Oorzaak: input[type=date] kreeg nooit -webkit-appearance:none, dus Safari bleef de eigen chrome tekenen i.p.v. de CSS-styling; nu toegevoegd (plus color-scheme:dark zodat het ook echt donker rendert i.p.v. alleen de rand). Ook: \'nummering van facturen wil ik geen invloed op hebben\' -- het Nummer-veld is geen invoerveld meer maar een read-only weergave (.zzp-nf-readonly) van het automatisch bepaalde nummer; wordt nu bij elke wisseling van handelsnaam opnieuw herberekend (was eerst maar 1x, bij een lege waarde) zodat het altijd klopt en Rob er nooit meer in hoeft te typen. Bevat ook 2026-09-22j (zzp_inkoop_bestand, streng-regel bij ontbrekend document).';
 const DASHBOARD_VERSION_PREV_2026_09_22j = '2026-09-22j - Rob: \'als factuur gemaakt, dan is hij altijd terug te halen?\' -- ja, zit als data in zzp_omzet/zzp_omzet_regels, PDF wordt elke keer opnieuw uit die data gegenereerd, dus blijft ophaalbaar zolang de rij niet verwijderd wordt (nog niet mogelijk vanuit de app). Daarnaast: \'we moeten inkomende facturen ook gaan opslaan (fysiek)\' -- nieuwe tabel zzp_inkoop_bestand (inkoop_id, bestand_naam, mime_type, data_base64) bewaart het originele document van een inkoopfactuur zelf (niet alleen de afgeleide data), base64 in de database i.p.v. Supabase Storage zodat Claude het rechtstreeks kan wegschrijven zodra Rob een factuur in de chat aanlevert -- vastgelegd in ways-of-working. loadZzpTables() haalt nu ook de (lichte) bestand-metadata op; de inkoopfacturenlijst toont een "bestand"-link per rij zodra er een gekoppeld is, die het origineel ophaalt en opent/downloadt. Bevat ook 2026-09-22i (formulier bovenaan/opgeschoond, meer codes) en 2026-09-22h (logo/kleur).';
@@ -1827,6 +1827,10 @@ function autoDetectReis(t){
   // 2) Keyword-match als er geen (eenduidig) datumbereik + buitenland-match is
   const v = t.vendor.toLowerCase();
   for(const [id, kws] of Object.entries(REIZEN_KEYWORDS)){
+    // Rob, 23-09-2026: een reis wordt met datum afgedekt — na de einddatum koppelt een keyword nooit meer
+    // (een spontane trip later valt er dus nooit onder). Boekingen vóór de reis blijven wel koppelbaar.
+    const rp = REIZEN_PLANNING.find(p=>p.id===id);
+    if(rp && rp.eind && t.date > rp.eind) continue;
     if(kws.some(k=>{
       const esc = k.trim().replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
       return new RegExp('(?:^|[^a-z0-9])'+esc+'(?:$|[^a-z0-9])','i').test(v);
@@ -2907,7 +2911,7 @@ async function loadTransactionsTable(){
   // reizen-tabel (vervangt overrides kind='reis_plan'/'reis_budget'): vult dezelfde reisPlanOverrides/
   // reisBudgetOverrides-objecten die de rest van de code al gebruikt.
   try{
-    const rres = await fetch(SUPABASE_URL+'/rest/v1/reizen?select=trip_id,budget,timing,status,jaar,afgewikkeld,afgewikkeld_bedrag,afgewikkeld_maand', {headers: SUPABASE_HEADERS});
+    const rres = await fetch(SUPABASE_URL+'/rest/v1/reizen?select=trip_id,budget,timing,status,jaar,afgewikkeld,afgewikkeld_bedrag,afgewikkeld_maand,start,eind', {headers: SUPABASE_HEADERS});
     if(rres.ok){
       const rrows = await rres.json();
       rrows.forEach(r=>{
@@ -2919,6 +2923,9 @@ async function loadTransactionsTable(){
         if(r.afgewikkeld) plan.afgewikkeld = true;
         if(r.afgewikkeld_bedrag!=null) plan.afgewikkeldBedrag = Number(r.afgewikkeld_bedrag);
         if(r.afgewikkeld_maand) plan.afgewikkeldMaand = r.afgewikkeld_maand;
+        // Reisperiode (start/eind) leeft in Supabase; overschrijft de snapshot in REIZEN_PLANNING.
+        const rp = REIZEN_PLANNING.find(p=>p.id===r.trip_id);
+        if(rp){ if(r.start) rp.start = r.start; if(r.eind) rp.eind = r.eind; }
         if(Object.keys(plan).length) reisPlanOverrides[r.trip_id] = plan;
       });
     }
@@ -3079,6 +3086,7 @@ async function loadOverrides(){
       _uitschieterGrenzenCache = null; // nieuwe data binnen, cache ongeldig
       await loadTransactionsTable(); // vult ook pendingRaboTx/pendingIngTx/pendingIngccTx/pendingAmexTx (confirmed=false)
       if(!IS_READONLY) await loadZzpTables(); // zzp_*-tabellen voor de ZZP-tegel
+      await loadReisVerdeling(); // reis_*-tabellen: posten, verdeling, medereizigers, begroting per reis
       overridesSource = 'live';
     }
   }catch(e){ /* geen verbinding met Supabase — de fallback-snapshot hierboven blijft actief, live tx worden dan niet getoond */ }
@@ -3897,6 +3905,198 @@ function reisLedgerRow(t, currentRid){
   </li>`;
 }
 
+// ===== Reisverdeling (Rob, 23-09-2026): posten, verdeling per groep, medereizigers, begroting en pdf — per reis
+// uit de reis_*-tabellen in Supabase. Geldt voor elke reis die posten + deelnemers heeft (eerste: thailand-2026).
+let REISV = {geladen:false, posten:[], verdeling:[], deelnemers:[], ontvangen:[], begroting:[], instellingen:[], dagen:[]};
+async function loadReisVerdeling(){
+  const get = async (pad)=>{ const r = await fetch(SUPABASE_URL+'/rest/v1/'+pad, {headers: SUPABASE_HEADERS}); return r.ok ? await r.json() : []; };
+  try{
+    const [posten, verdeling, deelnemers, ontvangen, begroting, instellingen, dagen] = await Promise.all([
+      get('reis_posten?select=id,trip_id,datum,reisdatum,omschrijving,categorie,fase,status,bedrag_eur,bedrag_thb,betaald_door,begroting_id&order=reisdatum.asc,id.asc'),
+      get('reis_post_verdeling?select=post_id,persoon,bedrag_eur'),
+      get('reis_deelnemers?select=trip_id,persoon,groep,volgorde,extern&order=volgorde.asc'),
+      get('reis_ontvangen?select=trip_id,datum,van,bedrag&order=datum.asc'),
+      get('reis_begroting?select=id,trip_id,categorie,post,reisdatum,bedrag_eur,bedrag_thb&order=reisdatum.asc.nullslast,id.asc'),
+      get('reis_instellingen?select=trip_id,planningskoers_thb'),
+      get('reis_dagen?select=trip_id,datum,plaats,hotel,programma&order=datum.asc')
+    ]);
+    REISV = {geladen:true, posten, verdeling, deelnemers, ontvangen, begroting, instellingen, dagen};
+  }catch(e){ /* offline: geen reisverdeling */ }
+}
+const REIS_CAT_VOLGORDE = ['Vluchten','Vervoer','Hotels','Entree & tours','Eten & drinken'];
+function reisR2(x){ return Math.round((x+Number.EPSILON)*100)/100; }
+function reisModel(tripId){
+  const deeln = REISV.deelnemers.filter(d=>d.trip_id===tripId);
+  const posten = REISV.posten.filter(p=>p.trip_id===tripId);
+  if(!deeln.length || !posten.length) return null;
+  const groepen = [];
+  deeln.forEach(d=>{ let g = groepen.find(x=>x.naam===d.groep); if(!g){ g={naam:d.groep, extern:false}; groepen.push(g); } if(d.extern) g.extern = true; });
+  const persGroep = {}; deeln.forEach(d=>{ persGroep[d.persoon] = d.groep; });
+  const inst = REISV.instellingen.find(i=>i.trip_id===tripId);
+  const koersPlan = inst ? Number(inst.planningskoers_thb) : null;
+  const rows = posten.map(p=>{
+    const per = {}; groepen.forEach(g=>{ per[g.naam] = 0; });
+    REISV.verdeling.filter(v=>v.post_id===p.id).forEach(v=>{ const g = persGroep[v.persoon]; if(g) per[g] += Number(v.bedrag_eur); });
+    Object.keys(per).forEach(k=>{ per[k] = reisR2(per[k]); });
+    const eur = Number(p.bedrag_eur), thb = p.bedrag_thb!=null ? Number(p.bedrag_thb) : null;
+    const voorlopig = p.status==='open';
+    return {...p, eur, thb, per, voorlopig, koers: thb ? (voorlopig ? koersPlan : thb/eur) : null, open: voorlopig ? eur : 0};
+  });
+  const eigenNamen = groepen.filter(g=>!g.extern).map(g=>g.naam);
+  rows.forEach(r=>{ r.ons = reisR2(eigenNamen.reduce((s,n)=>s+r.per[n],0)); r.openOns = r.voorlopig ? r.ons : 0; });
+  const catIdx = c=>{ const i = REIS_CAT_VOLGORDE.indexOf(c); return i<0 ? 99 : i; };
+  rows.sort((a,b)=> catIdx(a.categorie)-catIdx(b.categorie) || String(a.reisdatum||'').localeCompare(String(b.reisdatum||'')) || a.id-b.id);
+  const begroting = REISV.begroting.filter(b=>b.trip_id===tripId).map(b=>({...b, bedrag: Number(b.bedrag_eur), gedekt: rows.some(r=>r.begroting_id===b.id)}));
+  const ontvangen = REISV.ontvangen.filter(o=>o.trip_id===tripId).map(o=>({...o, bedrag:Number(o.bedrag)}));
+  const tot = {totaal:0, open:0, per:{}}; groepen.forEach(g=>{ tot.per[g.naam]=0; });
+  rows.forEach(r=>{ tot.totaal += r.eur; tot.open += r.open; groepen.forEach(g=>{ tot.per[g.naam] += r.per[g.naam]; }); });
+  const eigen = groepen.filter(g=>!g.extern);
+  const onsWerkelijk = rows.reduce((s,r)=>s+eigen.reduce((t,g)=>t+r.per[g.naam],0),0);
+  const begroot = begroting.reduce((s,b)=>s+b.bedrag,0);
+  const nogBegroot = begroting.filter(b=>!b.gedekt).reduce((s,b)=>s+b.bedrag,0);
+  const externen = groepen.filter(g=>g.extern).map(g=>{
+    const betaaldePosten = rows.filter(r=>!r.voorlopig && r.per[g.naam]>0);
+    const aandeel = betaaldePosten.reduce((s,r)=>s+r.per[g.naam],0);
+    const ontv = ontvangen.filter(o=>o.van===g.naam);
+    const ontvTot = ontv.reduce((s,o)=>s+o.bedrag,0);
+    const later = rows.filter(r=>r.voorlopig).reduce((s,r)=>s+r.per[g.naam],0);
+    return {naam:g.naam, betaaldePosten, aandeel:reisR2(aandeel), ontvangen:ontv, ontvTot:reisR2(ontvTot), nog:reisR2(aandeel-ontvTot), later:reisR2(later)};
+  });
+  const onsOpen = reisR2(rows.reduce((s,r)=>s+r.openOns,0) + nogBegroot);
+  return {tripId, groepen, rows, onsOpen, begroting, ontvangen, dagen: REISV.dagen.filter(d=>d.trip_id===tripId), koersPlan, tot,
+    ons:{werkelijk:reisR2(onsWerkelijk), begroot:reisR2(begroot), verwacht:reisR2(onsWerkelijk+nogBegroot)}, externen};
+}
+function reisNl(x,d){ return Number(x).toLocaleString('nl-NL',{minimumFractionDigits:d==null?2:d, maximumFractionDigits:d==null?2:d}); }
+function reisDdMm(d){ return d ? d.slice(8,10)+'-'+d.slice(5,7) : ''; }
+function reisKostenTabelHtml(m, pdf){
+  // Gedeelde tabel (tegel + pdf): eerst de eigen begroting (Begroot, eigen groepen, Totaal eigen, Open eigen),
+  // daarna per medereizigersgroep hun aandeel. Wie wat betaalt staat hier bewust niet in.
+  const eigen = m.groepen.filter(g=>!g.extern), ext = m.groepen.filter(g=>g.extern);
+  const nu = x=> pdf ? ((x<0?'-':'')+'€ '+reisNl(Math.abs(x))) : fmt(x);
+  const e = x=> x ? nu(x) : '';
+  const td = (x,cls,extra)=> pdf ? `<td class="${cls||''}">${x}</td>` : `<td style="text-align:right;padding:4px 6px;font-variant-numeric:tabular-nums;${extra||''}">${x}</td>`;
+  const tdl = (x,extra)=> pdf ? `<td class="l">${x}</td>` : `<td style="padding:4px 6px;${extra||''}">${x}</td>`;
+  const vSt = pdf ? '' : 'color:var(--brass);font-style:italic;';
+  const oSt = pdf ? '' : 'color:var(--neg, #d9534f);';
+  const sep = pdf ? 'sep' : '';
+  const ncol = 9 + ext.length;
+  const th = (x,l,cls)=> pdf ? `<th class="${l?'l':''} ${cls||''}">${x}</th>` : `<th style="text-align:${l?'left':'right'};padding:4px 6px;">${x}</th>`;
+  let h = pdf ? `<table><thead><tr><th class="l grp" colspan="4" style="border-bottom:none;"></th><th colspan="${eigen.length+3}" class="grp">Begroting ${eigen.map(g=>g.naam).join(' + ')}</th>${ext.map(g=>`<th class="grp sep">${g.naam}</th>`).join('')}</tr>`
+              : `<table style="width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap;"><thead style="color:var(--muted);font-size:11px;">`;
+  h += `<tr>${th('Post',true)}${th('Datum')}${th('THB')}${th('Koers')}${th('Begroot')}${eigen.map(g=>th(g.naam)).join('')}${th('Totaal')}${th('Open')}${ext.map(g=>th(pdf?'Aandeel':g.naam,false,'sep')).join('')}</tr></thead><tbody>`;
+  const gebruikt = new Set();
+  const cats = [...new Set([...m.rows.map(r=>r.categorie), ...m.begroting.filter(b=>!b.gedekt).map(b=>b.categorie)])];
+  cats.sort((a,b)=>{ const ia=REIS_CAT_VOLGORDE.indexOf(a), ib=REIS_CAT_VOLGORDE.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib); });
+  const T = {beg:0, ons:0, open:0, per:{}}; m.groepen.forEach(g=>{ T.per[g.naam]=0; });
+  cats.forEach(c=>{
+    h += pdf ? `<tr class="cat"><td class="l" colspan="${ncol}">${c}</td></tr>` : `<tr><td colspan="${ncol}" style="padding:8px 6px 3px;color:var(--brass);font-size:11px;">${c}</td></tr>`;
+    const items = [...m.rows.filter(r=>r.categorie===c).map(r=>({r, d:r.reisdatum||'9999'})), ...m.begroting.filter(b=>!b.gedekt && b.categorie===c).map(b=>({b, d:b.reisdatum||'9999'}))];
+    items.sort((a,b)=>a.d.localeCompare(b.d));
+    items.forEach((it,i)=>{
+      const trOpen = pdf ? `<tr class="${i%2?'alt':''}">` : `<tr style="border-top:1px solid var(--rule);">`;
+      if(it.b){ const b = it.b; T.beg += b.bedrag; T.open += b.bedrag;
+        h += trOpen + tdl(b.post) + td(reisDdMm(b.reisdatum)) + td(b.bedrag_thb?reisNl(b.bedrag_thb,0):'') + td('') + td(e(b.bedrag)) + eigen.map(()=>td('')).join('') + td('') + td(e(b.bedrag),'o',oSt) + ext.map(()=>td('',sep)).join('') + `</tr>`;
+        return; }
+      const r = it.r, v = r.voorlopig;
+      let beg = '';
+      if(r.begroting_id && !gebruikt.has(r.begroting_id)){ const b = m.begroting.find(x=>x.id===r.begroting_id); if(b){ beg = b.bedrag; T.beg += b.bedrag; gebruikt.add(r.begroting_id); } }
+      T.ons += r.ons; T.open += r.openOns; m.groepen.forEach(g=>{ T.per[g.naam] += r.per[g.naam]; });
+      const vc = v ? 'v' : '', vs = v ? vSt : '';
+      h += trOpen + tdl(r.omschrijving) + td(reisDdMm(r.reisdatum)) + td(r.thb?reisNl(r.thb,0):'') + td(r.koers?(v?'≈ ':'')+reisNl(r.koers):'',vc,vs)
+        + td(beg!==''?e(beg):'') + eigen.map(g=>td(e(r.per[g.naam]),vc,vs)).join('') + td(e(r.ons),vc,vs) + td(e(r.openOns),'o '+vc,v?vSt:oSt)
+        + ext.map(g=>td(e(r.per[g.naam]),vc+' '+sep,vs)).join('') + `</tr>`;
+    });
+  });
+  const trTot = pdf ? `<tr class="tot">` : `<tr style="border-top:2px solid var(--brass);font-weight:600;">`;
+  h += trTot + tdl('Totaal') + td('') + td('') + td('') + td(e(reisR2(T.beg))) + eigen.map(g=>td(e(reisR2(T.per[g.naam])))).join('') + td(e(reisR2(T.ons))) + td(e(reisR2(T.open)),'o',oSt) + ext.map(g=>td(e(reisR2(T.per[g.naam])),sep)).join('') + `</tr></tbody></table>`;
+  return h;
+}
+function renderReisVerdelingHtml(p){
+  const m = reisModel(p.id); if(!m) return '';
+  const num = 'font-variant-numeric:tabular-nums;';
+  const eigen = m.groepen.filter(g=>!g.extern);
+  const kOpen = reisTileExpand===(p.id+'|verdeling');
+  const verschil = reisR2(m.ons.verwacht - m.ons.begroot);
+  const kostenDetail = kOpen ? `<div class="cat-detail-tile" style="grid-column:1/-1;overflow-x:auto;">${reisKostenTabelHtml(m,false)}</div>` : '';
+  const extCards = m.externen.map(x=>{
+    const key = p.id+'|ext|'+x.naam; const o = reisTileExpand===key;
+    const det = o ? `<div class="cat-detail-tile" style="grid-column:1/-1;overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap;">
+        ${x.betaaldePosten.map(r=>`<tr style="border-top:1px solid var(--rule);"><td style="padding:4px 6px;">${r.omschrijving}</td><td style="text-align:right;padding:4px 6px;${num}">${fmt(r.per[x.naam])}</td></tr>`).join('')}
+        <tr style="border-top:2px solid var(--brass);font-weight:600;"><td style="padding:4px 6px;">Aandeel</td><td style="text-align:right;padding:4px 6px;${num}">${fmt(x.aandeel)}</td></tr>
+        ${x.ontvangen.map(o2=>`<tr><td style="padding:4px 6px;color:var(--muted);">Ontvangen ${reisDdMm(o2.datum)}-${o2.datum.slice(0,4)}</td><td style="text-align:right;padding:4px 6px;${num}">${fmt(-o2.bedrag)}</td></tr>`).join('')}
+        <tr style="border-top:2px solid var(--brass);font-weight:600;"><td style="padding:4px 6px;">Nog te betalen</td><td style="text-align:right;padding:4px 6px;${num}">${fmt(x.nog)}</td></tr>
+      </table></div>` : '';
+    return `<div class="card" data-reis-tile-toggle="${key}" style="cursor:pointer;${o?'border-color:var(--brass);border-width:2px;':''}">
+        <div class="card-label">${x.naam}${o?' ▾':' ▸'}</div>
+        <div class="stat-figure ${x.nog>0?'neg':'pos'}" style="${num}">${fmt(x.nog)}</div>
+        <div class="stat-sub" style="${num}">aandeel ${fmt(x.aandeel)} · ontvangen ${fmt(x.ontvTot)}${x.later?` · later <span style="color:var(--brass);font-style:italic;">${fmt(x.later)}</span>`:''}</div>
+      </div>${det}`;
+  }).join('');
+  const knop = (attr,label)=>`<span ${attr} style="cursor:pointer;display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--paper);border:1px solid var(--rule);border-radius:20px;padding:6px 14px;margin-right:8px;">${label}</span>`;
+  return `
+    <div class="hero4">
+      <div class="card" data-reis-tile-toggle="${p.id}|verdeling" style="cursor:pointer;${kOpen?'border-color:var(--brass);border-width:2px;':''}">
+        <div class="card-label">Begroting ${eigen.map(g=>g.naam).join(' + ')}${kOpen?' ▾':' ▸'}</div>
+        <div class="stat-figure ${verschil<=0?'pos':'neg'}" style="${num}">${fmt(verschil)}</div>
+        <div class="stat-sub" style="${num}">begroot ${fmt(m.ons.begroot)} · verwacht ${fmt(m.ons.verwacht)} · open <span style="color:var(--brass);font-style:italic;">${fmt(m.onsOpen)}</span></div>
+      </div>
+      ${kostenDetail}
+      ${extCards}
+    </div>
+    <div style="margin-bottom:12px;">${knop(`data-reis-pdf="${p.id}|alles"`,'PDF reis')}${m.externen.map(x=>knop(`data-reis-pdf="${p.id}|${x.naam}"`,'PDF '+x.naam)).join('')}</div>`;
+}
+function reisPdf(tripId, deel){
+  const m = reisModel(tripId); if(!m) return;
+  const p = REIZEN_PLANNING.find(x=>x.id===tripId) || {naam:tripId};
+  const e = x=> x ? (x<0?'-':'')+'€ '+reisNl(Math.abs(x)) : '';
+  const IND='#2B2F66', GOLD='#B8893B', LT='#F3F1EA', OPEN='#A4462F';
+  const titelReis = (p.naam||tripId)+' '+(p.start?p.start.slice(0,4):'');
+  const periode = (p.start&&p.eind) ? new Date(p.start).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})+' – '+new Date(p.eind).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}) : '';
+  const vandaag = new Date().toLocaleDateString('nl-NL');
+  const css = `@page{size:A4 landscape;margin:12mm;}
+    body{font-family:'Lato','Gill Sans','Helvetica Neue',Arial,sans-serif;color:#222;margin:0;padding:16px;font-size:10.5px;}
+    .pagina{page-break-after:always;border-top:3px solid ${GOLD};padding-top:10px;}
+    .pagina:last-child{page-break-after:auto;}
+    h1{color:${IND};font-size:22px;margin:4px 0 2px;} h2{color:${IND};font-size:17px;margin:4px 0 2px;}
+    .sub{color:#777;font-size:10px;margin-bottom:8px;}
+    table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;}
+    th{background:${IND};color:#fff;font-weight:700;padding:4px 6px;text-align:right;white-space:nowrap;}
+    td{padding:3px 6px;text-align:right;white-space:nowrap;}
+    th.l,td.l{text-align:left;} tr.alt td{background:${LT};}
+    tr.cat td{color:${GOLD};font-weight:700;border-bottom:1px solid ${GOLD};background:#fff;text-align:left;padding-top:6px;}
+    tr.tot td{font-weight:700;border-top:1.5px solid ${IND};}
+    .v{color:${GOLD};font-style:italic;} .o{color:${OPEN};font-weight:700;} .o.v{font-weight:400;}
+    .box{margin-top:10px;width:auto;} th.grp{background:#fff;color:${IND};border-bottom:1.5px solid ${GOLD};text-align:center;} .sep{border-left:1.5px solid ${GOLD};} .box td{padding:3px 10px;}
+    .knop{position:fixed;top:12px;right:12px;background:#111;color:#fff;border:none;border-radius:6px;padding:10px 16px;font-size:13px;cursor:pointer;}
+    @media print{ body{padding:0;} .knop{display:none;} }`;
+  const kop = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"><title>${titelReis}</title><style>${css}</style></head><body><button class="knop" onclick="window.print()">Print / Opslaan als PDF</button>`;
+  let html = kop;
+  if(deel==='alles'){
+    if(m.dagen.length){
+      html += `<div class="pagina"><h1>${titelReis}</h1><div class="sub">${periode} · stand ${vandaag}</div><table><thead><tr><th>Dag</th><th class="l">Plaats</th><th class="l">Hotel</th><th class="l">Programma</th></tr></thead><tbody>`;
+      m.dagen.forEach((d,i)=>{ const dt = new Date(d.datum); html += `<tr class="${i%2?'alt':''}"><td>${dt.toLocaleDateString('nl-NL',{weekday:'short'})} ${reisDdMm(d.datum)}</td><td class="l" style="color:${IND};font-weight:700;">${d.plaats||''}</td><td class="l">${d.hotel||''}</td><td class="l" style="white-space:normal;">${d.programma||''}</td></tr>`; });
+      html += `</tbody></table></div>`;
+    }
+    const eigen = m.groepen.filter(g=>!g.extern);
+    html += `<div class="pagina"><h2>Kosten en verdeling</h2><div class="sub">Begroot en Open = begroting ${eigen.map(g=>g.naam).join(' + ')} · Koers = THB per euro · ≈ en goud = voorlopig, anders werkelijk afgerekend · stand ${vandaag}</div>`
+      + reisKostenTabelHtml(m,true)
+      + `<table class="box" style="width:auto;"><tr><th class="l" colspan="2">Begroting ${eigen.map(g=>g.naam).join(' + ')}</th></tr>
+      <tr><td class="l">Begroot</td><td>${e(m.ons.begroot)}</td></tr><tr><td class="l">Werkelijk + geboekt + nog begroot</td><td>${e(m.ons.verwacht)}</td></tr>
+      <tr class="tot"><td class="l">Verschil</td><td>${e(reisR2(m.ons.verwacht-m.ons.begroot))}</td></tr></table></div>`;
+  }
+  m.externen.filter(x=>deel==='alles'||deel===x.naam).forEach(x=>{
+    html += `<div class="pagina"><h2>Verrekening ${x.naam.replace('/',' & ')}</h2><div class="sub">Door ${m.groepen.filter(g=>!g.extern)[0].naam.split('/')[0]} betaalde posten · aandeel op werkelijke prijs per persoon · koers werkelijk afgeschreven · stand ${vandaag}</div>
+      <table><thead><tr><th class="l">Post</th><th>Reisdatum</th><th>THB</th><th>Koers</th><th>Totaal</th><th>Aandeel ${x.naam}</th></tr></thead><tbody>`;
+    x.betaaldePosten.forEach((r,i)=>{ html += `<tr class="${i%2?'alt':''}"><td class="l">${r.omschrijving}</td><td>${reisDdMm(r.reisdatum)}</td><td>${r.thb?reisNl(r.thb,0):''}</td><td>${r.koers?reisNl(r.koers):''}</td><td>${e(r.eur)}</td><td>${e(r.per[x.naam])}</td></tr>`; });
+    html += `<tr class="tot"><td class="l">Totaal aandeel</td><td></td><td></td><td></td><td></td><td>${e(x.aandeel)}</td></tr>`;
+    x.ontvangen.forEach(o=>{ html += `<tr><td class="l">Ontvangen ${o.datum.split('-').reverse().join('-')}</td><td></td><td></td><td></td><td></td><td>${e(-o.bedrag)}</td></tr>`; });
+    html += `<tr class="tot"><td class="l">Nog te betalen</td><td></td><td></td><td></td><td></td><td class="o">${e(x.nog)}</td></tr></tbody></table></div>`;
+  });
+  html += `</body></html>`;
+  c3sToonPdfOverlay(html);
+}
+
 function renderReisDetailCard(p, data, sparenActies){
   sparenActies = sparenActies || [];
   const gespaard = p.potje ? (SPAAR_POTJES[p.potje]||0) : 0;
@@ -3955,6 +4155,7 @@ function renderReisDetailCard(p, data, sparenActies){
         <div class="stat-sub">${restBudget==null?'geen budget bekend':(restBudget>=0?'nog beschikbaar binnen het budget':'budget al overschreden')}</div>
       </div>
     </div>
+    ${renderReisVerdelingHtml(p)}
     ${effectiveStatus(p)==='planning' ? `<div style="margin-bottom:12px;">
       <span data-demote-idee="${p.id}" class="edit-only" style="cursor:pointer;display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--muted);border:1px solid var(--rule);border-radius:20px;padding:6px 14px;">↩ Terug naar idee</span>
     </div>` : ''}
@@ -8471,6 +8672,7 @@ function render(){
   document.querySelectorAll('[data-filter-reis]').forEach(el=>el.addEventListener('click',()=>{ selectedFilter={type:'reis', value:el.dataset.filterReis}; render(); scrollToReisLedger(); }));
   document.querySelectorAll('[data-clear-filter]').forEach(el=>el.addEventListener('click',()=>{ selectedFilter=null; render(); }));
   document.querySelectorAll('[data-reis-tile-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const key=el.dataset.reisTileToggle; reisTileExpand = (reisTileExpand===key) ? null : key; render(); scrollC3sNaarKop('[data-reis-tile-toggle="'+key+'"]'); }));
+  document.querySelectorAll('[data-reis-pdf]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const [id,deel]=el.dataset.reisPdf.split('|'); reisPdf(id,deel); }));
   document.querySelectorAll('[data-edit-budget]').forEach(el=>el.addEventListener('click',(e)=>{
     e.stopPropagation();
     const id = el.dataset.editBudget;
