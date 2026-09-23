@@ -1198,7 +1198,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-09-23e - Reistegel: budget = eigen begroting uit reis_begroting (Thailand 14.483,15 i.p.v. richtbedrag 15.000; ook in effectiveBudget, dus overal), Uitgegeven = eigen deel van betaalde reisposten (was: optelsom transacties incl. deel medereizigers en tekenfout AMEX), Rest van budget = begroting − eigen betaald. Vorige versie (2026-09-23d - Reis-pdf pagina 1 (dagschema): vaste kolombreedtes (Dag smal, Plaats/Hotel vast, Programma rest) zodat de kolommen niet meer uit elkaar getrokken worden. Vorige versie (2026-09-23c - Reistegel/pdf herindeling op Robs verzoek (\'eigen begroting en dan de kolommen voor RI, later maar zien wie wat betaald\'): kostentabel toont eerst de eigen begroting (Begroot, Rob/Lindy, Maud, Totaal, Open alleen eigen deel) en daarna per medereizigersgroep hun aandeel; kolom Totaal-voor-iedereen en open-voor-iedereen vervallen. Tegel: Begroting-kaart (verschil, begroot, verwacht, open eigen) + kaart per medereizigersgroep. Vorige versie (2026-09-23b - Reisverdeling in de reis-tegel (Totaal reis met uitsplitsing per groep, Begroting eigen groep, per medereizigersgroep nog te betalen) plus PDF reis / PDF per medereiziger, alles live uit reis_*-tabellen; geldt voor elke reis met posten + deelnemers. Vorige versie (2026-09-23a - Trip-categorie (Dagelijks) voor korte tripjes buiten de Reizen-tegel; reisperiode start/eind uit Supabase-tabel reizen; keyword-koppeling aan een reis nooit meer na de einddatum. Vorige versie (2026-09-22m - Rob\'s voorstel (\'bij inkomen verwachting zou wel gewoon de 50% salaris moeten staan en dan komt er te veel binnen, en volgende maand idem maar dan eronder\') bleek al precies te bestaan: lindyNettoVoorMaand() gebruikt voor de verwachting altijd het percentage van de vorige kalendermaand (normale salarisvertraging) -- voor de huishoudperiode \'oktober\' (gevoed door dit septembersalaris) pakt dat dus al septembers eigen percentage (1-9 al 50% in LINDY_PARTTIME_STAPPEN), dus verwacht \u2248 \u20ac2.090,83 terwijl werkelijk \u20ac2.505,83 (de 60%-fout) binnenkomt -- precies de gewenste afwijking, geen enkele codewijziging nodig, alleen de echte transactie en de periode-doorschuif (nog te doen zodra het bankafschrift er is). Wel gevonden: de code-comment IN lindyNettoVoorMaand() zelf bevatte nog dezelfde foute \'oktober-strook\'-aanname als net gecorrigeerd bij LINDY_PARTTIME_STAPPEN (22l) -- rekenlogica ongewijzigd (deed toevallig al het juiste), toelichting rechtgezet: dit is puur de normale betalingsvertraging, geen aparte percentage-zichtbaarheidsvertraging. Bevat ook 2026-09-22l/k/j.';
+const DASHBOARD_VERSION = '2026-09-23g - Reistegel kostenoverzicht per categorie (1 regel per categorie met Begroot · Wij · Robin/Ingrid · Open in vaste kolommen; tik voor de posten) i.p.v. alle posten tegelijk. Parkeren Schiphol alleen Rob/Lindy (verdeling bijgewerkt in Supabase) en naar categorie Vervoer. Vorige versie (2026-09-23f - Reis-pdf nu als echt PDF-bestand via jsPDF + autotable (lui geladen van cdnjs, fallback jsdelivr): altijd A4 liggend (iOS negeerde @page landscape), dagschema met vaste kolombreedtes, kosten op 1 pagina met begrotingssamenvatting rechtsboven, delen via het deelmenu. Kostenoverzicht in de tegel als telefoonvriendelijke lijst (per post naam+datum, daaronder begroot/ons/medereizigers/open) i.p.v. brede tabel. Rest van budget toont of het potje de rest dekt. Vorige versie (2026-09-23e - Reistegel: budget = eigen begroting uit reis_begroting (Thailand 14.483,15 i.p.v. richtbedrag 15.000; ook in effectiveBudget, dus overal), Uitgegeven = eigen deel van betaalde reisposten (was: optelsom transacties incl. deel medereizigers en tekenfout AMEX), Rest van budget = begroting − eigen betaald. Vorige versie (2026-09-23d - Reis-pdf pagina 1 (dagschema): vaste kolombreedtes (Dag smal, Plaats/Hotel vast, Programma rest) zodat de kolommen niet meer uit elkaar getrokken worden. Vorige versie (2026-09-23c - Reistegel/pdf herindeling op Robs verzoek (\'eigen begroting en dan de kolommen voor RI, later maar zien wie wat betaald\'): kostentabel toont eerst de eigen begroting (Begroot, Rob/Lindy, Maud, Totaal, Open alleen eigen deel) en daarna per medereizigersgroep hun aandeel; kolom Totaal-voor-iedereen en open-voor-iedereen vervallen. Tegel: Begroting-kaart (verschil, begroot, verwacht, open eigen) + kaart per medereizigersgroep. Vorige versie (2026-09-23b - Reisverdeling in de reis-tegel (Totaal reis met uitsplitsing per groep, Begroting eigen groep, per medereizigersgroep nog te betalen) plus PDF reis / PDF per medereiziger, alles live uit reis_*-tabellen; geldt voor elke reis met posten + deelnemers. Vorige versie (2026-09-23a - Trip-categorie (Dagelijks) voor korte tripjes buiten de Reizen-tegel; reisperiode start/eind uit Supabase-tabel reizen; keyword-koppeling aan een reis nooit meer na de einddatum. Vorige versie (2026-09-22m - Rob\'s voorstel (\'bij inkomen verwachting zou wel gewoon de 50% salaris moeten staan en dan komt er te veel binnen, en volgende maand idem maar dan eronder\') bleek al precies te bestaan: lindyNettoVoorMaand() gebruikt voor de verwachting altijd het percentage van de vorige kalendermaand (normale salarisvertraging) -- voor de huishoudperiode \'oktober\' (gevoed door dit septembersalaris) pakt dat dus al septembers eigen percentage (1-9 al 50% in LINDY_PARTTIME_STAPPEN), dus verwacht \u2248 \u20ac2.090,83 terwijl werkelijk \u20ac2.505,83 (de 60%-fout) binnenkomt -- precies de gewenste afwijking, geen enkele codewijziging nodig, alleen de echte transactie en de periode-doorschuif (nog te doen zodra het bankafschrift er is). Wel gevonden: de code-comment IN lindyNettoVoorMaand() zelf bevatte nog dezelfde foute \'oktober-strook\'-aanname als net gecorrigeerd bij LINDY_PARTTIME_STAPPEN (22l) -- rekenlogica ongewijzigd (deed toevallig al het juiste), toelichting rechtgezet: dit is puur de normale betalingsvertraging, geen aparte percentage-zichtbaarheidsvertraging. Bevat ook 2026-09-22l/k/j.';
 const DASHBOARD_VERSION_PREV_2026_09_22l = '2026-09-22l - Correctie op eerdere aanname: Rob wees erop dat de septemberstrook 2026 (die al 50% deeltijd had moeten tonen, ingangsdatum 1-9) niet hoort te wachten op een \'oktoberstrook\' -- die eerdere redenering verwarde de loonstrook-periode zelf met de aparte, losstaande budgetterings-vertraging die het huishouden al gebruikt (leven van het septembersalaris in de periode die intern \'oktober\' heet, zie lindyNettoVoorMaand). LINDY_PARTTIME_STAPPEN-comment gecorrigeerd: de septemberstrook toonde in werkelijkheid nog 60%, dat is dus een echte SARO-fout, geen normaal verwerkingsritme. Geen logica gewijzigd (pct-waarden en -data waren al correct), puur de toelichting rechtgezet zodat een volgende sessie niet dezelfde denkfout maakt. Bevat ook 2026-09-22k (formulier bovenaan/opgeschoond, meer codes) en 2026-09-22j (zzp_inkoop_bestand).';
 const DASHBOARD_VERSION_PREV_2026_09_22k = '2026-09-22k - Rob zag overlappende velden op het nieuwe-factuurformulier (screenshot: het datumveld toonde als het native lichte iOS-pilletje, negeerde de donkere .zzp-nf-input styling, en overlapte daardoor het ernaast liggende Nummer-veld / de Soort-regel-select). Oorzaak: input[type=date] kreeg nooit -webkit-appearance:none, dus Safari bleef de eigen chrome tekenen i.p.v. de CSS-styling; nu toegevoegd (plus color-scheme:dark zodat het ook echt donker rendert i.p.v. alleen de rand). Ook: \'nummering van facturen wil ik geen invloed op hebben\' -- het Nummer-veld is geen invoerveld meer maar een read-only weergave (.zzp-nf-readonly) van het automatisch bepaalde nummer; wordt nu bij elke wisseling van handelsnaam opnieuw herberekend (was eerst maar 1x, bij een lege waarde) zodat het altijd klopt en Rob er nooit meer in hoeft te typen. Bevat ook 2026-09-22j (zzp_inkoop_bestand, streng-regel bij ontbrekend document).';
 const DASHBOARD_VERSION_PREV_2026_09_22j = '2026-09-22j - Rob: \'als factuur gemaakt, dan is hij altijd terug te halen?\' -- ja, zit als data in zzp_omzet/zzp_omzet_regels, PDF wordt elke keer opnieuw uit die data gegenereerd, dus blijft ophaalbaar zolang de rij niet verwijderd wordt (nog niet mogelijk vanuit de app). Daarnaast: \'we moeten inkomende facturen ook gaan opslaan (fysiek)\' -- nieuwe tabel zzp_inkoop_bestand (inkoop_id, bestand_naam, mime_type, data_base64) bewaart het originele document van een inkoopfactuur zelf (niet alleen de afgeleide data), base64 in de database i.p.v. Supabase Storage zodat Claude het rechtstreeks kan wegschrijven zodra Rob een factuur in de chat aanlevert -- vastgelegd in ways-of-working. loadZzpTables() haalt nu ook de (lichte) bestand-metadata op; de inkoopfacturenlijst toont een "bestand"-link per rij zodra er een gekoppeld is, die het origineel ophaalt en opent/downloadt. Bevat ook 2026-09-22i (formulier bovenaan/opgeschoond, meer codes) en 2026-09-22h (logo/kleur).';
@@ -3973,47 +3973,45 @@ function reisModel(tripId){
 }
 function reisNl(x,d){ return Number(x).toLocaleString('nl-NL',{minimumFractionDigits:d==null?2:d, maximumFractionDigits:d==null?2:d}); }
 function reisDdMm(d){ return d ? d.slice(8,10)+'-'+d.slice(5,7) : ''; }
-function reisKostenTabelHtml(m, pdf){
-  // Gedeelde tabel (tegel + pdf): eerst de eigen begroting (Begroot, eigen groepen, Totaal eigen, Open eigen),
-  // daarna per medereizigersgroep hun aandeel. Wie wat betaalt staat hier bewust niet in.
+var reisCatOpen = null; // welke kostencategorie in de reistegel is uitgeklapt ("tripId|categorie")
+function reisKostenLijstHtml(m){
+  // Overzicht per categorie (1 regel: begroot · eigen · medereizigers · open); tik op een categorie voor de posten.
   const eigen = m.groepen.filter(g=>!g.extern), ext = m.groepen.filter(g=>g.extern);
-  const nu = x=> pdf ? ((x<0?'-':'')+'€ '+reisNl(Math.abs(x))) : fmt(x);
-  const e = x=> x ? nu(x) : '';
-  const td = (x,cls,extra)=> pdf ? `<td class="${cls||''}">${x}</td>` : `<td style="text-align:right;padding:4px 6px;font-variant-numeric:tabular-nums;${extra||''}">${x}</td>`;
-  const tdl = (x,extra)=> pdf ? `<td class="l">${x}</td>` : `<td style="padding:4px 6px;${extra||''}">${x}</td>`;
-  const vSt = pdf ? '' : 'color:var(--brass);font-style:italic;';
-  const oSt = pdf ? '' : 'color:var(--neg, #d9534f);';
-  const sep = pdf ? 'sep' : '';
-  const ncol = 9 + ext.length;
-  const th = (x,l,cls)=> pdf ? `<th class="${l?'l':''} ${cls||''}">${x}</th>` : `<th style="text-align:${l?'left':'right'};padding:4px 6px;">${x}</th>`;
-  let h = pdf ? `<table><thead><tr><th class="l grp" colspan="4" style="border-bottom:none;"></th><th colspan="${eigen.length+3}" class="grp">Begroting ${eigen.map(g=>g.naam).join(' + ')}</th>${ext.map(g=>`<th class="grp sep">${g.naam}</th>`).join('')}</tr>`
-              : `<table style="width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap;"><thead style="color:var(--muted);font-size:11px;">`;
-  h += `<tr>${th('Post',true)}${th('Datum')}${th('THB')}${th('Koers')}${th('Begroot')}${eigen.map(g=>th(g.naam)).join('')}${th('Totaal')}${th('Open')}${ext.map(g=>th(pdf?'Aandeel':g.naam,false,'sep')).join('')}</tr></thead><tbody>`;
+  const num = 'font-variant-numeric:tabular-nums;';
+  const V = 'color:var(--brass);font-style:italic;', O = 'color:var(--neg, #d9534f);';
+  const kolommen = [['begroot','Begroot'], ['ons','Wij'], ...ext.map(g=>['ext:'+g.naam, g.naam]), ['open','Open']];
+  const cel = (x, st, vet)=> `<div style="text-align:right;${num}${st||''}${vet?'font-weight:600;':''}">${x ? fmt(x) : ''}</div>`;
+  const grid = `display:grid;grid-template-columns:minmax(0,1.6fr) repeat(${kolommen.length},minmax(0,1fr));gap:6px;align-items:baseline;`;
   const gebruikt = new Set();
   const cats = [...new Set([...m.rows.map(r=>r.categorie), ...m.begroting.filter(b=>!b.gedekt).map(b=>b.categorie)])];
   cats.sort((a,b)=>{ const ia=REIS_CAT_VOLGORDE.indexOf(a), ib=REIS_CAT_VOLGORDE.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib); });
-  const T = {beg:0, ons:0, open:0, per:{}}; m.groepen.forEach(g=>{ T.per[g.naam]=0; });
+  const T = {begroot:0, ons:0, open:0}; ext.forEach(g=>{ T['ext:'+g.naam]=0; });
+  let h = `<div style="${grid}font-size:10.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;padding-bottom:6px;"><div></div>${kolommen.map(k=>`<div style="text-align:right;">${k[1]}</div>`).join('')}</div>`;
   cats.forEach(c=>{
-    h += pdf ? `<tr class="cat"><td class="l" colspan="${ncol}">${c}</td></tr>` : `<tr><td colspan="${ncol}" style="padding:8px 6px 3px;color:var(--brass);font-size:11px;">${c}</td></tr>`;
     const items = [...m.rows.filter(r=>r.categorie===c).map(r=>({r, d:r.reisdatum||'9999'})), ...m.begroting.filter(b=>!b.gedekt && b.categorie===c).map(b=>({b, d:b.reisdatum||'9999'}))];
     items.sort((a,b)=>a.d.localeCompare(b.d));
-    items.forEach((it,i)=>{
-      const trOpen = pdf ? `<tr class="${i%2?'alt':''}">` : `<tr style="border-top:1px solid var(--rule);">`;
-      if(it.b){ const b = it.b; T.beg += b.bedrag; T.open += b.bedrag;
-        h += trOpen + tdl(b.post) + td(reisDdMm(b.reisdatum)) + td(b.bedrag_thb?reisNl(b.bedrag_thb,0):'') + td('') + td(e(b.bedrag)) + eigen.map(()=>td('')).join('') + td('') + td(e(b.bedrag),'o',oSt) + ext.map(()=>td('',sep)).join('') + `</tr>`;
-        return; }
-      const r = it.r, v = r.voorlopig;
-      let beg = '';
-      if(r.begroting_id && !gebruikt.has(r.begroting_id)){ const b = m.begroting.find(x=>x.id===r.begroting_id); if(b){ beg = b.bedrag; T.beg += b.bedrag; gebruikt.add(r.begroting_id); } }
-      T.ons += r.ons; T.open += r.openOns; m.groepen.forEach(g=>{ T.per[g.naam] += r.per[g.naam]; });
-      const vc = v ? 'v' : '', vs = v ? vSt : '';
-      h += trOpen + tdl(r.omschrijving) + td(reisDdMm(r.reisdatum)) + td(r.thb?reisNl(r.thb,0):'') + td(r.koers?(v?'≈ ':'')+reisNl(r.koers):'',vc,vs)
-        + td(beg!==''?e(beg):'') + eigen.map(g=>td(e(r.per[g.naam]),vc,vs)).join('') + td(e(r.ons),vc,vs) + td(e(r.openOns),'o '+vc,v?vSt:oSt)
-        + ext.map(g=>td(e(r.per[g.naam]),vc+' '+sep,vs)).join('') + `</tr>`;
+    const regels = items.map(it=>{
+      if(it.b) return {naam:it.b.post, datum:reisDdMm(it.b.reisdatum), begroot:it.b.bedrag, ons:0, open:it.b.bedrag, ext:{}, v:false};
+      const r = it.r; let beg = 0;
+      if(r.begroting_id && !gebruikt.has(r.begroting_id)){ const b = m.begroting.find(x=>x.id===r.begroting_id); if(b){ beg = b.bedrag; gebruikt.add(r.begroting_id); } }
+      const ex = {}; ext.forEach(g=>{ ex[g.naam] = r.per[g.naam]; });
+      return {naam:r.omschrijving, datum:reisDdMm(r.reisdatum), begroot:beg, ons:r.ons, open:r.openOns, ext:ex, v:r.voorlopig};
+    });
+    const S = {begroot:0, ons:0, open:0, ext:{}}; ext.forEach(g=>{ S.ext[g.naam]=0; });
+    let voorl = false;
+    regels.forEach(x=>{ S.begroot+=x.begroot; S.ons+=x.ons; S.open+=x.open; ext.forEach(g=>{ S.ext[g.naam]+=(x.ext[g.naam]||0); }); if(x.v) voorl = true; });
+    T.begroot+=S.begroot; T.ons+=S.ons; T.open+=S.open; ext.forEach(g=>{ T['ext:'+g.naam]+=S.ext[g.naam]; });
+    const key = m.tripId+'|'+c, open = reisCatOpen===key;
+    h += `<div data-reis-cat="${key}" style="${grid}cursor:pointer;padding:9px 0;border-top:1px solid var(--rule);font-size:13px;">
+      <div style="color:var(--brass);">${c} <span style="color:var(--muted);font-size:11px;">${open?'▾':'▸'} ${regels.length}</span></div>
+      ${cel(reisR2(S.begroot))}${cel(reisR2(S.ons), voorl?V:'')}${ext.map(g=>cel(reisR2(S.ext[g.naam]), voorl?V:'')).join('')}${cel(reisR2(S.open), O)}</div>`;
+    if(open) regels.forEach(x=>{
+      h += `<div style="padding:6px 0 6px 10px;border-left:2px solid var(--brass);margin-left:2px;">
+        <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;"><span>${x.naam}</span><span style="color:var(--muted);${num}">${x.datum}</span></div>
+        <div style="${grid}font-size:11.5px;margin-top:2px;"><div></div>${cel(x.begroot)}${cel(x.ons, x.v?V:'')}${ext.map(g=>cel(x.ext[g.naam], x.v?V:'')).join('')}${cel(x.open, x.v?V:O)}</div></div>`;
     });
   });
-  const trTot = pdf ? `<tr class="tot">` : `<tr style="border-top:2px solid var(--brass);font-weight:600;">`;
-  h += trTot + tdl('Totaal') + td('') + td('') + td('') + td(e(reisR2(T.beg))) + eigen.map(g=>td(e(reisR2(T.per[g.naam])))).join('') + td(e(reisR2(T.ons))) + td(e(reisR2(T.open)),'o',oSt) + ext.map(g=>td(e(reisR2(T.per[g.naam])),sep)).join('') + `</tr></tbody></table>`;
+  h += `<div style="${grid}padding:9px 0 2px;border-top:2px solid var(--brass);font-size:13px;"><div style="font-weight:600;">Totaal</div>${cel(reisR2(T.begroot),'',1)}${cel(reisR2(T.ons),'',1)}${ext.map(g=>cel(reisR2(T['ext:'+g.naam]),'',1)).join('')}${cel(reisR2(T.open),O,1)}</div>`;
   return h;
 }
 function renderReisVerdelingHtml(p){
@@ -4022,7 +4020,7 @@ function renderReisVerdelingHtml(p){
   const eigen = m.groepen.filter(g=>!g.extern);
   const kOpen = reisTileExpand===(p.id+'|verdeling');
   const verschil = reisR2(m.ons.verwacht - m.ons.begroot);
-  const kostenDetail = kOpen ? `<div class="cat-detail-tile" style="grid-column:1/-1;overflow-x:auto;">${reisKostenTabelHtml(m,false)}</div>` : '';
+  const kostenDetail = kOpen ? `<div class="cat-detail-tile" style="grid-column:1/-1;">${reisKostenLijstHtml(m)}</div>` : '';
   const extCards = m.externen.map(x=>{
     const key = p.id+'|ext|'+x.naam; const o = reisTileExpand===key;
     const det = o ? `<div class="cat-detail-tile" style="grid-column:1/-1;overflow-x:auto;">
@@ -4051,55 +4049,122 @@ function renderReisVerdelingHtml(p){
     </div>
     <div style="margin-bottom:12px;">${knop(`data-reis-pdf="${p.id}|alles"`,'PDF reis')}${m.externen.map(x=>knop(`data-reis-pdf="${p.id}|${x.naam}"`,'PDF '+x.naam)).join('')}</div>`;
 }
-function reisPdf(tripId, deel){
-  const m = reisModel(tripId); if(!m) return;
-  const p = REIZEN_PLANNING.find(x=>x.id===tripId) || {naam:tripId};
+// Rob, 23-09-2026: pdf's worden nu echt als PDF-bestand gemaakt (jsPDF + autotable, lui geladen) — iOS negeert
+// @page landscape bij printen, daardoor kwam alles staand en samengeperst. Nu altijd A4 liggend, Helvetica
+// (cijfers even breed), en via het deelmenu van de telefoon te bewaren/versturen.
+function reisLaadScript(urls){
+  return new Promise((res,rej)=>{ const probeer = i=>{ if(i>=urls.length) return rej(new Error('pdf-bibliotheek niet te laden'));
+    const sc = document.createElement('script'); sc.src = urls[i]; sc.onload = ()=>res(); sc.onerror = ()=>probeer(i+1); document.head.appendChild(sc); }; probeer(0); });
+}
+async function reisPdfLibs(){
+  if(!(window.jspdf && window.jspdf.jsPDF)) await reisLaadScript(['https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js']);
+  if(!(window.jspdf.jsPDF.API.autoTable)) await reisLaadScript(['https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js','https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js']);
+  return window.jspdf.jsPDF;
+}
+function reisPdfDoc(jsPDF, m, p, deel){
+  const IND=[43,47,102], GOLD=[184,137,59], LT=[243,241,234], OPEN=[164,70,47], GR=[110,110,115];
+  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+  const W = 297, M = 12;
   const e = x=> x ? (x<0?'-':'')+'€ '+reisNl(Math.abs(x)) : '';
-  const IND='#2B2F66', GOLD='#B8893B', LT='#F3F1EA', OPEN='#A4462F';
-  const titelReis = (p.naam||tripId)+' '+(p.start?p.start.slice(0,4):'');
-  const periode = (p.start&&p.eind) ? new Date(p.start).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})+' – '+new Date(p.eind).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}) : '';
   const vandaag = new Date().toLocaleDateString('nl-NL');
-  const css = `@page{size:A4 landscape;margin:12mm;}
-    body{font-family:'Lato','Gill Sans','Helvetica Neue',Arial,sans-serif;color:#222;margin:0;padding:16px;font-size:10.5px;}
-    .pagina{page-break-after:always;border-top:3px solid ${GOLD};padding-top:10px;}
-    .pagina:last-child{page-break-after:auto;}
-    h1{color:${IND};font-size:22px;margin:4px 0 2px;} h2{color:${IND};font-size:17px;margin:4px 0 2px;}
-    .sub{color:#777;font-size:10px;margin-bottom:8px;}
-    table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;}
-    th{background:${IND};color:#fff;font-weight:700;padding:4px 6px;text-align:right;white-space:nowrap;}
-    td{padding:3px 6px;text-align:right;white-space:nowrap;}
-    th.l,td.l{text-align:left;} tr.alt td{background:${LT};}
-    tr.cat td{color:${GOLD};font-weight:700;border-bottom:1px solid ${GOLD};background:#fff;text-align:left;padding-top:6px;}
-    tr.tot td{font-weight:700;border-top:1.5px solid ${IND};}
-    .v{color:${GOLD};font-style:italic;} .o{color:${OPEN};font-weight:700;} .o.v{font-weight:400;}
-    .box{margin-top:10px;width:auto;} th.grp{background:#fff;color:${IND};border-bottom:1.5px solid ${GOLD};text-align:center;} .sep{border-left:1.5px solid ${GOLD};} .box td{padding:3px 10px;}
-    .knop{position:fixed;top:12px;right:12px;background:#111;color:#fff;border:none;border-radius:6px;padding:10px 16px;font-size:13px;cursor:pointer;}
-    @media print{ body{padding:0;} .knop{display:none;} }`;
-  const kop = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"><title>${titelReis}</title><style>${css}</style></head><body><button class="knop" onclick="window.print()">Print / Opslaan als PDF</button>`;
-  let html = kop;
+  const titel = (p.naam||m.tripId)+(p.start?' '+p.start.slice(0,4):'');
+  const periode = (p.start&&p.eind) ? new Date(p.start).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})+' – '+new Date(p.eind).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'}) : '';
+  let eerste = true;
+  const kop = (t, sub)=>{
+    if(!eerste) doc.addPage(); eerste = false;
+    doc.setFillColor(...GOLD); doc.rect(M, 9, W-2*M, 0.8, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(17); doc.setTextColor(...IND); doc.text(t, M, 18);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...GR); doc.text(sub, M, 23);
+  };
+  const basis = {theme:'plain', margin:{left:M, right:M}, styles:{font:'helvetica', fontSize:8.6, cellPadding:{top:1.5,bottom:1.5,left:2,right:2}, textColor:[34,34,34], overflow:'linebreak'},
+    headStyles:{fillColor:IND, textColor:255, fontStyle:'bold'}, alternateRowStyles:{fillColor:LT}};
+  const eigen = m.groepen.filter(g=>!g.extern), ext = m.groepen.filter(g=>g.extern);
   if(deel==='alles'){
     if(m.dagen.length){
-      html += `<div class="pagina"><h1>${titelReis}</h1><div class="sub">${periode} · stand ${vandaag}</div><table style="table-layout:fixed;"><colgroup><col style="width:24mm"><col style="width:44mm"><col style="width:62mm"><col></colgroup><thead><tr><th>Dag</th><th class="l" style="padding-left:12px;">Plaats</th><th class="l">Hotel</th><th class="l">Programma</th></tr></thead><tbody>`;
-      m.dagen.forEach((d,i)=>{ const dt = new Date(d.datum); html += `<tr class="${i%2?'alt':''}"><td>${dt.toLocaleDateString('nl-NL',{weekday:'short'})} ${reisDdMm(d.datum)}</td><td class="l" style="color:${IND};font-weight:700;padding-left:12px;">${d.plaats||''}</td><td class="l" style="white-space:normal;">${d.hotel||''}</td><td class="l" style="white-space:normal;">${d.programma||''}</td></tr>`; });
-      html += `</tbody></table></div>`;
+      kop(titel, [periode, 'stand '+vandaag].filter(Boolean).join(' · '));
+      doc.autoTable(Object.assign({}, basis, {startY:27,
+        head:[['Dag','Plaats','Hotel','Programma']],
+        body:m.dagen.map(d=>[new Date(d.datum).toLocaleDateString('nl-NL',{weekday:'short'})+' '+reisDdMm(d.datum), d.plaats||'', d.hotel||'', d.programma||'']),
+        styles:Object.assign({}, basis.styles, {fontSize:9.5, cellPadding:{top:2.4,bottom:2.4,left:2.5,right:2.5}}),
+        columnStyles:{0:{cellWidth:22, halign:'right'}, 1:{cellWidth:48, fontStyle:'bold', textColor:IND}, 2:{cellWidth:66}, 3:{cellWidth:'auto'}},
+        didParseCell:c=>{ if(c.section==='head' && c.column.index===0) c.cell.styles.halign='right'; }
+      }));
     }
-    const eigen = m.groepen.filter(g=>!g.extern);
-    html += `<div class="pagina"><h2>Kosten en verdeling</h2><div class="sub">Begroot en Open = begroting ${eigen.map(g=>g.naam).join(' + ')} · Koers = THB per euro · ≈ en goud = voorlopig, anders werkelijk afgerekend · stand ${vandaag}</div>`
-      + reisKostenTabelHtml(m,true)
-      + `<table class="box" style="width:auto;"><tr><th class="l" colspan="2">Begroting ${eigen.map(g=>g.naam).join(' + ')}</th></tr>
-      <tr><td class="l">Begroot</td><td>${e(m.ons.begroot)}</td></tr><tr><td class="l">Werkelijk + geboekt + nog begroot</td><td>${e(m.ons.verwacht)}</td></tr>
-      <tr class="tot"><td class="l">Verschil</td><td>${e(reisR2(m.ons.verwacht-m.ons.begroot))}</td></tr></table></div>`;
+    // Kosten: eerst eigen begroting, dan per medereizigersgroep het aandeel
+    kop('Kosten en verdeling', `Begroot en Open = begroting ${eigen.map(g=>g.naam).join(' + ')} · Koers = THB per euro · ~ en goud = voorlopig, anders werkelijk afgerekend · stand ${vandaag}`);
+    { // begrotingssamenvatting rechtsboven
+      const regels = [['Begroot', e(m.ons.begroot)], ['Verwacht', e(m.ons.verwacht)], ['Verschil', e(reisR2(m.ons.verwacht-m.ons.begroot))]];
+      doc.setFontSize(8.5); regels.forEach((r,i)=>{ doc.setFont('helvetica', i===2?'bold':'normal'); doc.setTextColor(...(i===2?IND:GR)); doc.text(r[0], W-M-45, 14+i*4.2); doc.text(r[1], W-M, 14+i*4.2, {align:'right'}); });
+    }
+    const cats = [...new Set([...m.rows.map(r=>r.categorie), ...m.begroting.filter(b=>!b.gedekt).map(b=>b.categorie)])];
+    cats.sort((a,b)=>{ const ia=REIS_CAT_VOLGORDE.indexOf(a), ib=REIS_CAT_VOLGORDE.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib); });
+    const body = [], meta = []; const gebruikt = new Set(); const T = {beg:0, ons:0, open:0, per:{}}; m.groepen.forEach(g=>{ T.per[g.naam]=0; });
+    const ncol = 8 + eigen.length + ext.length;
+    cats.forEach(c=>{
+      body.push([{content:c, colSpan:ncol}]); meta.push('cat');
+      const items = [...m.rows.filter(r=>r.categorie===c).map(r=>({r, d:r.reisdatum||'9999'})), ...m.begroting.filter(b=>!b.gedekt && b.categorie===c).map(b=>({b, d:b.reisdatum||'9999'}))];
+      items.sort((a,b)=>a.d.localeCompare(b.d));
+      items.forEach(it=>{
+        if(it.b){ const b = it.b; T.beg += b.bedrag; T.open += b.bedrag;
+          body.push([b.post, reisDdMm(b.reisdatum), b.bedrag_thb?reisNl(b.bedrag_thb,0):'', '', e(b.bedrag), ...eigen.map(()=>''), '', e(b.bedrag), ...ext.map(()=>'')]); meta.push('beg'); return; }
+        const r = it.r; let beg = '';
+        if(r.begroting_id && !gebruikt.has(r.begroting_id)){ const b = m.begroting.find(x=>x.id===r.begroting_id); if(b){ beg = e(b.bedrag); T.beg += b.bedrag; gebruikt.add(r.begroting_id); } }
+        T.ons += r.ons; T.open += r.openOns; m.groepen.forEach(g=>{ T.per[g.naam] += r.per[g.naam]; });
+        body.push([r.omschrijving, reisDdMm(r.reisdatum), r.thb?reisNl(r.thb,0):'', r.koers?(r.voorlopig?'~ ':'')+reisNl(r.koers):'', beg, ...eigen.map(g=>e(r.per[g.naam])), e(r.ons), e(r.openOns), ...ext.map(g=>e(r.per[g.naam]))]);
+        meta.push(r.voorlopig ? 'v' : '');
+      });
+    });
+    body.push(['Totaal','','','', e(reisR2(T.beg)), ...eigen.map(g=>e(reisR2(T.per[g.naam]))), e(reisR2(T.ons)), e(reisR2(T.open)), ...ext.map(g=>e(reisR2(T.per[g.naam])))]); meta.push('tot');
+    const openCol = 5 + eigen.length + 1, eersteExt = openCol + 1;
+    const colW = {0:{cellWidth:'auto'}}; for(let i=1;i<ncol;i++) colW[i] = {halign:'right', cellWidth: i===1?14 : i===2?17 : i===3?17 : 21};
+    doc.autoTable(Object.assign({}, basis, {startY:27, alternateRowStyles:{}, styles:Object.assign({}, basis.styles, {fontSize:8.3, cellPadding:{top:1.2,bottom:1.2,left:1.8,right:1.8}}),
+      head:[[{content:'',colSpan:4,styles:{fillColor:255}}, {content:'Begroting '+eigen.map(g=>g.naam).join(' + '), colSpan:eigen.length+3, styles:{fillColor:255,textColor:IND,halign:'center',lineWidth:{bottom:0.5},lineColor:GOLD}}, ...ext.map(g=>({content:g.naam, styles:{fillColor:255,textColor:IND,halign:'center',lineWidth:{bottom:0.5},lineColor:GOLD}}))],
+            ['Post','Datum','THB','Koers','Begroot', ...eigen.map(g=>g.naam), 'Totaal','Open', ...ext.map(()=>'Aandeel')]],
+      body, columnStyles:colW,
+      didParseCell:c=>{
+        if(c.section==='head'){ if(c.row.index===1 && c.column.index>0) c.cell.styles.halign='right'; return; }
+        const t = meta[c.row.index];
+        if(t==='cat'){ c.cell.styles.textColor=GOLD; c.cell.styles.fontStyle='bold'; c.cell.styles.lineWidth={bottom:0.3}; c.cell.styles.lineColor=GOLD; return; }
+        if(t==='tot'){ c.cell.styles.fontStyle='bold'; c.cell.styles.lineWidth={top:0.4}; c.cell.styles.lineColor=IND; }
+        if(t==='v' && c.column.index>=3 && c.column.index!==4){ c.cell.styles.textColor=GOLD; c.cell.styles.fontStyle='italic'; }
+        if(c.column.index===openCol && c.cell.raw){ c.cell.styles.textColor=OPEN; if(t!=='v' && t!=='tot') c.cell.styles.fontStyle='bold'; }
+      },
+      didDrawCell:c=>{ if(ext.length && c.column.index===eersteExt && (c.section==='body' || (c.section==='head' && c.row.index===1))){ doc.setDrawColor(...GOLD); doc.setLineWidth(0.4); doc.line(c.cell.x, c.cell.y, c.cell.x, c.cell.y+c.cell.height); } }
+    }));
   }
   m.externen.filter(x=>deel==='alles'||deel===x.naam).forEach(x=>{
-    html += `<div class="pagina"><h2>Verrekening ${x.naam.replace('/',' & ')}</h2><div class="sub">Door ${m.groepen.filter(g=>!g.extern)[0].naam.split('/')[0]} betaalde posten · aandeel op werkelijke prijs per persoon · koers werkelijk afgeschreven · stand ${vandaag}</div>
-      <table><thead><tr><th class="l">Post</th><th>Reisdatum</th><th>THB</th><th>Koers</th><th>Totaal</th><th>Aandeel ${x.naam}</th></tr></thead><tbody>`;
-    x.betaaldePosten.forEach((r,i)=>{ html += `<tr class="${i%2?'alt':''}"><td class="l">${r.omschrijving}</td><td>${reisDdMm(r.reisdatum)}</td><td>${r.thb?reisNl(r.thb,0):''}</td><td>${r.koers?reisNl(r.koers):''}</td><td>${e(r.eur)}</td><td>${e(r.per[x.naam])}</td></tr>`; });
-    html += `<tr class="tot"><td class="l">Totaal aandeel</td><td></td><td></td><td></td><td></td><td>${e(x.aandeel)}</td></tr>`;
-    x.ontvangen.forEach(o=>{ html += `<tr><td class="l">Ontvangen ${o.datum.split('-').reverse().join('-')}</td><td></td><td></td><td></td><td></td><td>${e(-o.bedrag)}</td></tr>`; });
-    html += `<tr class="tot"><td class="l">Nog te betalen</td><td></td><td></td><td></td><td></td><td class="o">${e(x.nog)}</td></tr></tbody></table></div>`;
+    kop('Verrekening '+x.naam.replace('/',' & '), `Door ${eigen[0].naam.split('/')[0]} betaalde posten · aandeel op werkelijke prijs per persoon · koers werkelijk afgeschreven · stand ${vandaag}`);
+    const body = x.betaaldePosten.map(r=>[r.omschrijving, reisDdMm(r.reisdatum), r.thb?reisNl(r.thb,0):'', r.koers?reisNl(r.koers):'', e(r.eur), e(r.per[x.naam])]);
+    const n1 = body.length;
+    body.push(['Totaal aandeel','','','','', e(x.aandeel)]);
+    x.ontvangen.forEach(o=>body.push(['Ontvangen '+o.datum.split('-').reverse().join('-'),'','','','', e(-o.bedrag)]));
+    body.push(['Nog te betalen','','','','', e(x.nog)]);
+    doc.autoTable(Object.assign({}, basis, {startY:27,
+      head:[['Post','Reisdatum','THB','Koers','Totaal','Aandeel '+x.naam]], body,
+      columnStyles:{0:{cellWidth:'auto'},1:{halign:'right',cellWidth:24},2:{halign:'right',cellWidth:22},3:{halign:'right',cellWidth:18},4:{halign:'right',cellWidth:28},5:{halign:'right',cellWidth:36}},
+      didParseCell:c=>{
+        if(c.section==='head'){ if(c.column.index>0) c.cell.styles.halign='right'; return; }
+        if(c.row.index>=n1) c.cell.styles.fillColor = 255;
+        if(c.row.index===n1 || c.row.index===body.length-1){ c.cell.styles.fontStyle='bold'; c.cell.styles.lineWidth={top:0.4}; c.cell.styles.lineColor=IND; }
+        if(c.row.index===body.length-1 && c.column.index===5) c.cell.styles.textColor=OPEN;
+      }
+    }));
   });
-  html += `</body></html>`;
-  c3sToonPdfOverlay(html);
+  return {doc, naam: (deel==='alles' ? titel+' reisoverzicht' : titel+' verrekening '+deel.replace('/',' ')).replace(/\s+/g,'_')+'.pdf'};
+}
+async function reisPdf(tripId, deel){
+  const m = reisModel(tripId); if(!m) return;
+  const p = REIZEN_PLANNING.find(x=>x.id===tripId) || {naam:tripId};
+  try{
+    const jsPDF = await reisPdfLibs();
+    const {doc, naam} = reisPdfDoc(jsPDF, m, p, deel);
+    const blob = doc.output('blob');
+    const file = new File([blob], naam, {type:'application/pdf'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file], title:naam}); return; }catch(e){ if(e && e.name==='AbortError') return; } }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = naam; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 60000);
+  }catch(e){ alert('PDF maken lukte niet: '+e.message); }
 }
 
 function renderReisDetailCard(p, data, sparenActies){
@@ -4162,7 +4227,7 @@ function renderReisDetailCard(p, data, sparenActies){
       <div class="card">
         <div class="card-label">Rest van budget</div>
         <div class="stat-figure ${restBudget==null?'':(restBudget>=0?'pos':'neg')}">${restBudget!=null?fmt(restBudget):'—'}</div>
-        <div class="stat-sub">${restBudget==null?'geen budget bekend':(restBudget>=0?'nog beschikbaar binnen het budget':'budget al overschreden')}</div>
+        <div class="stat-sub">${restBudget==null?'geen budget bekend':(rmodel && gespaard ? `potje ${fmt(gespaard)} · ${gespaard>=restBudget?'dekt de rest (+'+fmt(reisR2(gespaard-restBudget))+')':'tekort '+fmt(reisR2(restBudget-gespaard))}` : (restBudget>=0?'nog beschikbaar binnen het budget':'budget al overschreden'))}</div>
       </div>
     </div>
     ${renderReisVerdelingHtml(p)}
@@ -8682,6 +8747,7 @@ function render(){
   document.querySelectorAll('[data-filter-reis]').forEach(el=>el.addEventListener('click',()=>{ selectedFilter={type:'reis', value:el.dataset.filterReis}; render(); scrollToReisLedger(); }));
   document.querySelectorAll('[data-clear-filter]').forEach(el=>el.addEventListener('click',()=>{ selectedFilter=null; render(); }));
   document.querySelectorAll('[data-reis-tile-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const key=el.dataset.reisTileToggle; reisTileExpand = (reisTileExpand===key) ? null : key; render(); scrollC3sNaarKop('[data-reis-tile-toggle="'+key+'"]'); }));
+  document.querySelectorAll('[data-reis-cat]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const k=el.dataset.reisCat; reisCatOpen = (reisCatOpen===k) ? null : k; render(); }));
   document.querySelectorAll('[data-reis-pdf]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const [id,deel]=el.dataset.reisPdf.split('|'); reisPdf(id,deel); }));
   document.querySelectorAll('[data-edit-budget]').forEach(el=>el.addEventListener('click',(e)=>{
     e.stopPropagation();
