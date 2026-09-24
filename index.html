@@ -1145,6 +1145,7 @@ let c3sSectiesOpen = {koop:false, project:false, bouw:false, afwerking:false, fa
 function isLindySalarisTx(t){ return (t.vendor||'').includes('SARO (salaris'); }
 function isLindyExtraTx(t){ return /^SARO \((AMT|extra)/.test(t.vendor||''); }
 let MAAND_OVERBOEKINGEN = [];
+let PERIODEN = [];
 let VAST_VERWACHT_PATRONEN = {}; // categorie -> som bedrag_verwacht van vendor_patronen met telt_als_verwachting=true (live geladen)
 const VAST_VERWACHT_PATRONEN_FALLBACK = {"Telecom": 100.01};
 VAST_VERWACHT_PATRONEN = {...VAST_VERWACHT_PATRONEN_FALLBACK};
@@ -1205,7 +1206,11 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-09-24f - Sparen (Rob, 24-09): verwachting/lijn blijft schema (Rob 2.000 + Lindy regulier + deurwaarder); werkelijk telt nu ook Lindy — extra (AMT) mee (SARO (AMT…)/SARO (extra), categorie Overig inkomen), dus sparenBasis = Rob + Lindy salaris + Lindy extra. Tekortverrekening apart getoond in de Sparen-uitklap: maand_afsluitingen.verrekend_met_sparen (sep: 920,29) als eigen regel plus netto naar C3S.';
+const DASHBOARD_VERSION = '2026-09-24j - Pensioen geïndexeerd (Rob, 24-09): ABP/AOW-bedragen (stand 2026) groeien in de Inflatie-projectie mee met dezelfde 2%/jr (ikv2pctIndex, anker aug 2026), ook ná ingang; Nominaal rekent in geld van nu: vanaf december 2034 is Robs bijdrage in VERMOGEN_MAANDEN niet meer de Excel-waarde maar pensioen netto − uitgaven (ongeïndexeerd) − privé 1.000 (vermogenMaandenLive). Salaris › Rob › Pensioen-kaart toont beide bedragen.';
+const DASHBOARD_VERSION_PREV_2026_09_24i = '2026-09-24i - Vermogen: maandlijst gegroepeerd per jaar (Rob, 24-09). Jaarkaart toont eindstand spaarvermogen (laatste maand van dat jaar); uitklappen geeft de maanden met hun spaarvermogen; een maand uitklappen geeft de details (aflossing, potjes, transacties of theoretische regels). Lopend jaar staat standaard open.';
+const DASHBOARD_VERSION_PREV_2026_09_24h = '2026-09-24h - Pensioen Rob (mijnpensioenoverzicht 18-09-2026, parameter_historie categorie Pensioen Rob): vanaf AOW-datum 15-12-2034 vervangt pensioen het salaris in de salarismotor (berekenSalarisPeriodes krijgt een pensioenperiode vanaf 2034-12-01 als totJaar>=2035; salarisJaarOverzicht vanaf 2035 zonder vakantiegeld/13e maand). Netto = (ABP te bereiken − deel ex-partner + AOW) − IB met AOW-tarief schijf 1 (s1−17,9%) − ZVW-bijdrage 5,26% tot max bijdrage-inkomen 79.409 (aanname), gelijk over 12 maanden, niet geïndexeerd. Vermogen (inflatie/salarismotor) rekent daarmee door; nieuwe kaart Pensioen onderaan Salaris › Rob. Fallback 13e/vakantiegeld gebruikt nu !=null i.p.v. truthy.';
+const DASHBOARD_VERSION_PREV_2026_09_24g = '2026-09-24g - Verwachtingslijn per maand (Rob, 24-09: "doe je dat dan overal"): trendgrafieken met een formule-verwachting (Rob/Lindy/deurwaarder, Sparen- en Inkomen-totaal, hypotheek, Casa 3S, Muziek) tekenen de stippellijn nu per maand op de verwachting van dát moment (reeks[i].verwacht), vanaf de eerste maand met data; grafieken zonder maandformule (vaste/dagelijkse categorieën) houden de horizontale lijn. Plus: salarisperiodeVoorDatum() gebruikt nu de perioden-tabel (23-10, 24-11, 22-12) i.p.v. vast de 24e, met de 24e-regel als fallback buiten bekende perioden.';
+const DASHBOARD_VERSION_PREV_2026_09_24f = '2026-09-24f - Sparen (Rob, 24-09): verwachting/lijn blijft schema (Rob 2.000 + Lindy regulier + deurwaarder); werkelijk telt nu ook Lindy — extra (AMT) mee (SARO (AMT…)/SARO (extra), categorie Overig inkomen), dus sparenBasis = Rob + Lindy salaris + Lindy extra. Tekortverrekening apart getoond in de Sparen-uitklap: maand_afsluitingen.verrekend_met_sparen (sep: 920,29) als eigen regel plus netto naar C3S.';
 const DASHBOARD_VERSION_PREV_2026_09_24e = '2026-09-24e - Terugdraaiing van 24c op Robs verzoek: Lindy — SARO telt weer alleen het reguliere salaris (vendor SARO (salaris...)); extra SARO-betalingen (AMT-kwartaalbonus, SARO (extra)) staan in Supabase op categorie Overig inkomen en tellen dus onder Overig inkomen. Spaarverwachting en trendlijnen blijven het schema volgen (Rob 2.000 + Lindy regulier + deurwaarder).';
 const DASHBOARD_VERSION_PREV_2026_09_24d = '2026-09-24d - Nieuwe tegel Overmaken in de maand-tab (Rob, 24-09: kort overzicht wat waarvan overgemaakt moet worden, ook achteraf terug te zien). Bron: tabel maand_overboekingen (per periode van/naar/bedrag/status). Rabo-regels vinken automatisch af zodra een Rabo-afschrijving van exact dat bedrag in de periode staat; overige (bv. Thailand-potje) via status. Vervangt de oude tegel Overmaken naar ING zodra er voor de periode rijen zijn.';
 const DASHBOARD_VERSION_PREV_2026_09_24c = '2026-09-24c - Lindy-inkomen telt nu elke SARO-transactie met categorie Salaris (isLindySalarisTx), niet alleen vendor "SARO (salaris...". De AMT-kwartaalbonus (SARO (AMT kwartaal 3), 584,49) viel daardoor buiten Inkomen én buiten sparenBasis; telt nu mee onder Lindy — SARO en gaat dus mee naar sparen (Rob, 24-09). SARO-vergoedingen (Overig inkomen) blijven apart.';
@@ -2021,6 +2026,8 @@ function reisCorrectieFactorVoorMaand(jaarMaandKey){
 // dezelfde 24e-cutoff toe die de rest van de app al gebruikt, zodat de grafiek altijd hetzelfde "maand"-begrip
 // hanteert als de headertotalen erboven.
 function salarisperiodeVoorDatum(dateStr){
+  const bekend = PERIODEN.find(p=>p.start_datum<=dateStr && dateStr<p.eind_datum);
+  if(bekend) return {jaar:Number(bekend.jaar), maand:Number(bekend.maand)};
   const [j,m,d] = dateStr.split('-').map(Number);
   if(d>=24){
     return { jaar: m===12?j+1:j, maand: m===12?1:m+1 };
@@ -2280,7 +2287,7 @@ function renderCategorieTrendSvg(reeks, verwachting, verwachtingVolgende){
   const w=900,h=200,pad=10;
   const n = reeks.length;
   const verstreken = reeks.filter(r=>!r.isToekomst);
-  const alleWaarden = [...reeks.map(r=>r.bedrag), ...(verwachting!=null?[verwachting]:[]), ...(verwachtingVolgende!=null?[verwachtingVolgende]:[])];
+  const alleWaarden = [...reeks.map(r=>r.bedrag), ...reeks.filter(r=>r.verwacht!=null).map(r=>r.verwacht), ...(verwachting!=null?[verwachting]:[]), ...(verwachtingVolgende!=null?[verwachtingVolgende]:[])];
   const max = Math.max(...alleWaarden)*1.05 || 1;
   // Rob, 01-09-2026: "als y-as 0-waarde, dan wel 'lege ruimte' onder de 0" — puntjes op €0 (bv. Paardrijden's
   // vast-bucket in een maand zonder De Flemming-tx) zaten voorheen exact op de onderrand (min=0 wanneer alle
@@ -2310,7 +2317,10 @@ function renderCategorieTrendSvg(reeks, verwachting, verwachtingVolgende){
   // maand naar de volgende loopt geen lijn — daar staat alleen het losse open bolletje (al bestaand gedrag).
   const huidigIdx = reeks.findIndex(r=>r.isHuidig);
   const verwachtLineEndX = huidigIdx>=0 ? xFor(huidigIdx) : w-pad;
-  const verwachtLine = verwachting!=null ? `<line x1="${pad}" y1="${yFor(verwachting).toFixed(1)}" x2="${verwachtLineEndX.toFixed(1)}" y2="${yFor(verwachting).toFixed(1)}" stroke="#c9a227" stroke-width="1" stroke-dasharray="5,4" opacity="0.7"/>` : '';
+  const perMaandVerwacht = reeks.some(r=>r.verwacht!=null);
+  const eersteData = verstreken.findIndex(r=>Math.abs(r.bedrag)>0.005);
+  const verwachtPts = perMaandVerwacht ? verstreken.map((r,i)=>(i>=Math.max(0,eersteData<0?verstreken.length-1:eersteData) && r.verwacht!=null) ? [xFor(i), yFor(r.verwacht)] : null).filter(Boolean) : [];
+  const verwachtLine = perMaandVerwacht ? (verwachtPts.length ? `<path d="${verwachtPts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="none" stroke="#c9a227" stroke-width="1" stroke-dasharray="5,4" opacity="0.7"/>` : '') : verwachting!=null ? `<line x1="${pad}" y1="${yFor(verwachting).toFixed(1)}" x2="${verwachtLineEndX.toFixed(1)}" y2="${yFor(verwachting).toFixed(1)}" stroke="#c9a227" stroke-width="1" stroke-dasharray="5,4" opacity="0.7"/>` : '';
   // Rob, 01-09-2026 (definitief, meermaals herbevestigd op de geteste testpagina): "werkelijk heeft open
   // bolletje en verwachting een dicht bolletje" — dus precies andersom dan de vorige (herziene) versie hier.
   // De lopende maand ("werkelijk") is nu altijd OPEN (zie open-berekening hierboven, isHuidig telt niet meer
@@ -2592,12 +2602,15 @@ function bouwHybrideMaandReeks(matcher, bedragFn, maandenTerug=6, huidigJaar, hu
     reeks.push({
       key, jaar, maandIdx:d.getMonth(),
       bedrag: Math.round(bedrag*100)/100,
+      verwacht: isToekomst ? null : verwachtAfgerond(bedragFn(jaar, maand)),
       uitgesloten:false, isHuidig, isToekomst,
       open: isToekomst || isHuidig, // Rob, 01-09-2026 (definitief): lopende maand altijd open, ongeacht data
     });
   }
   return reeks;
 }
+function verwachtAfgerond(v){ return (v==null || isNaN(v)) ? null : Math.round(Number(v)*100)/100; }
+function zetVerwachtPerMaand(reeks, fn){ reeks.forEach(r=>{ if(!r.isToekomst) r.verwacht = verwachtAfgerond(fn(r.jaar, r.maandIdx+1)); }); return reeks; }
 function bouwDeterministischeMaandReeks(bedragFn, maandenTerug=6, huidigJaar, huidigMaand){
   const vandaag = huidigJaar!=null ? new Date(huidigJaar, huidigMaand-1, 1) : new Date();
   const reeks = [];
@@ -2779,7 +2792,8 @@ function totaalTrendComponentenHybride(componenten, maandenTerug=6, huidigJaar, 
       }).reduce((s,r)=>s+Math.abs(r.amount),0);
       bedrag += som;
     });
-    reeks.push({key:`${jaar}-${maand}`, jaar, maandIdx:d.getMonth(), bedrag:Math.round(bedrag*100)/100, uitgesloten:false, isHuidig, isToekomst, open: isToekomst||isHuidig});
+    const verwacht = isToekomst ? null : verwachtAfgerond(componenten.reduce((s,{bedragFn})=>s+(bedragFn(jaar,maand)||0),0));
+    reeks.push({key:`${jaar}-${maand}`, jaar, maandIdx:d.getMonth(), bedrag:Math.round(bedrag*100)/100, verwacht, uitgesloten:false, isHuidig, isToekomst, open: isToekomst||isHuidig});
   }
   return reeks;
 }
@@ -2896,6 +2910,7 @@ async function loadTransactionsTable(){
       const pres = await fetch(SUPABASE_URL+'/rest/v1/perioden?select=start_datum,eind_datum,jaar,maand&order=start_datum.asc', {headers: SUPABASE_HEADERS});
       if(pres.ok){
         const per = await pres.json();
+        PERIODEN = per;
         const vandaag = new Date().toISOString().slice(0,10);
         const lopend = per.filter(x=>x.start_datum<=vandaag);
         if(lopend.length){
@@ -2950,9 +2965,22 @@ async function loadTransactionsTable(){
     }
   }catch(e){ /* offline: fallback-vendorOverrides (indien aanwezig) blijven staan */ }
   try{
+    const phres = await fetch(SUPABASE_URL+'/rest/v1/parameter_historie?select=parameter,waarde,ingangsdatum&categorie=eq.Pensioen%20Rob', {headers: SUPABASE_HEADERS});
+    if(phres.ok){
+      const ph = await phres.json(), w = n=>{ const r = ph.find(x=>x.parameter===n); return r ? Number(r.waarde) : null; };
+      const nieuw = {...PENSIOEN_ROB};
+      if(w('AOW te bereiken')!=null) nieuw.aow = w('AOW te bereiken');
+      if(w('ABP te bereiken')!=null) nieuw.abpTeBereiken = w('ABP te bereiken');
+      if(w('ABP voor ex-partner (in mindering)')!=null) nieuw.abpExPartner = w('ABP voor ex-partner (in mindering)');
+      if(w('ABP partnerpensioen na pensionering (vanaf 67j3m)')!=null) nieuw.partnerpensioen = w('ABP partnerpensioen na pensionering (vanaf 67j3m)');
+      PENSIOEN_ROB = nieuw;
+    }
+  }catch(e){ /* offline: fallback */ }
+  try{
     const ores = await fetch(SUPABASE_URL+'/rest/v1/maand_overboekingen?select=id,periode_start,volgorde,van,naar,bedrag,omschrijving,status,gedaan_op&order=volgorde.asc', {headers: SUPABASE_HEADERS});
     if(ores.ok) MAAND_OVERBOEKINGEN = await ores.json();
   }catch(e){ /* offline */ }
+  _potjesMaandGroeiMapCache = null; // hangt nu ook af van live uitgaven + pensioenparameters
   // vendor_patronen met telt_als_verwachting=true: vaste verwachting per categorie (som), bv. Telecom
   // tijdens een tijdelijke aanbieding (Rob, 24-09-2026: aanbieding is meevaller, verwachting blijft regulier).
   try{
@@ -3903,6 +3931,7 @@ let vermogenAflos = 'nee'; // 'nee' | 'ja' — 'ja' gebruikt precies de delen di
 let vermogenAflosDetailOpen = false; // is de delen-keuze onder de "Aflossen hypotheek"-tegel in Vermogen uitgeklapt?
 let vermogenMomentExpand = null; // index van uitgeklapt bijzonder-moment, of null
 let vermogenJaarExpand = null; // welke jaar-tegel in Vermogen is uitgeklapt, of null
+let vermogenPotjesJaarExpand = undefined; // undefined = lopend jaar open (standaard), null = alles dicht
 let vermogenPotjesMaandExpand = null; // welke maandtegel in de nieuwe Balans-potjes-lijst is uitgeklapt, of null
 let vermogenMaandExpand = null; // welke maand-rij (2e niveau) is uitgeklapt, of null
 // (energieJaarSelectie/data-energie-jaar op Robs verzoek nu écht opgeruimd, 27-08-2026 — was al ongebruikt sinds 25c maar bleef staan)
@@ -5608,7 +5637,7 @@ function renderVolgendeMaandView(){
     return `<div class="card" style="grid-column: 1 / -1; border-color:transparent; margin-top:-1px; border-top-left-radius:0; border-top-right-radius:0;">
       <div class="card-label">${titel} — samenstelling (${expandKey==='inkomen' ? 'werkelijk, tot nu toe' : 'voorspelling'})</div>
       <div class="bar-total"><span>Totaal</span><b>${fmt(d.total).replace('€','€ ')}</b></div>
-      ${expandKey==='inkomen' ? renderReeksTotaalHtml(totaalTrendCategorieenReeks(['Salaris','Belastingteruggave','Overig inkomen'], 6, INKOMEN_JAAR, INKOMEN_MAAND), Math.round((robNettoVoorMaand(INKOMEN_JAAR,INKOMEN_MAAND)+lindyNettoVoorMaand(INKOMEN_JAAR,INKOMEN_MAAND)+BELASTING+deurwaarderVerwachtInkomen)*100)/100, 'trend-totaal-'+expandKey) : ''}
+      ${expandKey==='inkomen' ? renderReeksTotaalHtml(zetVerwachtPerMaand(totaalTrendCategorieenReeks(['Salaris','Belastingteruggave','Overig inkomen'], 6, INKOMEN_JAAR, INKOMEN_MAAND), (j,m)=>(robNettoVoorMaand(j,m)||0)+(lindyNettoVoorMaand(j,m)||0)+BELASTING+(deurwaarderBedragVoorMaand(j,m)||0)), Math.round((robNettoVoorMaand(INKOMEN_JAAR,INKOMEN_MAAND)+lindyNettoVoorMaand(INKOMEN_JAAR,INKOMEN_MAAND)+BELASTING+deurwaarderVerwachtInkomen)*100)/100, 'trend-totaal-'+expandKey) : ''}
       ${expandKey==='sparen' ? renderComponentenTotaalTrendBlokHybride([
         {matcher:null, bedragFn:(_,__)=>ROB_SPAREN},
         {matcher:r=>isLindySalarisTx(r), bedragFn:lindyNettoVoorMaand},
@@ -6104,6 +6133,17 @@ function c3sTotaalOpenBedrag(){
   return C3S_POSTEN.reduce((s,p)=>s + c3sBudget(p) - betaaldVoorPostExport(p), 0) - c3sBetaaldOngekoppeld();
 }
 function vermogenMaandenLive(){
+  return vermogenMaandenMetPensioen(vermogenMaandenLiveBasis());
+}
+function vermogenMaandenMetPensioen(rijen){
+  return rijen.map(r=>{
+    const p = parseVermogenMaandLabel(r.m);
+    if(!p || !isPensioenMaand(p.jaar, p.maand)) return r;
+    const rob = pensioenRobNettoMaand(p.jaar, p.maand, false) - liveUitgavenMaandAnchor(p.jaar, p.maand, true) - IKV_PRIVE_BUFFER_MAAND_ANCHOR;
+    return {...r, rob: Math.round(rob*100)/100, pensioen:true};
+  });
+}
+function vermogenMaandenLiveBasis(){
   // Koppelt de eenmalige Casa 3S-huisbetaling (februari 2027) aan het live "Open"-bedrag uit de Casa 3S-tab,
   // i.p.v. het oude, ingebakken schattingsgetal van €189.058. Alles vanaf die maand schuift mee met het verschil.
   const idx = VERMOGEN_MAANDEN.findIndex(r=>r.m==='februari 2027');
@@ -6319,7 +6359,7 @@ function potjesMaandelijksBedragIkv(jaar, maand){
   // breakdown in potjesTheoretischeRegelsIkv hieronder. Was voorheen een vast "€2.000 × robRatio" (robRatio =
   // alleen cao-groei op BRUTO salaris, zonder deeltijd) — dat liet Inflatie fors uit de pas lopen met Nominaal,
   // waar Rob de deeltijd-daling wél bewust had ingerekend (zie gesprek 17-08-2026).
-  const robNetto = robP ? robP.netto : 0;
+  const robNetto = robP ? (robP.pensioen ? pensioenRobNettoMaand(jaar, maand, true) : robP.netto) : 0;
   const uitgavenGeindexeerd = liveUitgavenMaandAnchor(jaar, maand);
   const priveGeindexeerd = IKV_PRIVE_BUFFER_MAAND_ANCHOR * ikvPriveIndex(jaar, maand);
   let rob = robNetto - uitgavenGeindexeerd - priveGeindexeerd, lindy = lindyP ? lindyP.netto : 0, heks = 900*ikv2pctIndex(jaar, maand);
@@ -6331,8 +6371,8 @@ function potjesMaandelijksBedragIkv(jaar, maand){
   // Rob, 25-08-2026: "dan is alles met inflatie gekoppeld" — de Deurwaarder-basis hierboven indexeert nu al mee
   // (was hardcoded 900), en dezelfde 2%/jr-index geldt consequent ook voor deze twee Deurwaarder-bonusposten
   // hieronder (waren nog hardcoded 850).
-  if(maand===1){ rob += (robJaarVerdiend && robJaarVerdiend.dertiende) ? robJaarVerdiend.dertiende : 8500*robRatio; heks += 850*ikv2pctIndex(jaar, maand); } // Rob — 13e maand (verdiend in december)
-  if(maand===7){ rob += (robJaarVerdiend && robJaarVerdiend.vakantiegeld) ? robJaarVerdiend.vakantiegeld : 8327*robRatio; heks += 850*ikv2pctIndex(jaar, maand); } // Rob — vakantiegeld (verdiend in juni)
+  if(maand===1){ rob += (robJaarVerdiend && robJaarVerdiend.dertiende!=null) ? robJaarVerdiend.dertiende : 8500*robRatio; heks += 850*ikv2pctIndex(jaar, maand); } // Rob — 13e maand (verdiend in december)
+  if(maand===7){ rob += (robJaarVerdiend && robJaarVerdiend.vakantiegeld!=null) ? robJaarVerdiend.vakantiegeld : 8327*robRatio; heks += 850*ikv2pctIndex(jaar, maand); } // Rob — vakantiegeld (verdiend in juni)
   const lindyJaarVerdiend = lindySalarisJaarOverzicht(2036).find(y=>y.jaar===vj);
   if(lindyJaarVerdiend){
     if(vm===5) lindy += lindyJaarVerdiend.vakantietoeslag||0; // verdiend in mei → beschikbaar in juni
@@ -6397,14 +6437,16 @@ function potjesTheoretischeRegels(maandLabel){
 // periodes, aflossing e.d.). Hypotheek pakt daarom nu altijd het echte bedrag van de opgevraagde maand zelf;
 // alleen het niet-hypotheek deel (overige vaste lasten + dagelijks, nog steeds aug-2026-basis) wordt met
 // 2%/jr geïndexeerd — dat blijft wél een aanname (zie ikv2pctIndex hieronder).
-function liveUitgavenMaandAnchor(jaar, maand){
+function pensioenRobNettoMaand(jaar, maand, geindexeerd){ return pensioenRobJaar().netto/12 * (geindexeerd ? ikv2pctIndex(jaar, maand) : 1); }
+function isPensioenMaand(jaar, maand){ return (jaar*12+maand) >= (2034*12+12); }
+function liveUitgavenMaandAnchor(jaar, maand, zonderIndex){
   const hypotheekMaand = hypotheekVindMaand(jaar, maand);
   const hypotheekBedrag = hypotheekMaand ? hypotheekMaand.bruto : ((hypotheekVindMaand(2026,8)||{}).bruto || 2597.40);
   const vastRestTotaal = 896.53 + (163.33+347.20) + (26.00+139.19) + 94.99 + (28.63+39.30+89.78)
     + 2.00 + (4.65+4.53+20.00) + (415.28+61.00) + 25.60 + 0.00 + (325.00+143.18) + 117.45;
   const dagelijks = voorspellingDagelijksPerCategorie(2026, 8).perCategorie;
   const variabel = Object.values(dagelijks).reduce((a,b)=>a+b,0);
-  const ikvIndex = ikv2pctIndex(jaar, maand);
+  const ikvIndex = zonderIndex ? 1 : ikv2pctIndex(jaar, maand);
   return Math.round((hypotheekBedrag + (vastRestTotaal+variabel)*ikvIndex)*100)/100;
 }
 // Op Robs verzoek (17-08-2026): "moeten we kijken naar verschil inkomen en uitgaven geïndexeerd, met ook doel
@@ -6445,12 +6487,12 @@ function potjesTheoretischeRegelsIkv(maandLabel){
     const lindyP = lindyPeriodes.filter(x=>x.vanaf<=verdiendDatum).slice(-1)[0] || lindyPeriodes[0];
     let heks = 900*ikv2pctIndex(p.jaar, p.maand);
     const robJaarVerdiend = salarisJaarOverzicht(2036).find(y=>y.jaar===vj);
-    if(p.maand===1){ heks += 850*ikv2pctIndex(p.jaar, p.maand); regels.push({naam:'Rob — 13e maand', bedrag:Math.round(((robJaarVerdiend && robJaarVerdiend.dertiende) ? robJaarVerdiend.dertiende : 8500*robRatio)*100)/100}); }
-    if(p.maand===7){ heks += 850*ikv2pctIndex(p.jaar, p.maand); regels.push({naam:'Rob — vakantiegeld', bedrag:Math.round(((robJaarVerdiend && robJaarVerdiend.vakantiegeld) ? robJaarVerdiend.vakantiegeld : 8327*robRatio)*100)/100}); }
+    if(p.maand===1){ heks += 850*ikv2pctIndex(p.jaar, p.maand); regels.push({naam:'Rob — 13e maand', bedrag:Math.round(((robJaarVerdiend && robJaarVerdiend.dertiende!=null) ? robJaarVerdiend.dertiende : 8500*robRatio)*100)/100}); }
+    if(p.maand===7){ heks += 850*ikv2pctIndex(p.jaar, p.maand); regels.push({naam:'Rob — vakantiegeld', bedrag:Math.round(((robJaarVerdiend && robJaarVerdiend.vakantiegeld!=null) ? robJaarVerdiend.vakantiegeld : 8327*robRatio)*100)/100}); }
     const ikvIndex = ikv2pctIndex(p.jaar, p.maand);
     const uitgavenGeindexeerd = liveUitgavenMaandAnchor(p.jaar, p.maand);
     const priveGeindexeerd = IKV_PRIVE_BUFFER_MAAND_ANCHOR * ikvPriveIndex(p.jaar, p.maand);
-    const robNetto = robP ? robP.netto : 0;
+    const robNetto = robP ? (robP.pensioen ? pensioenRobNettoMaand(p.jaar, p.maand, true) : robP.netto) : 0;
     const teSparenRob = robNetto - uitgavenGeindexeerd - priveGeindexeerd;
     regels.push({naam:'Rob — inkomen (netto)', bedrag:Math.round(robNetto*100)/100});
     regels.push({naam:'Rob — uitgaven (geïndexeerd)', bedrag:-Math.round(uitgavenGeindexeerd*100)/100});
@@ -6719,7 +6761,16 @@ function renderPotjesView(maandelijksBedragFn, theorieFn){
       ${renderPotjesChart(potjesMaanden)}
     </div>`}
     <div class="card-label" style="margin:18px 0 8px;">Per maand (tik voor de transacties)</div>
-    ${potjesMaanden.slice(1).map(r=>{
+    ${(()=>{ const totaalVan = r=>(r.c3s||0)+POTJES_TRIP_IDS.reduce((s,id)=>s+(r[id]||0),0);
+      const jaren = []; potjesMaanden.slice(1).forEach(r=>{ const j=(r.label.match(/\d{4}/)||[''])[0]; let g=jaren.find(x=>x.jaar===j); if(!g){ g={jaar:j, maanden:[]}; jaren.push(g); } g.maanden.push(r); });
+      const openJaar = vermogenPotjesJaarExpand===undefined ? (jaren[0]||{}).jaar : vermogenPotjesJaarExpand;
+      return jaren.map(g=>{ const jOpen = openJaar===g.jaar; const eind = totaalVan(g.maanden[g.maanden.length-1]);
+      return `<div class="card" style="margin-bottom:10px;${jOpen?'border-color:var(--brass);border-width:2px;':''}">
+        <div data-potjes-jaar="${g.jaar}" style="cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-weight:600;font-size:18px;">${g.jaar}${jOpen?' ▾':' ▸'}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:${eind<0?'var(--rose)':'var(--teal)'};">${fmt(eind)}</span>
+        </div>
+        ${jOpen ? `<div style="margin-top:10px;">${g.maanden.map(r=>{
       const isOpen = vermogenPotjesMaandExpand===r.label;
       const txs = isOpen ? potjesTransactiesVoorMaand(r.label) : [];
       // Rob, 25-08-2026: dezelfde .filter(!gebeurtenis) als de hero-kaart hierboven al gebruikt — anders komt
@@ -6730,16 +6781,19 @@ function renderPotjesView(maandelijksBedragFn, theorieFn){
       return `<div class="card" id="potjes-maand-${slugifyMaandLabel(r.label)}" data-potjes-maand="${r.label}" style="cursor:pointer;margin-bottom:8px;${isOpen?'border-color:var(--brass);border-width:2px;':''}">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper);">${r.label}${isOpen?' ▾':' ▸'}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:${totaalVan(r)<0?'var(--rose)':'var(--teal)'};">${fmt(totaalVan(r))}</span>
         </div>
+        ${isOpen ? `
         ${r.aflosBedrag!=null ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;margin-top:4px;border-bottom:1px solid var(--rule);"><span style="font-size:13px;color:var(--brass);font-weight:600;">Aflossing hypotheek</span><span style="font-size:15px;color:var(--brass);font-weight:600;">−${fmt(r.aflosBedrag)}</span></div>` : ''}
         <div style="margin-top:8px;">
           ${potjesLijst.filter(p=>r[p.key]!=null && (p.key==='c3s' || r[p.key]!==0)).map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:13px;"><span style="display:flex;align-items:center;gap:6px;color:var(--paper-dim);"><span style="width:7px;height:7px;border-radius:50%;background:${potjesKleur(p.key,r[p.key],doelen[p.key])};display:inline-block;"></span>${p.naam}</span><span style="color:${potjesKleur(p.key,r[p.key],doelen[p.key])};font-weight:600;">${fmt(r[p.key])}</span></div>`).join('')}
         </div>
         ${isOpen?`<div style="margin-top:10px;border-top:1px solid var(--rule);padding-top:8px;">
           ${txs.length ? `<ul class="ledger-list" style="list-style:none;margin:0;padding:0;">${txs.map(t=>txRow2Html(t,{})).join('')}</ul>` : (theorie.length ? theorie.map(t=>`<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px;color:var(--paper-dim);"><span>${t.naam}</span><span>${fmt(t.bedrag)}</span></div>`).join('') : `<div style="font-size:12px;color:var(--muted);">Geen bijzondere posten deze maand.</div>`)}
-        </div>`:''}
+        </div>`:''}` : ''}
       </div>`;
-    }).join('')}
+    }).join('')}</div>` : ''}
+      </div>`; }).join(''); })()}
     <footer>Elke maand: het spaarbedrag gaat naar reispotjes binnen hun ${POTJES_RESERVERING_MAANDEN_VOORAF}-maanden-venster (transfer vanuit C3S), de rest naar C3S. Onvoldoende? Dan gaat C3S negatief (rood) en herstelt vanzelf. Op de reisdatum verdwijnt het potje.</footer>
   `;
 }
@@ -7171,6 +7225,15 @@ function sectionIcon(key){
    anker doorgerekend; we reconstrueren de historie vóór 1-7-2026 bewust niet (bevestigd met Rob). */
 const ROB_PENSIOEN_JAAR = 2035; // AOW-leeftijd bereikt op 15-12-2034 (geboren 15-9-1967, 67j+3mnd) — valt in het aug-dec-blok van de "juli 2035"-periode, dat blok blijft "nog in dienst" (4 van de 5 maanden nog salaris)
 const SALARIS_ANCHOR_DATUM = '2026-07-01';
+let PENSIOEN_ROB = {aowDatum:'2034-12-15', abpTeBereiken:126362, abpExPartner:38518, aow:14571, partnerpensioen:32389}; // fallback; live uit parameter_historie (categorie Pensioen Rob)
+const PENSIOEN_ZVW_PCT = 5.26, PENSIOEN_ZVW_MAX = 79409; // aanname (tarief/max bijdrage-inkomen), bijstellen zodra bekend
+function pensioenRobJaar(){
+  const P = PENSIOEN_ROB, abp = P.abpTeBereiken - P.abpExPartner, bruto = abp + P.aow;
+  const sc = salarisSchijvenVoorDatum(P.aowDatum), s1 = sc.s1 - 0.179;
+  const ib = Math.min(bruto,sc.g1)*s1 + Math.max(0,Math.min(bruto,sc.g2)-sc.g1)*sc.s2 + Math.max(0,bruto-sc.g2)*sc.s3;
+  const zvw = Math.min(bruto, PENSIOEN_ZVW_MAX)*PENSIOEN_ZVW_PCT/100;
+  return {abp, aow:P.aow, bruto, ib, zvw, netto: bruto-ib-zvw, s1};
+}
 const SALARIS_ANCHOR_BEDRAG = 18648.40; // Salaris-regel (na cumulatieve cao-groei + deeltijdfactor), sheet-geverifieerd
 const SALARIS_TOD_PCT = 12.87;   // vast contractueel percentage over Salaris — exact geverifieerd (2400,05 = 18648,40×12,87%)
 const SALARIS_AP_PREMIE_PCT = 0.33; // vast contractueel percentage — benadering van de grondslag (Salaris+TOD+WG+ZK)
@@ -7263,9 +7326,9 @@ function salarisOmslagData(totJaar){
   return [...alle].sort();
 }
 function berekenSalarisPeriodes(totJaar){
-  const data = salarisOmslagData(totJaar);
+  const data = salarisOmslagData(totJaar).filter(d=>totJaar<2035 || d<'2034-12-01');
   let salaris = SALARIS_ANCHOR_BEDRAG;
-  return data.map(datum=>{
+  const res = data.map(datum=>{
     const caoStap = SALARIS_CAO_STAPPEN.find(s=>s.vanaf===datum);
     // Salaris groeit alleen met cao — deeltijd werkt niet hier nogmaals door, die zit al verwerkt in Korting IKV
     // (bevestigd door Rob: "ikv korting is dat deeltijd percentage"). Salaris moet dus nooit dalen.
@@ -7285,6 +7348,11 @@ function berekenSalarisPeriodes(totJaar){
     return {vanaf:datum, salaris,tod,wg,zk,apPremie,brutoTotaal,pensioenWN:wn.val,ikvKorting:ikv.val,deeltijdPct,fiscaalBruto,netto,
       zvw: zvw.val||0, aannameZvw: !!zvw.aanname, aannameCao: !!caoAanname, aannamePensioenWN: !!wn.aanname};
   });
+  if(totJaar>=2035 && res.length){
+    const pj = pensioenRobJaar();
+    res.push({...res[res.length-1], vanaf:'2034-12-01', netto: pj.netto/12, pensioen:true});
+  }
+  return res;
 }
 function salarisJaarOverzicht(totJaar){
   const periodes = berekenSalarisPeriodes(totJaar);
@@ -7309,6 +7377,7 @@ function salarisJaarOverzicht(totJaar){
       dertiende = DERTIENDE_ANCHOR * (tweedeHelft.salaris / SALARIS_ANCHOR_BEDRAG) * deeltijdRatio(julDatum);
       bonusAanname = true;
     }
+    if(j>=2035){ vakantiegeld = 0; dertiende = 0; }
     const nettoJaar = nettoMaanden + vakantiegeld + dertiende + (j===2027 ? 32700.75 : 0);
     const caoStapDitJaar = SALARIS_CAO_STAPPEN.find(s=>s.vanaf===julDatum); // groeistap die dit jaar (juli) is toegepast
     const gratificatie40jr = j===2027 ? 32700.75 : null; // februari 2027: 40 jaar dienstverband, 200% (salaris+TOD+vakantiegeld), 100% belast (49,5%) + 100% onbelast — bevestigd door Rob 25-7-2026
@@ -7504,8 +7573,22 @@ function renderSalarisRobView(){
       </div>` : ''}
     </div>`;
   }).join('');
+  const pj = pensioenRobJaar();
+  const pensioenKaart = `<div class="card" style="margin-bottom:10px;">
+      <div class="card-label">Pensioen vanaf ${PENSIOEN_ROB.aowDatum.split('-').reverse().join('-')}</div>
+      <div class="stat-figure pos">${fmt(pj.netto/12)}<span style="font-size:11px;color:var(--muted);font-weight:400;">/mnd netto, geld van nu</span></div>
+      <div class="stat-sub">Bij ingang (2%/jr geïndexeerd): ${fmt(pensioenRobNettoMaand(2035,1,true))}/mnd</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;display:flex;flex-direction:column;gap:5px;margin-top:10px;">
+        <div style="display:flex;justify-content:space-between;"><span>ABP (na deel ex-partner)</span><span>${fmt(pj.abp)}/jr</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>AOW</span><span>${fmt(pj.aow)}/jr</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>Inkomstenbelasting</span><span>${fmt(-pj.ib)}/jr</span></div>
+        <div style="display:flex;justify-content:space-between;"><span>ZVW-bijdrage*</span><span>${fmt(-pj.zvw)}/jr</span></div>
+        <div style="display:flex;justify-content:space-between;color:var(--paper);"><span>Netto</span><span>${fmt(pj.netto)}/jr</span></div>
+      </div>
+    </div>`;
   return `
     ${rows}
+    ${pensioenKaart}
     <footer>* = aanname, geen bevestigd cijfer: cao-groei vanaf juli 2027 is Rob's eigen inflatie-plug van 2%/jr (wordt overschreven zodra een nieuwe cao bekend is, zichtbaar per jaar hierboven); ZVW bijdrage WN vanaf 1-7-2027 gaat uit van het laatst bekende bedrag (2023: €302,96), vlak gehouden tot een echt cijfer bekend is. Vakantiegeld/13e maand vanaf 2027 zijn geschaald met dezelfde salarisgroei als de rest van dit model (geen los cijfer beschikbaar). Pensioentoezeggingen WG en Compensatie ZK worden jaarlijks per 1 januari vastgesteld (blijkt uit de salarisstrook van februari) — tot je die doorgeeft hou ik ze vlak op het laatst bekende bedrag. Pensioen WN vervalt vanaf 2030 (bevestigd; exacte maand nog aangenomen op januari). AOW/pensionering: bevestigd op 15-12-2034 (67 jaar + 3 maanden). Netto is berekend met de belastingschijven van box 1 (2026 vastgesteld; 2027 = voorstel Belastingplan 2027, pas definitief na de Eerste Kamer; latere jaren = 2027 vlak), geijkt op de sheet-kolom juli 2026, min de ZVW-plug vanaf 2027. Heffingskortingen zijn nihil bij dit inkomen; het AOW-tarief voor de eerste schijf (vanaf dec 2034) is niet meegenomen.</footer>
   `;
 }
@@ -8935,6 +9018,7 @@ function render(){
     if(vermogenAflosDetailOpen){
       scrollMetStickyOffset('#vermogen-aflos-keuze-blok', ['.detail-header', '.vermogen-opties-grid']);
     } else if(hypotheekGekozenDelen.length){
+      if(!document.querySelector('#potjes-maand-oktober-2031')){ vermogenPotjesJaarExpand='2031'; vermogenPotjesMaandExpand='oktober 2031'; render(); }
       scrollMetStickyOffset('#potjes-maand-oktober-2031', ['.detail-header', '.vermogen-opties-grid', '.vermogen-trend-sticky']);
     }
   }));
@@ -8958,6 +9042,7 @@ function render(){
   document.querySelectorAll('[data-hyp-jaar-toggle]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.hypJaarToggle; hypotheekJaarExpand = (hypotheekJaarExpand===key) ? null : key; render(); scrollC3sNaarKop('[data-hyp-jaar-toggle="'+key+'"]'); }));
   document.querySelectorAll('[data-hyp-maand-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const key=el.dataset.hypMaandToggle; hypotheekMaandExpand = (hypotheekMaandExpand===key) ? null : key; render(); }));
   document.querySelectorAll('[data-jaar-toggle]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.jaarToggle; vermogenJaarExpand = (vermogenJaarExpand===key) ? null : key; render(); scrollMetStickyOffset('[data-jaar-toggle="'+key+'"]', ['.detail-header', '.vermogen-opties-grid', '.vermogen-trend-sticky']); }));
+  document.querySelectorAll('[data-potjes-jaar]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const j=el.dataset.potjesJaar; const huidig = vermogenPotjesJaarExpand===undefined ? null : vermogenPotjesJaarExpand; const openNu = (vermogenPotjesJaarExpand===undefined) ? (document.querySelector('[data-potjes-jaar]')||{}).dataset?.potjesJaar : huidig; vermogenPotjesJaarExpand = (openNu===j) ? null : j; render(); }));
   document.querySelectorAll('[data-potjes-maand]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.potjesMaand; vermogenPotjesMaandExpand = (vermogenPotjesMaandExpand===key) ? null : key; render(); scrollMetStickyOffset('#'+el.id, ['.detail-header', '.vermogen-opties-grid', '.vermogen-trend-sticky']); }));
   document.querySelectorAll('[data-sal-jaar-toggle]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.salJaarToggle; salarisJaarExpand = (salarisJaarExpand===key) ? null : key; render(); scrollC3sNaarKop('[data-sal-jaar-toggle="'+key+'"]'); }));
   document.querySelectorAll('[data-maand-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); vermogenMaandExpand = (vermogenMaandExpand===el.dataset.maandToggle) ? null : el.dataset.maandToggle; render(); }));
