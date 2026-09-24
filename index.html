@@ -1142,6 +1142,8 @@ let c3sPostenOpen = {}; // post-id -> true = opengeklapt, standaard dicht
 let c3sFactuurKoppelOpen = {}; // C3S_FACTUREN-index -> true = koppel-UI opengeklapt, standaard dicht
 let c3sFactuurAlleTonen = {}; // C3S_FACTUREN-index -> true = volledige postenlijst i.p.v. top-voorstellen
 let c3sSectiesOpen = {koop:false, project:false, bouw:false, afwerking:false, facturen:false}; // per tegel open/dicht, standaard allemaal dicht
+function isLindySalarisTx(t){ return /^SARO\b/.test(t.vendor||'') && t.category==='Salaris'; }
+let MAAND_OVERBOEKINGEN = [];
 let VAST_VERWACHT_PATRONEN = {}; // categorie -> som bedrag_verwacht van vendor_patronen met telt_als_verwachting=true (live geladen)
 const VAST_VERWACHT_PATRONEN_FALLBACK = {"Telecom": 100.01};
 VAST_VERWACHT_PATRONEN = {...VAST_VERWACHT_PATRONEN_FALLBACK};
@@ -1202,7 +1204,9 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-09-24b - Maandovergang naar oktober (periode 24-09 t/m 26-10) en periodegrenzen naar Supabase: nieuwe tabel perioden (start_datum, eind_datum, jaar, maand); loadTransactionsTable() leest de huidige en vorige periode live, dus een volgende maandovergang is alleen een SQL-insert, geen nieuwe index.html. Codeconstanten zijn nu alleen offline-fallback. Reisposten: status geannuleerd = doorgehaald en gedimd, telt niet mee in totalen/verdeling/begrotingsdekking; een open verwachte_betalingen-rij met reis_post_id toont ↺ + bedrag bij die post.';
+const DASHBOARD_VERSION = '2026-09-24d - Nieuwe tegel Overmaken in de maand-tab (Rob, 24-09: kort overzicht wat waarvan overgemaakt moet worden, ook achteraf terug te zien). Bron: tabel maand_overboekingen (per periode van/naar/bedrag/status). Rabo-regels vinken automatisch af zodra een Rabo-afschrijving van exact dat bedrag in de periode staat; overige (bv. Thailand-potje) via status. Vervangt de oude tegel Overmaken naar ING zodra er voor de periode rijen zijn.';
+const DASHBOARD_VERSION_PREV_2026_09_24c = '2026-09-24c - Lindy-inkomen telt nu elke SARO-transactie met categorie Salaris (isLindySalarisTx), niet alleen vendor "SARO (salaris...". De AMT-kwartaalbonus (SARO (AMT kwartaal 3), 584,49) viel daardoor buiten Inkomen én buiten sparenBasis; telt nu mee onder Lindy — SARO en gaat dus mee naar sparen (Rob, 24-09). SARO-vergoedingen (Overig inkomen) blijven apart.';
+const DASHBOARD_VERSION_PREV_2026_09_24b = '2026-09-24b - Maandovergang naar oktober (periode 24-09 t/m 26-10) en periodegrenzen naar Supabase: nieuwe tabel perioden (start_datum, eind_datum, jaar, maand); loadTransactionsTable() leest de huidige en vorige periode live, dus een volgende maandovergang is alleen een SQL-insert, geen nieuwe index.html. Codeconstanten zijn nu alleen offline-fallback. Reisposten: status geannuleerd = doorgehaald en gedimd, telt niet mee in totalen/verdeling/begrotingsdekking; een open verwachte_betalingen-rij met reis_post_id toont ↺ + bedrag bij die post.';
 const DASHBOARD_VERSION_PREV_2026_09_24a = '2026-09-24a - Telecom-verwachting uit vendor_patronen (Rob, 24-09: Youfone 3 abo\'s tijdelijk 5,50, regulier 13,50 elk; Delta Fiber tijdelijk 52,01, regulier 59,51 - aanbiedingen zijn meevallers, verwachting blijft regulier). Nieuwe kolom vendor_patronen.telt_als_verwachting: per categorie telt de som van de gemarkeerde patronen als vaste verwachting (vastStabiel en de trendgrafiek), i.p.v. het laatst waargenomen maandtotaal. Alleen categorieen met minstens 1 gemarkeerd patroon; nu alleen Telecom (40,50 + 59,51 = 100,01).';
 const DASHBOARD_VERSION_PREV_2026_09_23i = '2026-09-23i - Trip: niet begroot (geen verwachting uit historie, ook geen trendverwachting; tekst \'niet begroot\'), en in de Trip-uitklap per trip het totaal over alle periodes incl. eerdere boekingen (nieuwe kolom transactions.trip_naam; Puglia sep 2026 = € 528,57, boekingen 19-08 vallen in de augustusperiode). Vorige versie (2026-09-23h - Reistegel kostenoverzicht: per categorie naam op eigen regel met daaronder vier vaste kolommen (Begroot · Wij · R/I · Open) over de volle breedte, posten idem — geen tegen elkaar lopende bedragen meer. Nog-te-plaatsen: trip_id=__GEEN__ telt als bewust geen reis (5 oude posten juni–aug weggelaten). Fix dubbeltelling: buildCombinedAlles telde alle AMEX-transacties twee keer (buildCombinedJul + amexHistorisch) — raakte Reizen, reisbudgetten, potje-berekening en Casa-projectview. Vorige versie (2026-09-23g - Reistegel kostenoverzicht per categorie (1 regel per categorie met Begroot · Wij · Robin/Ingrid · Open in vaste kolommen; tik voor de posten) i.p.v. alle posten tegelijk. Parkeren Schiphol alleen Rob/Lindy (verdeling bijgewerkt in Supabase) en naar categorie Vervoer. Vorige versie (2026-09-23f - Reis-pdf nu als echt PDF-bestand via jsPDF + autotable (lui geladen van cdnjs, fallback jsdelivr): altijd A4 liggend (iOS negeerde @page landscape), dagschema met vaste kolombreedtes, kosten op 1 pagina met begrotingssamenvatting rechtsboven, delen via het deelmenu. Kostenoverzicht in de tegel als telefoonvriendelijke lijst (per post naam+datum, daaronder begroot/ons/medereizigers/open) i.p.v. brede tabel. Rest van budget toont of het potje de rest dekt. Vorige versie (2026-09-23e - Reistegel: budget = eigen begroting uit reis_begroting (Thailand 14.483,15 i.p.v. richtbedrag 15.000; ook in effectiveBudget, dus overal), Uitgegeven = eigen deel van betaalde reisposten (was: optelsom transacties incl. deel medereizigers en tekenfout AMEX), Rest van budget = begroting − eigen betaald. Vorige versie (2026-09-23d - Reis-pdf pagina 1 (dagschema): vaste kolombreedtes (Dag smal, Plaats/Hotel vast, Programma rest) zodat de kolommen niet meer uit elkaar getrokken worden. Vorige versie (2026-09-23c - Reistegel/pdf herindeling op Robs verzoek (\'eigen begroting en dan de kolommen voor RI, later maar zien wie wat betaald\'): kostentabel toont eerst de eigen begroting (Begroot, Rob/Lindy, Maud, Totaal, Open alleen eigen deel) en daarna per medereizigersgroep hun aandeel; kolom Totaal-voor-iedereen en open-voor-iedereen vervallen. Tegel: Begroting-kaart (verschil, begroot, verwacht, open eigen) + kaart per medereizigersgroep. Vorige versie (2026-09-23b - Reisverdeling in de reis-tegel (Totaal reis met uitsplitsing per groep, Begroting eigen groep, per medereizigersgroep nog te betalen) plus PDF reis / PDF per medereiziger, alles live uit reis_*-tabellen; geldt voor elke reis met posten + deelnemers. Vorige versie (2026-09-23a - Trip-categorie (Dagelijks) voor korte tripjes buiten de Reizen-tegel; reisperiode start/eind uit Supabase-tabel reizen; keyword-koppeling aan een reis nooit meer na de einddatum. Vorige versie (2026-09-22m - Rob\'s voorstel (\'bij inkomen verwachting zou wel gewoon de 50% salaris moeten staan en dan komt er te veel binnen, en volgende maand idem maar dan eronder\') bleek al precies te bestaan: lindyNettoVoorMaand() gebruikt voor de verwachting altijd het percentage van de vorige kalendermaand (normale salarisvertraging) -- voor de huishoudperiode \'oktober\' (gevoed door dit septembersalaris) pakt dat dus al septembers eigen percentage (1-9 al 50% in LINDY_PARTTIME_STAPPEN), dus verwacht \u2248 \u20ac2.090,83 terwijl werkelijk \u20ac2.505,83 (de 60%-fout) binnenkomt -- precies de gewenste afwijking, geen enkele codewijziging nodig, alleen de echte transactie en de periode-doorschuif (nog te doen zodra het bankafschrift er is). Wel gevonden: de code-comment IN lindyNettoVoorMaand() zelf bevatte nog dezelfde foute \'oktober-strook\'-aanname als net gecorrigeerd bij LINDY_PARTTIME_STAPPEN (22l) -- rekenlogica ongewijzigd (deed toevallig al het juiste), toelichting rechtgezet: dit is puur de normale betalingsvertraging, geen aparte percentage-zichtbaarheidsvertraging. Bevat ook 2026-09-22l/k/j.';
 const DASHBOARD_VERSION_PREV_2026_09_22l = '2026-09-22l - Correctie op eerdere aanname: Rob wees erop dat de septemberstrook 2026 (die al 50% deeltijd had moeten tonen, ingangsdatum 1-9) niet hoort te wachten op een \'oktoberstrook\' -- die eerdere redenering verwarde de loonstrook-periode zelf met de aparte, losstaande budgetterings-vertraging die het huishouden al gebruikt (leven van het septembersalaris in de periode die intern \'oktober\' heet, zie lindyNettoVoorMaand). LINDY_PARTTIME_STAPPEN-comment gecorrigeerd: de septemberstrook toonde in werkelijkheid nog 60%, dat is dus een echte SARO-fout, geen normaal verwerkingsritme. Geen logica gewijzigd (pct-waarden en -data waren al correct), puur de toelichting rechtgezet zodat een volgende sessie niet dezelfde denkfout maakt. Bevat ook 2026-09-22k (formulier bovenaan/opgeschoond, meer codes) en 2026-09-22j (zzp_inkoop_bestand).';
@@ -2372,7 +2376,7 @@ function berekenBestedingsruimteDagReeks(periodeStart, periodeEind, alleTxInPeri
     const dagStr = dagDatum.toISOString().slice(0,10);
     const txTotNu = alleTxInPeriode.filter(t=>t.date<=dagStr);
     const inkomenTotNu = txTotNu.filter(t=>t.vendor.includes('Luchtverkeersleiding')).reduce((s,t)=>s+t.amount,0)
-      + txTotNu.filter(t=>t.vendor.includes('SARO (salaris')).reduce((s,t)=>s+t.amount,0)
+      + txTotNu.filter(isLindySalarisTx).reduce((s,t)=>s+t.amount,0)
       + txTotNu.filter(t=>t.category==='Overig inkomen').reduce((s,t)=>s+t.amount,0)
       + txTotNu.filter(t=>t.category==='Belastingteruggave').reduce((s,t)=>s+t.amount,0);
     const spendTotNu = spendTxInPeriode.filter(t=>t.date<=dagStr);
@@ -2942,6 +2946,10 @@ async function loadTransactionsTable(){
       });
     }
   }catch(e){ /* offline: fallback-vendorOverrides (indien aanwezig) blijven staan */ }
+  try{
+    const ores = await fetch(SUPABASE_URL+'/rest/v1/maand_overboekingen?select=id,periode_start,volgorde,van,naar,bedrag,omschrijving,status,gedaan_op&order=volgorde.asc', {headers: SUPABASE_HEADERS});
+    if(ores.ok) MAAND_OVERBOEKINGEN = await ores.json();
+  }catch(e){ /* offline */ }
   // vendor_patronen met telt_als_verwachting=true: vaste verwachting per categorie (som), bv. Telecom
   // tijdens een tijdelijke aanbieding (Rob, 24-09-2026: aanbieding is meevaller, verwachting blijft regulier).
   try{
@@ -5136,7 +5144,7 @@ function c3sVermogenProjectie(){
   // Deurwaarder staat op €0 (Velthoven De Koning gepauzeerd) i.p.v. het oude €900-sjabloon.
   const liveHuidigeMaand = (()=>{
     const tx = [...RABO_TX_SEP, ...ING_TX_SEP];
-    const lindyLive = tx.filter(t=>t.vendor.includes('SARO (salaris')).reduce((s,t)=>s+t.amount, 0);
+    const lindyLive = tx.filter(isLindySalarisTx).reduce((s,t)=>s+t.amount, 0);
     return {rob: 2000.00, lindy: lindyLive, heks: 0};
   })();
   const rijen = [];
@@ -5310,7 +5318,7 @@ function renderVolgendeMaandView(){
 
   // Salaris is al binnen — dus geen voorspelling meer nodig, gewoon de echte bedragen optellen (niet alleen de eerste match).
   const ROB_ACTUEEL = inkomenPeriodeTx.filter(t=>t.vendor.includes('Luchtverkeersleiding')).reduce((s,t)=>s+t.amount, 0);
-  const LINDY = inkomenPeriodeTx.filter(t=>t.vendor.includes('SARO (salaris')).reduce((s,t)=>s+t.amount, 0);
+  const LINDY = inkomenPeriodeTx.filter(isLindySalarisTx).reduce((s,t)=>s+t.amount, 0);
   const OVERIG_INKOMEN_TOTAAL = inkomenPeriodeTx.filter(t=>t.category==='Overig inkomen').reduce((s,t)=>s+t.amount, 0);
   // Belastingteruggave (hypotheekrenteaftrek) komt elke periode als vast, voorspelbaar bedrag binnen. BELASTING
   // (met fallback-schatting) blijft bestaan als de "verwacht"-referentie (inkomenVerwacht, verderop) — maar
@@ -5571,7 +5579,7 @@ function renderVolgendeMaandView(){
         const trendBlok = heeftInkomenTrend(name) ? (()=>{
           if(name==='Rob — LVNL' || name==='Lindy — SARO'){
             const bedragFn = name==='Rob — LVNL' ? robNettoVoorMaand : lindyNettoVoorMaand;
-            const matcher = name==='Rob — LVNL' ? (r=>r.vendor.includes('Luchtverkeersleiding')) : (r=>r.vendor.includes('SARO (salaris'));
+            const matcher = name==='Rob — LVNL' ? (r=>r.vendor.includes('Luchtverkeersleiding')) : (r=>isLindySalarisTx(r));
             const reeks = bouwHybrideMaandReeks(matcher, bedragFn, 6, INKOMEN_JAAR, INKOMEN_MAAND);
             const [vj,vm] = volgendeMaandVan(INKOMEN_JAAR, INKOMEN_MAAND);
             return renderDeterministischeTrendBlok(name, reeks, 'trend-'+slugifyMaandLabel(catKey), bedragFn(INKOMEN_JAAR, INKOMEN_MAAND), bedragFn(vj,vm));
@@ -5598,7 +5606,7 @@ function renderVolgendeMaandView(){
       ${expandKey==='inkomen' ? renderReeksTotaalHtml(totaalTrendCategorieenReeks(['Salaris','Belastingteruggave','Overig inkomen'], 6, INKOMEN_JAAR, INKOMEN_MAAND), Math.round((robNettoVoorMaand(INKOMEN_JAAR,INKOMEN_MAAND)+lindyNettoVoorMaand(INKOMEN_JAAR,INKOMEN_MAAND)+BELASTING+deurwaarderVerwachtInkomen)*100)/100, 'trend-totaal-'+expandKey) : ''}
       ${expandKey==='sparen' ? renderComponentenTotaalTrendBlokHybride([
         {matcher:null, bedragFn:(_,__)=>ROB_SPAREN},
-        {matcher:r=>r.vendor.includes('SARO (salaris'), bedragFn:lindyNettoVoorMaand},
+        {matcher:r=>isLindySalarisTx(r), bedragFn:lindyNettoVoorMaand},
         {matcher:r=>false, bedragFn:deurwaarderBedragVoorMaand}
       ], expandKey, LM_JAAR, LM_MAAND) : ''}
       ${barHtml}
@@ -5779,7 +5787,29 @@ function renderVolgendeMaandView(){
 
   return `
     ${renderSaldoCheckCard()}
-    ${overmakenGedaan ? '' : (()=>{
+    ${(()=>{
+      const rijen = MAAND_OVERBOEKINGEN.filter(r=>r.periode_start===PERIODE_START_SALARISDATUM);
+      if(!rijen.length) return '';
+      const gebruikt = new Set();
+      const gedaan = r=>{
+        if(r.status==='gedaan') return true;
+        if(r.van!=='Rabo') return false;
+        const i = LM_RABO_TX.findIndex((t,idx)=>!gebruikt.has(idx) && t.amount<0 && Math.abs(-t.amount-Number(r.bedrag))<0.005);
+        if(i<0) return false; gebruikt.add(i); return true;
+      };
+      const lijst = rijen.map(r=>({...r, ok:gedaan(r)}));
+      const open = lijst.filter(r=>!r.ok).reduce((s,r)=>s+Number(r.bedrag),0);
+      const isOpen = volgendeExpand==='overmaken';
+      return `<div class="card" data-expand="overmaken" style="cursor:pointer;${isOpen?'border-color:var(--brass);border-width:2px;':''}">
+        <div class="card-label">Overmaken${isOpen?' ▾':' ▸'}</div>
+        <div class="stat-figure" style="color:${open>0.005?'var(--brass)':'var(--dot-ok)'};">${open>0.005?fmt(open):'✓'}</div>
+        ${isOpen?`<div class="cdt-divider"></div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;display:flex;flex-direction:column;gap:6px;">
+          ${lijst.map(r=>`<div style="display:flex;justify-content:space-between;gap:8px;${r.ok?'opacity:.45;':''}"><span>${r.ok?'✓ ':''}${r.van} → ${r.naar}</span><span style="white-space:nowrap;">${fmt(Number(r.bedrag))}</span></div>`).join('')}
+        </div>`:''}
+      </div>`;
+    })()}
+    ${(overmakenGedaan || MAAND_OVERBOEKINGEN.some(r=>r.periode_start===PERIODE_START_SALARISDATUM)) ? '' : (()=>{
       const isOpen = volgendeExpand==='na-salaris';
       const kleur = restNaarIng>=0?'var(--dot-ok)':'var(--dot-over)';
       return `<div class="card" data-expand="na-salaris" style="cursor:pointer;${isOpen?'border-color:var(--brass);border-width:2px;':''}">
