@@ -1206,7 +1206,9 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-09-24j - Pensioen geïndexeerd (Rob, 24-09): ABP/AOW-bedragen (stand 2026) groeien in de Inflatie-projectie mee met dezelfde 2%/jr (ikv2pctIndex, anker aug 2026), ook ná ingang; Nominaal rekent in geld van nu: vanaf december 2034 is Robs bijdrage in VERMOGEN_MAANDEN niet meer de Excel-waarde maar pensioen netto − uitgaven (ongeïndexeerd) − privé 1.000 (vermogenMaandenLive). Salaris › Rob › Pensioen-kaart toont beide bedragen.';
+const DASHBOARD_VERSION = '2026-09-24l - Herstel ZZP-werk uit de parallelle chat van 23-09 (versies ZZP 23a-c, gemaakt op een andere kopie van index.html en daardoor niet in deze lijn): (1) nieuwe-factuurformulier: toetsenbord blijft open (geen render() per cijfer, zzpNfUpdateCalc), invoer met komma (zzpNum, inputmode=decimal); (2) factuurbrede keuze Tarieven Excl./Incl. btw (zzp_omzet.prijzen_incl_btw); (3) btw-soort per regel 21%/9%/0%/Vrijgesteld (zzp_omzet_regels.btw_soort), gemengde btw op 1 factuur via zzpOmzetSplits() in omzetlijst, bankkoppeling, factuur-PDF, Jaarrekening-PDF en btw-kwartalen (1a/1b/1e/vrijgesteld apart); (4) btw-aftrek algemene kosten volgt zzp_vrijgesteld_gebruik i.p.v. handelsnaam. Database stond al goed.';
+const DASHBOARD_VERSION_PREV_2026_09_24k = '2026-09-24k - Nominaal (Rob, 24-09: "in nominaal mag je dan wel uitgaan van die 6322"): vanaf december 2034 rekent Robs bijdrage met het pensioen zoals geïndexeerd bij ingang (jan 2035, ca. 6.322 netto/mnd, vast) − uitgaven (ongeïndexeerd) − privé 1.000. Inflatie ongewijzigd (pensioen blijft daar 2%/jr doorgroeien).';
+const DASHBOARD_VERSION_PREV_2026_09_24j = '2026-09-24j - Pensioen geïndexeerd (Rob, 24-09): ABP/AOW-bedragen (stand 2026) groeien in de Inflatie-projectie mee met dezelfde 2%/jr (ikv2pctIndex, anker aug 2026), ook ná ingang; Nominaal rekent in geld van nu: vanaf december 2034 is Robs bijdrage in VERMOGEN_MAANDEN niet meer de Excel-waarde maar pensioen netto − uitgaven (ongeïndexeerd) − privé 1.000 (vermogenMaandenLive). Salaris › Rob › Pensioen-kaart toont beide bedragen.';
 const DASHBOARD_VERSION_PREV_2026_09_24i = '2026-09-24i - Vermogen: maandlijst gegroepeerd per jaar (Rob, 24-09). Jaarkaart toont eindstand spaarvermogen (laatste maand van dat jaar); uitklappen geeft de maanden met hun spaarvermogen; een maand uitklappen geeft de details (aflossing, potjes, transacties of theoretische regels). Lopend jaar staat standaard open.';
 const DASHBOARD_VERSION_PREV_2026_09_24h = '2026-09-24h - Pensioen Rob (mijnpensioenoverzicht 18-09-2026, parameter_historie categorie Pensioen Rob): vanaf AOW-datum 15-12-2034 vervangt pensioen het salaris in de salarismotor (berekenSalarisPeriodes krijgt een pensioenperiode vanaf 2034-12-01 als totJaar>=2035; salarisJaarOverzicht vanaf 2035 zonder vakantiegeld/13e maand). Netto = (ABP te bereiken − deel ex-partner + AOW) − IB met AOW-tarief schijf 1 (s1−17,9%) − ZVW-bijdrage 5,26% tot max bijdrage-inkomen 79.409 (aanname), gelijk over 12 maanden, niet geïndexeerd. Vermogen (inflatie/salarismotor) rekent daarmee door; nieuwe kaart Pensioen onderaan Salaris › Rob. Fallback 13e/vakantiegeld gebruikt nu !=null i.p.v. truthy.';
 const DASHBOARD_VERSION_PREV_2026_09_24g = '2026-09-24g - Verwachtingslijn per maand (Rob, 24-09: "doe je dat dan overal"): trendgrafieken met een formule-verwachting (Rob/Lindy/deurwaarder, Sparen- en Inkomen-totaal, hypotheek, Casa 3S, Muziek) tekenen de stippellijn nu per maand op de verwachting van dát moment (reeks[i].verwacht), vanaf de eerste maand met data; grafieken zonder maandformule (vaste/dagelijkse categorieën) houden de horizontale lijn. Plus: salarisperiodeVoorDatum() gebruikt nu de perioden-tabel (23-10, 24-11, 22-12) i.p.v. vast de 24e, met de 24e-regel als fallback buiten bekende perioden.';
@@ -6139,7 +6141,7 @@ function vermogenMaandenMetPensioen(rijen){
   return rijen.map(r=>{
     const p = parseVermogenMaandLabel(r.m);
     if(!p || !isPensioenMaand(p.jaar, p.maand)) return r;
-    const rob = pensioenRobNettoMaand(p.jaar, p.maand, false) - liveUitgavenMaandAnchor(p.jaar, p.maand, true) - IKV_PRIVE_BUFFER_MAAND_ANCHOR;
+    const rob = pensioenRobNettoMaand(2035, 1, true) - liveUitgavenMaandAnchor(p.jaar, p.maand, true) - IKV_PRIVE_BUFFER_MAAND_ANCHOR;
     return {...r, rob: Math.round(rob*100)/100, pensioen:true};
   });
 }
@@ -7970,7 +7972,7 @@ function renderEnergieView(){
    (aftrekfactor, afschrijving, kwartaaladvies, jaaradvies) staat hier in code. Controlecijfers: dezelfde
    uitkomst staat als view zzp_btw_kwartaal_advies / zzp_ib_jaar_advies in Supabase.
    Regels: zakelijk % per factuur; 'sleutel' = zakelijk deel gelijk over de handelsnamen van dat jaar
-   (BZM Educatie is btw-vrijgesteld en geeft geen aftrek, vanaf zzp_parameter.bzm_start); 'direct' = de
+   (aftrek = 1 - aandeel vrijgesteld gebruik uit zzp_vrijgesteld_gebruik voor die datum); 'direct' = de
    handelsnaam van de factuur zelf. Activum vanaf zzp_parameter.drempel_activeren (excl. btw), lineair over
    zzp_parameter.afschrijving_jaren, pro rata naar maand; willekeurig_pct = direct afgeschreven deel in het
    aankoopjaar. Btw per kwartaal in hele euro's: omzet-btw afgerond, voorbelasting naar boven afgerond. */
@@ -7985,7 +7987,7 @@ const ZZP_HANDELSNAAM_STIJL = {
   'Bezemer ACC': { accent:'#367DA2', headerBg:'#87A9C3', logo:'data:image/png;base64,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' },
   'Rob Bezemer Photography': { accent:'#2E3135', headerBg:'#DF8F55', logo:'data:image/jpeg;base64,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' },
 };
-let ZZP = {inkoop:[], omzet:[], btw:[], ib:[], sleutel:[], punten:[], parkeren:[], vast:[], handelsnaam:[], codes:[], omzetRegels:[], inkoopBestanden:[], param:{}, geladen:false};
+let ZZP = {inkoop:[], omzet:[], btw:[], ib:[], sleutel:[], punten:[], parkeren:[], vast:[], handelsnaam:[], codes:[], omzetRegels:[], inkoopBestanden:[], vrijGebruik:[], param:{}, geladen:false};
 let zzpTab = 'btw', zzpJaar = null, zzpIbJaar = null, zzpFacJaar = null, zzpJrJaar = null;
 // Rob, 22-09-2026 ("we moeten in het systeem ook facturen kunnen maken ... facturen echt opslaan en ophalen"):
 // nieuwe facturen-module. zzpNieuweFactuurOpen/zzpNieuweFactuurDraft houden het formulier-in-opbouw bij (nooit
@@ -7994,9 +7996,9 @@ let zzpNieuweFactuurOpen = false, zzpNieuweFactuurDraft = null;
 async function loadZzpTables(){
   const get = async (pad)=>{ const r = await fetch(SUPABASE_URL+'/rest/v1/'+pad, {headers: SUPABASE_HEADERS}); return r.ok ? await r.json() : null; };
   try{
-    const [inkoop, omzet, btw, ib, sleutel, punten, param, parkeren, vast, handelsnaam, codes, omzetRegels, inkoopBestanden] = await Promise.all([
+    const [inkoop, omzet, btw, ib, sleutel, punten, param, parkeren, vast, handelsnaam, codes, omzetRegels, inkoopBestanden, vrijGebruik] = await Promise.all([
       get('zzp_inkoop?select=id,nummer,datum,crediteur,notities,bedrag_incl,btw,jaar,activiteit,zakelijk_pct,verdeling,willekeurig_pct,kostenjaar,betaald_datum&order=datum.asc,nummer.asc'),
-      get('zzp_omzet?select=id,nummer,datum,debiteur,debiteur_adres,project,titel,activiteit,bedrag_excl,btw_pct,bedrag_km,advies_btw_pct,doorbelast_overig,betaald_datum&order=datum.asc'),
+      get('zzp_omzet?select=id,nummer,datum,debiteur,debiteur_adres,project,titel,activiteit,bedrag_excl,btw_pct,bedrag_km,advies_btw_pct,doorbelast_overig,betaald_datum,prijzen_incl_btw&order=datum.asc'),
       get('zzp_btw_aangifte?select=jaar,kwartaal,status,omzet_1a,btw_1a,omzet_1e,voorbelasting_5b,saldo'),
       get('zzp_ib_aangifte?select=jaar,inkomsten,afschrijving,overige_kosten,resultaat'),
       get('zzp_verdeelsleutel?select=jaar,activiteit,gewicht'),
@@ -8006,12 +8008,13 @@ async function loadZzpTables(){
       get('zzp_jaarrekening_vastgesteld?select=jaar,vastgesteld_op,omzet,afschrijving,kosten_onder_drempel,reiskosten_parkeren,resultaat,vaste_activa,btw_saldo,eigen_vermogen_begin,prive,eigen_vermogen&order=jaar.asc,created_at.asc'),
       get('zzp_handelsnaam?select=naam,adres,postcode_plaats,telefoon,email,iban,kvk,btw_nummer,toont_code_kolom'),
       get('zzp_codes?select=id,code,handelsnaam,omschrijving_standaard,eenheid_type,standaard_tarief,is_onkosten,actief&order=code.asc'),
-      get('zzp_omzet_regels?select=id,omzet_id,datum,code,omschrijving,eenheid,per_eenheid,kosten,btw_pct,volgorde&order=omzet_id.asc,volgorde.asc'),
+      get('zzp_omzet_regels?select=id,omzet_id,datum,code,omschrijving,eenheid,per_eenheid,kosten,btw_pct,btw_soort,volgorde&order=omzet_id.asc,volgorde.asc'),
       get('zzp_inkoop_bestand?select=id,inkoop_id,bestand_naam,mime_type,grootte_bytes&order=created_at.asc'),
+      get('zzp_vrijgesteld_gebruik?select=van,tot,pct&order=van.asc'),
     ]);
     if(!inkoop || !omzet || !btw || !ib || !sleutel || !punten || !param || !parkeren) return;
     ZZP.inkoop = inkoop; ZZP.omzet = omzet; ZZP.btw = btw; ZZP.ib = ib; ZZP.sleutel = sleutel; ZZP.punten = punten; ZZP.parkeren = parkeren; ZZP.vast = vast || [];
-    ZZP.handelsnaam = handelsnaam || []; ZZP.codes = codes || []; ZZP.omzetRegels = omzetRegels || []; ZZP.inkoopBestanden = inkoopBestanden || [];
+    ZZP.handelsnaam = handelsnaam || []; ZZP.codes = codes || []; ZZP.omzetRegels = omzetRegels || []; ZZP.inkoopBestanden = inkoopBestanden || []; ZZP.vrijGebruik = vrijGebruik || [];
     ZZP.param = {}; param.forEach(p=>{ ZZP.param[p.naam] = p.waarde; });
     ZZP.geladen = true;
     zzpAutoMatchBetalingen();
@@ -8029,8 +8032,7 @@ function zzpOmzetBankKoppeling(){
   const dagen = (a,b)=>Math.round((new Date(a)-new Date(b))/86400000);
   const uit = {};
   ZZP.omzet.slice().sort((a,b)=>a.datum<b.datum?-1:1).forEach(o=>{
-    const pct = o.advies_btw_pct!=null ? Number(o.advies_btw_pct) : Number(o.btw_pct||0);
-    const incl = Number(o.bedrag_excl)*(1+pct/100) + Number(o.bedrag_km||0) + Number(o.doorbelast_overig||0);
+    const incl = zzpOmzetIncl(o);
     let best = null, bestD = 99;
     tx.forEach(t=>{
       if(t.gebruikt || Math.abs(t.amount - incl) >= 0.01) return;
@@ -8061,17 +8063,14 @@ async function zzpAutoMatchBetalingen(){
   if(gewijzigd) render();
 }
 function zzpInkoopBerekend(){
-  const bzmStart = ZZP.param.bzm_start || '2025-09-01';
   const drempel = Number(ZZP.param.drempel_activeren || 450);
-  const sleutel = {};
-  ZZP.sleutel.forEach(s=>{
-    const k = sleutel[s.jaar] || (sleutel[s.jaar] = {belast:0, tot:0}); const g = Number(s.gewicht);
-    k.tot += g; if(s.activiteit==='Bezemer ACC' || s.activiteit==='Rob Bezemer Photography') k.belast += g;
-  });
+  // 2026-09-23c: btw-aftrek op algemene ('sleutel') kosten volgt het werkelijke gebruik voor vrijgestelde
+  // prestaties (zzp_vrijgesteld_gebruik: periode + %), niet meer de handelsnaam BZM Educatie.
+  const vrijPct = datum=>{ const v = ZZP.vrijGebruik.filter(x=>datum>=x.van && datum<=x.tot).pop(); return v ? Number(v.pct)/100 : 0; };
   return ZZP.inkoop.map(r=>{
     const incl = Number(r.bedrag_incl), btw = Number(r.btw), zp = Number(r.zakelijk_pct)/100, excl = incl - btw, jaar = Number(r.jaar);
     let f;
-    if(r.verdeling==='sleutel'){ const k = sleutel[jaar]; f = (r.datum < bzmStart) ? 1 : ((k && k.tot) ? k.belast/k.tot : 1); }
+    if(r.verdeling==='sleutel') f = 1 - vrijPct(r.datum);
     else f = (r.activiteit==='BZM Educatie' || r.activiteit==='Casa Tre Sorelle') ? 0 : 1;
     return {
       id: r.id, nummer:r.nummer, datum:r.datum, crediteur:r.crediteur, naam:(String(r.notities||'').split(/;| \(/)[0].trim() || r.crediteur), activiteit:r.activiteit, verdeling:r.verdeling, jaar,
@@ -8104,16 +8103,20 @@ function zzpBtwKwartalen(){
   const jMin = Math.min(...jaren), jMax = Math.max(...jaren);
   const uit = [];
   for(let j=jMin; j<=jMax; j++) for(let q=1; q<=4; q++){
-    let om = 0, b1a = 0, vrij = 0;
+    let om = 0, b1a = 0, om1b = 0, b1b = 0, om1e = 0, vrij = 0;
     ZZP.omzet.filter(o=>Number(o.datum.slice(0,4))===j && Math.ceil(Number(o.datum.slice(5,7))/3)===q).forEach(o=>{
-      const pct = o.advies_btw_pct!=null ? Number(o.advies_btw_pct) : Number(o.btw_pct||0), ex = Number(o.bedrag_excl);
-      if(pct>0){ om += ex; b1a += ex*pct/100; } else vrij += ex;
+      zzpOmzetSplits(o).forEach(x=>{
+        if(x.soort==='vrij') vrij += x.excl;
+        else if(x.pct===0) om1e += x.excl;
+        else if(x.pct===9){ om1b += x.excl; b1b += x.excl*0.09; }
+        else { om += x.excl; b1a += x.excl*x.pct/100; }
+      });
     });
     const vb = rows.filter(r=>r.jaar===j && r.kwartaal===q).reduce((s,r)=>s+r.btwAftrek, 0);
-    const advB1a = Math.round(b1a), advVb = Math.max(0, Math.ceil(vb - 0.0001));
+    const advB1a = Math.round(b1a), advB1b = Math.round(b1b), advVb = Math.max(0, Math.ceil(vb - 0.0001));
     const filed = ZZP.btw.filter(b=>Number(b.jaar)===j && Number(b.kwartaal)===q).sort((a,b)=>(b.status==='verzonden')-(a.status==='verzonden'))[0] || null;
     uit.push({
-      j, q, om, b1a: advB1a, vrij, vb: advVb, saldo: advB1a - advVb,
+      j, q, om, b1a: advB1a, om1b, b1b: advB1b, om1e, vrij, vb: advVb, saldo: advB1a + advB1b - advVb,
       ag: filed ? {status:filed.status, om:Number(filed.omzet_1a||0), b1a:Number(filed.btw_1a||0), om1e:Number(filed.omzet_1e||0), vb:Number(filed.voorbelasting_5b||0), saldo:Number(filed.saldo||0)} : null
     });
   }
@@ -8129,7 +8132,7 @@ function zzpBtwVolgend(kw){
   const voorheen = kw.slice(0, idx+1).filter(k=>k.ag);
   const corrVb = voorheen.reduce((s,k)=>s+(k.ag.vb-k.vb), 0);
   const corrB1a = voorheen.reduce((s,k)=>s+(k.b1a-k.ag.b1a), 0);
-  const corr1e = voorheen.reduce((s,k)=>s+k.ag.om1e, 0);
+  const corr1e = voorheen.reduce((s,k)=>s+(k.ag.om1e-Math.round(k.om1e)), 0);
   return {volgend, corrVb, corrB1a, corr1e, totaal: volgend.saldo + corrVb + corrB1a};
 }
 function zzpIbJaren(){
@@ -8231,7 +8234,7 @@ function zzpBtwTab(){
   uit += kw.filter(k=>k.j===zzpJaar).map(k=>{
     const ag = k.ag;
     const status = ag ? (ag.status==='verzonden' ? 'verzonden' : ag.status) : 'nog te doen';
-    const leeg = !ag ? false : (ag.om===0 && ag.b1a===0 && ag.vb===0 && ag.om1e===0 && k.om===0 && k.vb===0);
+    const leeg = !ag ? false : (ag.om===0 && ag.b1a===0 && ag.vb===0 && ag.om1e===0 && k.om===0 && k.om1b===0 && k.om1e===0 && k.vb===0);
     let body;
     if(leeg && k.vrij===0) body = `<div style="font-size:13px;color:var(--muted);">Niets aan te geven</div>`;
     else {
@@ -8239,7 +8242,8 @@ function zzpBtwTab(){
       body = zzpKop3('aangegeven', 'advies', 'verschil')
         + zzpRij3('Omzet 1a', ag?zzpE0(ag.om):'\u2013', zzpE0(k.om), ag?zzpE0(ag.om-k.om):'\u2013')
         + zzpRij3('Btw 1a', ag?zzpE0(ag.b1a):'\u2013', zzpE0(k.b1a), ag?zzpE0(ag.b1a-k.b1a):'\u2013')
-        + (ag && ag.om1e ? zzpRij3('Omzet 1e', zzpE0(ag.om1e), zzpE0(0), zzpE0(ag.om1e), {kleur:'var(--brass)'}) : '')
+        + (k.om1b ? zzpRij3('Omzet 1b', '\u2013', zzpE0(k.om1b), '\u2013') + zzpRij3('Btw 1b', '\u2013', zzpE0(k.b1b), '\u2013') : '')
+        + ((ag && ag.om1e) || k.om1e ? zzpRij3('Omzet 1e', ag?zzpE0(ag.om1e):'\u2013', zzpE0(k.om1e), ag?zzpE0(ag.om1e-k.om1e):'\u2013', {kleur: ag && Math.round(ag.om1e-k.om1e)!==0 ? 'var(--brass)' : null}) : '')
         + zzpRij3('Voorbelasting 5b', ag?zzpE0(ag.vb):'\u2013', zzpE0(k.vb), ag?zzpE0(dv):'\u2013', {kleur: ag?zzpVerschilKleur(dv):null})
         + zzpRij3('Saldo', ag?zzpSaldo(ag.saldo):'\u2013', zzpSaldo(k.saldo), '', {sterk:true, rand:true})
         + (k.vrij>0 ? zzpRij('Vrijgestelde omzet (niet aangeven)', zzpE0(k.vrij)) : '');
@@ -8445,7 +8449,7 @@ function zzpGenereerJaarrekeningPdf(j){
   const omzetRows = omzetJ.map(o=>{
     const pct = o.advies_btw_pct!=null ? Number(o.advies_btw_pct) : Number(o.btw_pct||0);
     const statusLabel = o.betaald_datum ? 'betaald '+o.betaald_datum.split('-').reverse().join('-') : 'open';
-    return `<tr><td>${o.datum.split('-').reverse().join('-')}</td><td>${o.nummer||''}</td><td>${o.debiteur||''}</td><td>${act[o.activiteit]||o.activiteit||''}</td><td style="text-align:right;">${zzpE0(Number(o.bedrag_excl))}</td><td style="text-align:right;">${pct?pct+'%':'vrijgesteld'}</td><td style="text-align:right;">${zzpE0(Number(o.bedrag_km||0)+Number(o.doorbelast_overig||0))}</td><td style="color:${o.betaald_datum?'#1e8a4c':'#c0392b'};">${statusLabel}</td></tr>`;
+    return `<tr><td>${o.datum.split('-').reverse().join('-')}</td><td>${o.nummer||''}</td><td>${o.debiteur||''}</td><td>${act[o.activiteit]||o.activiteit||''}</td><td style="text-align:right;">${zzpE0(Number(o.bedrag_excl))}</td><td style="text-align:right;">${zzpOmzetBtwKort(o)}</td><td style="text-align:right;">${zzpE0(Number(o.bedrag_km||0)+Number(o.doorbelast_overig||0))}</td><td style="color:${o.betaald_datum?'#1e8a4c':'#c0392b'};">${statusLabel}</td></tr>`;
   }).join('') || '<tr><td colspan="8" style="color:#888;">Geen omzetfacturen dit jaar.</td></tr>';
   const omzetTotExcl = omzetJ.reduce((s,o)=>s+Number(o.bedrag_excl),0);
   const debiteurenOpenstaand = omzetJ.filter(o=>!o.betaald_datum).reduce((s,o)=>s+Number(o.bedrag_excl),0);
@@ -8570,8 +8574,8 @@ function zzpCodeInfo(code, handelsnaam){
 }
 function zzpNieuweFactuurLeeg(){
   const vandaag = new Date().toISOString().slice(0,10);
-  return { handelsnaam:'', debiteur:'', debiteur_adres:'', project:'', datum: vandaag, nummer:'', titel:'FACTUUR', titelHandmatig:false,
-    regels:[ {datum:vandaag, code:'', omschrijving:'', eenheid:1, per_eenheid:0, btw_pct:0} ] };
+  return { handelsnaam:'', debiteur:'', debiteur_adres:'', project:'', datum: vandaag, nummer:'', titel:'FACTUUR', titelHandmatig:false, prijzenIncl:false,
+    regels:[ {datum:vandaag, code:'', omschrijving:'', eenheid:'1', per_eenheid:'', btw_soort:'21'} ] };
 }
 function zzpNieuweFactuurAutoNummer(handelsnaam){
   if(!handelsnaam) return '';
@@ -8590,7 +8594,51 @@ function zzpNieuweFactuurAutoTitel(draft){
   });
   return alleOnkosten ? 'DECLARATIE' : 'FACTUUR';
 }
-function zzpNieuweFactuurKosten(r){ return Math.round(Number(r.eenheid||0)*Number(r.per_eenheid||0)*100)/100; }
+function zzpNum(v){ const n = Number(String(v??'').replace(',','.')); return isFinite(n) ? n : 0; }
+function zzpNieuweFactuurKosten(r){ return Math.round(zzpNum(r.eenheid)*zzpNum(r.per_eenheid)*100)/100; }
+// 2026-09-23b: btw-soort per regel: '21','9','0' (0%-tarief, rubriek 1e) of 'vrij' (vrijgesteld, niet aangeven).
+// Regelbedragen zijn 'zoals ingevoerd' -- incl. btw als de factuur prijzen_incl_btw heeft, anders excl.
+const ZZP_BTW_SOORTEN = [['21','21%'],['9','9%'],['0','0%'],['vrij','Vrijgesteld']];
+function zzpSoortPct(soort){ return soort==='vrij' ? 0 : zzpNum(soort); }
+function zzpRegelSoort(r){ return r.btw_soort || (zzpNum(r.btw_pct)===0 ? 'vrij' : String(zzpNum(r.btw_pct))); }
+function zzpR2(n){ return Math.round(n*100)/100; }
+function zzpBtwGroepen(items, incl){
+  const g = {}, volg = ['21','9','0','vrij'];
+  items.forEach(it=>{ g[it.soort] = (g[it.soort]||0) + it.bedrag; });
+  return Object.keys(g).sort((x,y)=>volg.indexOf(x)-volg.indexOf(y)).map(soort=>{
+    const p = zzpSoortPct(soort)/100, som = zzpR2(g[soort]);
+    const excl = incl ? zzpR2(som/(1+p)) : som, inc = incl ? som : zzpR2(som*(1+p));
+    return { soort, pct: zzpSoortPct(soort), excl, incl: inc, btw: zzpR2(inc-excl) };
+  });
+}
+function zzpNfGroepen(d, regels){ return zzpBtwGroepen((regels||d.regels).map(r=>({soort: r.btw_soort||'21', bedrag: zzpNieuweFactuurKosten(r)})), !!d.prijzenIncl); }
+function zzpNfTotalen(d){
+  const g = zzpNfGroepen(d);
+  return { excl: zzpR2(g.reduce((t,x)=>t+x.excl,0)), incl: zzpR2(g.reduce((t,x)=>t+x.incl,0)), btw: zzpR2(g.reduce((t,x)=>t+x.btw,0)) };
+}
+function zzpNfUpdateCalc(){
+  const d = zzpNieuweFactuurDraft; if(!d) return;
+  d.regels.forEach((r,i)=>{ const el = document.querySelector('[data-zzp-nf-calc="'+i+'"]'); if(el) el.textContent = '= '+fmt(zzpNieuweFactuurKosten(r)); });
+  const t = zzpNfTotalen(d);
+  const ex = document.querySelector('[data-zzp-nf-tot-excl]'); if(ex) ex.textContent = fmt(t.excl);
+  const inc = document.querySelector('[data-zzp-nf-tot-incl]'); if(inc) inc.textContent = fmt(t.incl);
+}
+// Btw-splitsing van een opgeslagen omzetfactuur. advies_btw_pct (correctie achteraf) wint; een factuur met
+// 1 btw-soort volgt de kopregel (bedrag_excl/btw_pct); pas bij gemengde regels wordt per soort uit de regels gerekend.
+function zzpOmzetSplits(o){
+  if(o.advies_btw_pct!=null){
+    const p = Number(o.advies_btw_pct), ex = Number(o.bedrag_excl), inc = zzpR2(ex*(1+p/100));
+    return [{ soort: p ? String(p) : 'vrij', pct: p, excl: ex, incl: inc, btw: zzpR2(inc-ex) }];
+  }
+  const regels = zzpOmzetRegelsVoor(o.id);
+  const soorten = [...new Set(regels.map(zzpRegelSoort))];
+  if(soorten.length>1) return zzpBtwGroepen(regels.map(r=>({soort: zzpRegelSoort(r), bedrag: Number(r.kosten||0)})), !!o.prijzen_incl_btw);
+  const p = Number(o.btw_pct||0), ex = Number(o.bedrag_excl);
+  const inc = o.prijzen_incl_btw && regels.length ? zzpR2(regels.reduce((t,r)=>t+Number(r.kosten||0),0)) : zzpR2(ex*(1+p/100));
+  return [{ soort: soorten[0] || (p ? String(p) : 'vrij'), pct: p, excl: ex, incl: inc, btw: zzpR2(inc-ex) }];
+}
+function zzpOmzetIncl(o){ return zzpOmzetSplits(o).reduce((t,x)=>t+x.incl,0) + Number(o.bedrag_km||0) + Number(o.doorbelast_overig||0); }
+function zzpOmzetBtwKort(o){ return zzpOmzetSplits(o).map(x=>x.soort==='vrij'?'vrijgesteld':x.pct+'%').join('/'); }
 function zzpOmzetSectie(){
   const jaren = [...new Set(ZZP.omzet.map(o=>Number(o.datum.slice(0,4))))].sort();
   const jaar = zzpFacJaar!=null && jaren.includes(zzpFacJaar) ? zzpFacJaar : (jaren[jaren.length-1] ?? new Date().getFullYear());
@@ -8599,10 +8647,10 @@ function zzpOmzetSectie(){
   const openCount = rows.filter(o=>!o.betaald_datum).length;
   const lijst = rows.map(o=>{
     const pct = o.advies_btw_pct!=null ? Number(o.advies_btw_pct) : Number(o.btw_pct||0);
-    const meta = [o.datum.slice(8,10)+'-'+o.datum.slice(5,7), act[o.activiteit]||o.activiteit, (o.titel||'FACTUUR').toLowerCase(), pct?pct+'% btw':'btw vrij'].join(' \u00b7 ');
+    const meta = [o.datum.slice(8,10)+'-'+o.datum.slice(5,7), act[o.activiteit]||o.activiteit, (o.titel||'FACTUUR').toLowerCase(), zzpOmzetBtwKort(o)==='vrijgesteld'?'btw vrij':zzpOmzetBtwKort(o)+' btw'].join(' \u00b7 ');
     const statusLabel = o.betaald_datum ? 'betaald '+o.betaald_datum.slice(8,10)+'-'+o.betaald_datum.slice(5,7) : 'open';
     const statusKleur = o.betaald_datum ? 'var(--dot-ok)' : 'var(--brass)';
-    const incl = Number(o.bedrag_excl)*(1+pct/100) + Number(o.bedrag_km||0) + Number(o.doorbelast_overig||0);
+    const incl = zzpOmzetIncl(o);
     return `<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--rule);">
       <span style="min-width:0;"><span style="font-size:13px;">${o.debiteur}${o.nummer?' \u00b7 '+o.nummer:''}</span><br><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);">${meta}</span></span>
       <span style="text-align:right;white-space:nowrap;"><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;">${fmt(incl)}</span><br>
@@ -8637,17 +8685,17 @@ function zzpNieuweFactuurFormHtml(){
       </div>
       <div class="zzp-nf-field"><span class="zzp-nf-label">Omschrijving</span><input type="text" class="zzp-nf-input" data-zzp-nf-regel="omschrijving" data-zzp-nf-idx="${i}" value="${r.omschrijving}" placeholder="Omschrijving op de factuur"></div>
       <div class="zzp-nf-row" style="align-items:flex-end;">
-        <div class="zzp-nf-field"><span class="zzp-nf-label">Eenheid</span><input type="number" step="0.01" class="zzp-nf-input mono" data-zzp-nf-regel="eenheid" data-zzp-nf-idx="${i}" value="${r.eenheid}"></div>
-        <div class="zzp-nf-field"><span class="zzp-nf-label">Tarief \u20ac</span><input type="number" step="0.01" class="zzp-nf-input mono" data-zzp-nf-regel="per_eenheid" data-zzp-nf-idx="${i}" value="${r.per_eenheid}"></div>
-        <div class="zzp-nf-field"><span class="zzp-nf-label">Btw %</span><input type="number" step="1" class="zzp-nf-input mono" data-zzp-nf-regel="btw_pct" data-zzp-nf-idx="${i}" value="${r.btw_pct}"></div>
+        <div class="zzp-nf-field"><span class="zzp-nf-label">Eenheid</span><input type="text" inputmode="decimal" class="zzp-nf-input mono" data-zzp-nf-regel="eenheid" data-zzp-nf-idx="${i}" value="${r.eenheid}"></div>
+        <div class="zzp-nf-field"><span class="zzp-nf-label">Tarief \u20ac ${d.prijzenIncl?'incl':'excl'}</span><input type="text" inputmode="decimal" class="zzp-nf-input mono" data-zzp-nf-regel="per_eenheid" data-zzp-nf-idx="${i}" value="${r.per_eenheid}" placeholder="0"></div>
+        <div class="zzp-nf-field"><span class="zzp-nf-label">Btw</span><select class="zzp-nf-input mono" data-zzp-nf-regel="btw_soort" data-zzp-nf-idx="${i}">${ZZP_BTW_SOORTEN.map(([v,l])=>`<option value="${v}"${(r.btw_soort||'21')===v?' selected':''}>${l}</option>`).join('')}</select></div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">
-        <span class="zzp-nf-regel-calc">= ${fmt(kosten)}</span>
+        <span class="zzp-nf-regel-calc" data-zzp-nf-calc="${i}">= ${fmt(kosten)}</span>
         ${d.regels.length>1 ? `<button type="button" class="zzp-nf-del-btn" data-zzp-nf-regel-verwijder="${i}">\u00d7</button>` : ''}
       </div>
     </div>`;
   }).join('');
-  const totaal = d.regels.reduce((s,r)=>s+zzpNieuweFactuurKosten(r),0);
+  const tot = zzpNfTotalen(d);
   return `<div class="card" style="border:1px solid var(--brass-dim);">
     <div class="card-label"><span>Nieuwe factuur / declaratie</span></div>
     <div class="zzp-nf-field"><span class="zzp-nf-label">Handelsnaam</span><select class="zzp-nf-input" data-zzp-nf="handelsnaam">${handelsOpts}</select></div>
@@ -8665,10 +8713,18 @@ function zzpNieuweFactuurFormHtml(){
         <button type="button" data-zzp-nf-titel="DECLARATIE" class="${d.titel==='DECLARATIE'?'active':''}">Declaratie</button>
       </div>
     </div>
+    <div class="zzp-nf-field">
+      <span class="zzp-nf-label">Tarieven</span>
+      <div class="zzp-nf-type-toggle">
+        <button type="button" data-zzp-nf-incl="0" class="${!d.prijzenIncl?'active':''}">Excl. btw</button>
+        <button type="button" data-zzp-nf-incl="1" class="${d.prijzenIncl?'active':''}">Incl. btw</button>
+      </div>
+    </div>
     <div class="card-label" style="margin-top:18px;"><span>Regels</span></div>
     ${regelsHtml}
     <button type="button" data-zzp-nf-regel-toevoegen="1" class="month-tab" style="margin-bottom:16px;">+ Regel</button>
-    <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:15px;margin-bottom:14px;padding-top:10px;border-top:1px solid var(--rule);"><span>Totaal excl. btw</span><b>${fmt(totaal)}</b></div>
+    <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:15px;margin-bottom:14px;padding-top:10px;border-top:1px solid var(--rule);"><span>Totaal excl. btw</span><b data-zzp-nf-tot-excl="1">${fmt(tot.excl)}</b></div>
+    <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:15px;margin-bottom:14px;"><span>Totaal incl. btw</span><b data-zzp-nf-tot-incl="1">${fmt(tot.incl)}</b></div>
     <div style="display:flex;gap:8px;">
       <button type="button" data-zzp-nf-opslaan="1" class="month-tab active" style="flex:1;">Opslaan</button>
       <button type="button" data-zzp-nf-annuleer="1" class="month-tab" style="flex:1;">Annuleren</button>
@@ -8678,20 +8734,22 @@ function zzpNieuweFactuurFormHtml(){
 async function zzpNieuweFactuurOpslaan(){
   const d = zzpNieuweFactuurDraft;
   if(!d.handelsnaam || !d.debiteur.trim() || !d.regels.length){ alert('Handelsnaam, debiteur en minstens 1 regel zijn verplicht.'); return; }
-  const regelsGeldig = d.regels.filter(r=>r.omschrijving.trim() && Number(r.per_eenheid)>=0);
+  const regelsGeldig = d.regels.filter(r=>r.omschrijving.trim() && zzpNum(r.per_eenheid)>=0);
   if(!regelsGeldig.length){ alert('Vul minstens 1 regel met een omschrijving in.'); return; }
-  const bedragExcl = regelsGeldig.reduce((s,r)=>s+zzpNieuweFactuurKosten(r),0);
-  const btwPct = Number(regelsGeldig[0].btw_pct||0);
+  const groepen = zzpNfGroepen(d, regelsGeldig);
+  const bedragExcl = zzpR2(groepen.reduce((t,x)=>t+x.excl,0));
+  // zzp_omzet.btw_pct = tarief van het grootste deel; bij gemengde regels rekent zzpOmzetSplits() per soort uit de regels.
+  const btwPct = groepen.slice().sort((x,y)=>y.excl-x.excl)[0].pct;
   try{
     const resOmzet = await fetch(SUPABASE_URL+'/rest/v1/zzp_omzet', {
       method:'POST', headers: Object.assign({}, SUPABASE_HEADERS, {'Content-Type':'application/json', 'Prefer':'return=representation'}),
       body: JSON.stringify([{ nummer: d.nummer||null, datum: d.datum, debiteur: d.debiteur.trim(), debiteur_adres: d.debiteur_adres.trim()||null,
-        project: d.project.trim()||null, titel: d.titel, activiteit: d.handelsnaam, bedrag_excl: bedragExcl, btw_pct: btwPct }])
+        project: d.project.trim()||null, titel: d.titel, activiteit: d.handelsnaam, bedrag_excl: bedragExcl, btw_pct: btwPct, prijzen_incl_btw: !!d.prijzenIncl }])
     });
     if(!resOmzet.ok) throw new Error('opslaan factuur mislukt');
     const [omzetRow] = await resOmzet.json();
     const regelsPayload = regelsGeldig.map((r,i)=>({ omzet_id: omzetRow.id, datum: r.datum||null, code: r.code||null, omschrijving: r.omschrijving.trim(),
-      eenheid: Number(r.eenheid||0), per_eenheid: Number(r.per_eenheid||0), kosten: zzpNieuweFactuurKosten(r), btw_pct: Number(r.btw_pct||0), volgorde: i }));
+      eenheid: zzpNum(r.eenheid), per_eenheid: zzpNum(r.per_eenheid), kosten: zzpNieuweFactuurKosten(r), btw_pct: zzpSoortPct(r.btw_soort||'21'), btw_soort: r.btw_soort||'21', volgorde: i }));
     const resRegels = await fetch(SUPABASE_URL+'/rest/v1/zzp_omzet_regels', {
       method:'POST', headers: Object.assign({}, SUPABASE_HEADERS, {'Content-Type':'application/json', 'Prefer':'return=minimal'}),
       body: JSON.stringify(regelsPayload)
@@ -8709,21 +8767,23 @@ function zzpGenereerFactuurPdf(omzetId){
   const stijl = ZZP_HANDELSNAAM_STIJL[o.activiteit] || { accent:'#333', headerBg:'#eee', logo:null };
   const regels = zzpOmzetRegelsVoor(o.id);
   const toontCode = h.toont_code_kolom!==false && regels.some(r=>r.code);
-  const pct = o.advies_btw_pct!=null ? Number(o.advies_btw_pct) : Number(o.btw_pct||0);
   const nlDatum = s=> s ? s.split('-').reverse().join('-') : '';
-  const regelRows = regels.map(r=>{
-    return `<tr>${r.datum?`<td>${nlDatum(r.datum)}</td>`:'<td></td>'}${toontCode?`<td>${r.code||''}</td>`:''}<td>${r.omschrijving}</td><td style="text-align:right;">${Number(r.eenheid).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="text-align:right;">\u20ac ${Number(r.per_eenheid).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="text-align:right;">\u20ac ${Number(r.kosten).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>${pct===0?'<td>V</td>':''}</tr>`;
-  }).join('');
-  const excl = Number(o.bedrag_excl);
-  const btwBedrag = excl*pct/100;
-  const totaal = excl + btwBedrag;
-  const footerHtml = pct===0
-    ? `<tr><td colspan="${toontCode?4:3}" style="text-align:right;border:none;">Totaal ex. btw</td><td style="text-align:right;border:none;">\u20ac ${excl.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="border:none;"></td></tr>
-      <tr><td colspan="${toontCode?4:3}" style="text-align:right;border:none;">Btw vrij 0,0%</td><td style="text-align:right;border:none;">\u20ac ${excl.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="text-align:right;border:none;">\u20ac 0,00</td></tr>
-      <tr style="border-top:2px solid #333;"><td colspan="${toontCode?4:3}" style="text-align:right;border:none;font-weight:700;"></td><td style="text-align:right;border:none;font-weight:700;">\u20ac ${totaal.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td style="border:none;"></td></tr>`
-    : `<tr><td colspan="${toontCode?3:2}" style="text-align:right;border:none;">Sub totaal</td><td style="text-align:right;border:none;">\u20ac ${excl.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>
-      <tr><td colspan="${toontCode?3:2}" style="text-align:right;border:none;">Btw ${pct}%</td><td style="text-align:right;border:none;">\u20ac ${btwBedrag.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>
-      <tr style="border-top:2px solid #333;"><td colspan="${toontCode?3:2}" style="text-align:right;border:none;font-weight:700;">Totaal</td><td style="text-align:right;border:none;font-weight:700;">\u20ac ${totaal.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2})}</td></tr>`;
+  const eur = n=>'\u20ac '+Number(n).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const getal = n=>Number(n).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const splits = zzpOmzetSplits(o);
+  const inclPrijzen = !!o.prijzen_incl_btw && splits.some(x=>x.pct>0);
+  const btwKolom = splits.length>1 || splits.some(x=>x.pct===0);
+  const btwCel = r=>{ const soort = splits.length===1 ? splits[0].soort : zzpRegelSoort(r); return soort==='vrij' ? 'V' : zzpSoortPct(soort)+'%'; };
+  const regelRows = regels.map(r=>`<tr><td>${r.datum?nlDatum(r.datum):''}</td>${toontCode?`<td>${r.code||''}</td>`:''}<td>${r.omschrijving}</td><td style="text-align:right;">${getal(r.eenheid)}</td><td style="text-align:right;">${eur(r.per_eenheid)}</td><td style="text-align:right;">${eur(r.kosten)}</td>${btwKolom?`<td>${btwCel(r)}</td>`:''}</tr>`).join('');
+  const nKol = 5 + (toontCode?1:0) + (btwKolom?1:0), labelSpan = nKol - 1 - (btwKolom?1:0);
+  const fRij = (label, bedrag, sterk)=>`<tr${sterk?' style="border-top:2px solid #333;"':''}><td colspan="${labelSpan}" style="text-align:right;border:none;${sterk?'font-weight:700;':''}">${label}</td><td style="text-align:right;border:none;${sterk?'font-weight:700;':''}">${eur(bedrag)}</td>${btwKolom?'<td style="border:none;"></td>':''}</tr>`;
+  const excl = zzpR2(splits.reduce((t,x)=>t+x.excl,0)), totaal = zzpR2(splits.reduce((t,x)=>t+x.incl,0));
+  const footerHtml = fRij('Sub totaal excl. btw', excl)
+    + splits.map(x=>{
+        const over = splits.length>1 ? ' over '+eur(x.excl) : '';
+        return x.soort==='vrij' ? fRij('Vrijgesteld van btw'+over, 0) : fRij('Btw '+x.pct+'%'+over, x.btw);
+      }).join('')
+    + fRij('Totaal', totaal, true);
   const naamKop = (o.activiteit||'').toUpperCase();
   c3sToonPdfOverlay(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><title>${o.titel||'Factuur'} ${o.nummer||''}</title>
   <style>
@@ -8756,7 +8816,7 @@ function zzpGenereerFactuurPdf(omzetId){
     <div><span>${(o.titel||'FACTUUR')==='DECLARATIE'?'Declaratienummer:':'Factuurnummer:'}</span><span>${o.nummer||''}</span></div>
     ${o.project?`<div><span>Project:</span><span>${o.project}</span></div>`:''}
   </div>
-  <table><thead><tr><th>Datum</th>${toontCode?'<th>Code</th>':''}<th>Omschrijving</th><th style="text-align:right;">Eenheid</th><th style="text-align:right;">Per eenheid</th><th style="text-align:right;">Kosten</th>${pct===0?'<th>Btw</th>':''}</tr></thead>
+  <table><thead><tr><th>Datum</th>${toontCode?'<th>Code</th>':''}<th>Omschrijving</th><th style="text-align:right;">Eenheid</th><th style="text-align:right;">Per eenheid${inclPrijzen?' incl. btw':''}</th><th style="text-align:right;">Kosten${inclPrijzen?' incl. btw':''}</th>${btwKolom?'<th>Btw</th>':''}</tr></thead>
   <tbody>${regelRows}</tbody>
   <tfoot>${footerHtml}</tfoot></table>
   <div class="footer-tekst">Wij verzoeken u deze ${(o.titel||'FACTUUR')==='DECLARATIE'?'declaratie':'factuur'} binnen 14 dagen na ${(o.titel||'FACTUUR')==='DECLARATIE'?'declaratiedatum':'factuurdatum'} te voldoen op<br>rekeningnummer ${h.iban||''} tnv R. Bezemer ovv ${(o.titel||'FACTUUR')==='DECLARATIE'?'declaratienummer':'factuurnummer'}.</div>
@@ -8864,7 +8924,13 @@ function render(){
   document.querySelectorAll('[data-zzp-nf-regel-toevoegen]').forEach(el=>el.addEventListener('click',()=>{
     if(!zzpNieuweFactuurDraft) return;
     const vandaag = new Date().toISOString().slice(0,10);
-    zzpNieuweFactuurDraft.regels.push({datum:vandaag, code:'', omschrijving:'', eenheid:1, per_eenheid:0, btw_pct:0});
+    const vorige = zzpNieuweFactuurDraft.regels[zzpNieuweFactuurDraft.regels.length-1];
+    zzpNieuweFactuurDraft.regels.push({datum:vorige?vorige.datum:vandaag, code:'', omschrijving:'', eenheid:'1', per_eenheid:'', btw_soort: vorige?(vorige.btw_soort||'21'):'21'});
+    render();
+  }));
+  document.querySelectorAll('[data-zzp-nf-incl]').forEach(el=>el.addEventListener('click',()=>{
+    if(!zzpNieuweFactuurDraft) return;
+    zzpNieuweFactuurDraft.prijzenIncl = el.dataset.zzpNfIncl==='1';
     render();
   }));
   document.querySelectorAll('[data-zzp-nf-regel-verwijder]').forEach(el=>el.addEventListener('click',()=>{
@@ -8893,11 +8959,14 @@ function render(){
       if(veld==='code'){
         r.code = el.value;
         const info = zzpCodeInfo(r.code, zzpNieuweFactuurDraft.handelsnaam);
-        if(info){ if(!r.omschrijving) r.omschrijving = info.omschrijving_standaard; if(info.standaard_tarief!=null) r.per_eenheid = info.standaard_tarief; }
+        if(info){ if(!r.omschrijving) r.omschrijving = info.omschrijving_standaard; if(info.standaard_tarief!=null){ const st = Number(info.standaard_tarief); r.per_eenheid = String(zzpNieuweFactuurDraft.prijzenIncl ? zzpR2(st*(1+zzpSoortPct(r.btw_soort||'21')/100)) : st); } }
         if(!zzpNieuweFactuurDraft.titelHandmatig) zzpNieuweFactuurDraft.titel = zzpNieuweFactuurAutoTitel(zzpNieuweFactuurDraft);
         render();
-      } else if(veld==='eenheid' || veld==='per_eenheid' || veld==='btw_pct'){
-        r[veld] = el.value; render();
+      } else if(veld==='btw_soort'){
+        r.btw_soort = el.value; zzpNfUpdateCalc();
+      } else if(veld==='eenheid' || veld==='per_eenheid'){
+        // geen render(): die vervangt het invoerveld en sluit het toetsenbord na elk cijfer
+        r[veld] = el.value; zzpNfUpdateCalc();
       } else {
         r[veld] = el.value; // datum/omschrijving: geen re-render nodig tijdens typen
       }
