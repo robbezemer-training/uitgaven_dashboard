@@ -1143,6 +1143,7 @@ let c3sFactuurKoppelOpen = {}; // C3S_FACTUREN-index -> true = koppel-UI opengek
 let c3sFactuurAlleTonen = {}; // C3S_FACTUREN-index -> true = volledige postenlijst i.p.v. top-voorstellen
 let c3sSectiesOpen = {koop:false, project:false, bouw:false, afwerking:false, facturen:false}; // per tegel open/dicht, standaard allemaal dicht
 function isLindySalarisTx(t){ return (t.vendor||'').includes('SARO (salaris'); }
+function isLindyExtraTx(t){ return /^SARO \((AMT|extra)/.test(t.vendor||''); }
 let MAAND_OVERBOEKINGEN = [];
 let VAST_VERWACHT_PATRONEN = {}; // categorie -> som bedrag_verwacht van vendor_patronen met telt_als_verwachting=true (live geladen)
 const VAST_VERWACHT_PATRONEN_FALLBACK = {"Telecom": 100.01};
@@ -1204,7 +1205,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-09-24e - Terugdraaiing van 24c op Robs verzoek: Lindy — SARO telt weer alleen het reguliere salaris (vendor SARO (salaris...)); extra SARO-betalingen (AMT-kwartaalbonus, SARO (extra)) staan in Supabase op categorie Overig inkomen en tellen dus onder Overig inkomen. Spaarverwachting en trendlijnen blijven het schema volgen (Rob 2.000 + Lindy regulier + deurwaarder).';
+const DASHBOARD_VERSION = '2026-09-24f - Sparen (Rob, 24-09): verwachting/lijn blijft schema (Rob 2.000 + Lindy regulier + deurwaarder); werkelijk telt nu ook Lindy — extra (AMT) mee (SARO (AMT…)/SARO (extra), categorie Overig inkomen), dus sparenBasis = Rob + Lindy salaris + Lindy extra. Tekortverrekening apart getoond in de Sparen-uitklap: maand_afsluitingen.verrekend_met_sparen (sep: 920,29) als eigen regel plus netto naar C3S.';
+const DASHBOARD_VERSION_PREV_2026_09_24e = '2026-09-24e - Terugdraaiing van 24c op Robs verzoek: Lindy — SARO telt weer alleen het reguliere salaris (vendor SARO (salaris...)); extra SARO-betalingen (AMT-kwartaalbonus, SARO (extra)) staan in Supabase op categorie Overig inkomen en tellen dus onder Overig inkomen. Spaarverwachting en trendlijnen blijven het schema volgen (Rob 2.000 + Lindy regulier + deurwaarder).';
 const DASHBOARD_VERSION_PREV_2026_09_24d = '2026-09-24d - Nieuwe tegel Overmaken in de maand-tab (Rob, 24-09: kort overzicht wat waarvan overgemaakt moet worden, ook achteraf terug te zien). Bron: tabel maand_overboekingen (per periode van/naar/bedrag/status). Rabo-regels vinken automatisch af zodra een Rabo-afschrijving van exact dat bedrag in de periode staat; overige (bv. Thailand-potje) via status. Vervangt de oude tegel Overmaken naar ING zodra er voor de periode rijen zijn.';
 const DASHBOARD_VERSION_PREV_2026_09_24c = '2026-09-24c - Lindy-inkomen telt nu elke SARO-transactie met categorie Salaris (isLindySalarisTx), niet alleen vendor "SARO (salaris...". De AMT-kwartaalbonus (SARO (AMT kwartaal 3), 584,49) viel daardoor buiten Inkomen én buiten sparenBasis; telt nu mee onder Lindy — SARO en gaat dus mee naar sparen (Rob, 24-09). SARO-vergoedingen (Overig inkomen) blijven apart.';
 const DASHBOARD_VERSION_PREV_2026_09_24b = '2026-09-24b - Maandovergang naar oktober (periode 24-09 t/m 26-10) en periodegrenzen naar Supabase: nieuwe tabel perioden (start_datum, eind_datum, jaar, maand); loadTransactionsTable() leest de huidige en vorige periode live, dus een volgende maandovergang is alleen een SQL-insert, geen nieuwe index.html. Codeconstanten zijn nu alleen offline-fallback. Reisposten: status geannuleerd = doorgehaald en gedimd, telt niet mee in totalen/verdeling/begrotingsdekking; een open verwachte_betalingen-rij met reis_post_id toont ↺ + bedrag bij die post.';
@@ -3067,7 +3069,7 @@ async function loadTransactionsTable(){
   // maand_afsluitingen-tabel (vervangt de losse overrides-rij kind='maand_afsluiting'): reconstrueert
   // dezelfde maandAfsluitingOverrides[periode_start_datum]-vorm die de rest van de code al gebruikt.
   try{
-    const mres = await fetch(SUPABASE_URL+'/rest/v1/maand_afsluitingen?select=periode_start_datum,rabo,ing,amex_openstaand,cc_openstaand,correctie,correctie_reden,afgesloten_op,aangezuiverd', {headers: SUPABASE_HEADERS});
+    const mres = await fetch(SUPABASE_URL+'/rest/v1/maand_afsluitingen?select=periode_start_datum,rabo,ing,amex_openstaand,cc_openstaand,correctie,correctie_reden,afgesloten_op,aangezuiverd,verrekend_met_sparen', {headers: SUPABASE_HEADERS});
     if(mres.ok){
       const mrows = await mres.json();
       mrows.forEach(m=>{
@@ -3075,7 +3077,8 @@ async function loadTransactionsTable(){
         maandAfsluitingOverrides[m.periode_start_datum] = {
           rabo:Number(m.rabo), ing:Number(m.ing), amexOpenstaand:Number(m.amex_openstaand),
           ccOpenstaand:Number(m.cc_openstaand), correctie:m.correctie!=null?Number(m.correctie):0,
-          correctieReden:m.correctie_reden||'', afgeslotenOp:m.afgesloten_op, aangezuiverd:!!m.aangezuiverd
+          correctieReden:m.correctie_reden||'', afgeslotenOp:m.afgesloten_op, aangezuiverd:!!m.aangezuiverd,
+          verrekendMetSparen:m.verrekend_met_sparen!=null?Number(m.verrekend_met_sparen):0
         };
       });
     }
@@ -5340,7 +5343,8 @@ function renderVolgendeMaandView(){
   [...LM_RABO_TX, ...LM_ING_TX].filter(t=>t.category==='Overig inkomen').forEach(t=>{
     OVERIG_INKOMEN_SUBCOMPONENTEN[t.vendor] = (OVERIG_INKOMEN_SUBCOMPONENTEN[t.vendor]||0) + t.amount;
   });
-  const SPAREN_COMPONENTEN = {"Rob — vast": ROB_SPAREN, "Lindy — volledig salaris": LINDY, "Deurwaarder (Velthoven)": 0};
+  const LINDY_EXTRA = inkomenPeriodeTx.filter(isLindyExtraTx).reduce((s,t)=>s+t.amount, 0);
+  const SPAREN_COMPONENTEN = {"Rob — vast": ROB_SPAREN, "Lindy — volledig salaris": LINDY, "Lindy — extra (AMT)": LINDY_EXTRA, "Deurwaarder (Velthoven)": 0};
   const hypotheekBegrootLM = hypotheekLM ? (hypotheekLM.bruto - (hypotheekLM.casa3sRente||0)) : 2597.40; // fallback als maand ontbreekt — casa3sRente eruit, zie hypotheekBedragVoorMaand hierboven voor de reden
   const voorspellingLM = voorspellingDagelijksPerCategorieViaTrend(LM_JAAR, LM_MAAND);
   // Een salarisperiode beslaat vaak delen van TWEE kalendermaanden (bv. 24-aug t/m 25-sep) — de seizoens-
@@ -5377,7 +5381,7 @@ function renderVolgendeMaandView(){
   const DAGELIJKS_COMPONENTEN = voorspellingLM.perCategorie;
   const variabel = Object.values(DAGELIJKS_COMPONENTEN).reduce((a,b)=>a+b,0) + voorspellingLM.onbekendTotaal;
   const inkomenTotaal = Object.values(INKOMEN_COMPONENTEN).reduce((a,b)=>a+b,0);
-  const sparenBasis = ROB_SPAREN+LINDY;
+  const sparenBasis = ROB_SPAREN+LINDY+LINDY_EXTRA;
   let netto = inkomenTotaal - sparenBasis - vastTotaal - variabel;
 
   // Uitgegeven-tot-nu-toe vs. Verwacht (volledige maand) — op basis van de werkelijke bucket (incl. handmatige
@@ -5548,7 +5552,7 @@ function renderVolgendeMaandView(){
     // formule, terwijl de hardcoded tekst nog het oude (hogere) bedrag toonde. Nu één bron van waarheid: beide
     // gebruiken dezelfde functie, dus tekst en grafiek kunnen nooit meer uit elkaar lopen.
     const inkomenVerwacht = {"Rob — LVNL": robNettoVoorMaand(INKOMEN_JAAR, INKOMEN_MAAND), "Lindy — SARO": lindyNettoVoorMaand(INKOMEN_JAAR, INKOMEN_MAAND), "Belastingteruggave": BELASTING, "Deurwaarder": deurwaarderVerwachtInkomen,
-      "Rob — vast": ROB_SPAREN, "Lindy — volledig salaris": lindyNettoVoorMaand(LM_JAAR, LM_MAAND), "Deurwaarder (Velthoven)": deurwaarderVerwachtSparen};
+      "Rob — vast": ROB_SPAREN, "Lindy — volledig salaris": lindyNettoVoorMaand(LM_JAAR, LM_MAAND), "Lindy — extra (AMT)": 0, "Deurwaarder (Velthoven)": deurwaarderVerwachtSparen};
     const wijktAf = (name, val) => { const b=inkomenVerwacht[name]; return b!=null && Math.abs(Math.abs(val)-b) > 0.005; };
     // Rob, 31-08-2026: "alle inkomsten ook eigen grafieken" — niet meer alleen Rob/Lindy. Rob/Lindy blijven
     // formule-gedreven (robNettoVoorMaand/lindyNettoVoorMaand, exact en vooruitkijkend). Belastingteruggave en
@@ -5608,9 +5612,20 @@ function renderVolgendeMaandView(){
       ${expandKey==='sparen' ? renderComponentenTotaalTrendBlokHybride([
         {matcher:null, bedragFn:(_,__)=>ROB_SPAREN},
         {matcher:r=>isLindySalarisTx(r), bedragFn:lindyNettoVoorMaand},
+        {matcher:r=>isLindyExtraTx(r), bedragFn:()=>0},
         {matcher:r=>false, bedragFn:deurwaarderBedragVoorMaand}
       ], expandKey, LM_JAAR, LM_MAAND) : ''}
       ${barHtml}
+      ${(()=>{
+        if(expandKey!=='sparen') return '';
+        const af = maandAfsluitingOverrides[PERIODE_START_SALARISDATUM];
+        const v = af && af.verrekendMetSparen ? af.verrekendMetSparen : 0;
+        if(v<0.005) return '';
+        return `<div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--rule);font-family:'IBM Plex Mono',monospace;font-size:12px;display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;justify-content:space-between;"><span>Verrekend met tekort vorige maand</span><span style="color:var(--rose);">${fmt(-v)}</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>Naar C3S</span><span>${fmt(d.total - v)}</span></div>
+        </div>`;
+      })()}
       ${(()=>{
         if(!categoryExpand || !categoryExpand.startsWith(expandKey+'|')) return '';
         const catName = categoryExpand.slice(expandKey.length+1);
