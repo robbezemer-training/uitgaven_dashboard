@@ -1206,7 +1206,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-09-25b - Dubbeltelling Casa 3S-rente uit liveUitgavenMaandAnchor (Rob, 25-09: "Ja"): vastRestTotaal bevatte nog 415,28 Casa 3S-rente terwijl hypotheekBedrag (HYPOTHEEK_MAANDEN.bruto) die al bevat. Raakte Vermogen Nominaal vanaf pensioen (dec 2034) en Vermogen Inflatie over de hele looptijd: Robs spaarbijdrage was 415,28/mnd (Inflatie: geïndexeerd) te laag. Enel/IMU (61,00) blijft staan.';
+const DASHBOARD_VERSION = '2026-09-25c - Inflatie-indexatie in jaarstappen i.p.v. maandelijks glijden (Rob, 25-09: "elke maand nu beetje ophoging zien is ook raar"; startpunt oktober 2026 = stand van zaken, oktober geen inflatie). ikv2pctIndex: 1,02^n met één stap per 1 juli vanaf 2027 (okt 2026–jun 2027 = 1,00), zelfde ritme als Robs cao en de privé-buffer; ikvPriveIndex volgt nu ikv2pctIndex. Geldt voor uitgaven (excl. hypotheek), privé-buffer, deurwaarder en geïndexeerd pensioen. Lindy blijft in eigen cao-stappen per 1 november.';
+const DASHBOARD_VERSION_PREV_2026_09_25b = '2026-09-25b - Dubbeltelling Casa 3S-rente uit liveUitgavenMaandAnchor (Rob, 25-09: "Ja"): vastRestTotaal bevatte nog 415,28 Casa 3S-rente terwijl hypotheekBedrag (HYPOTHEEK_MAANDEN.bruto) die al bevat. Raakte Vermogen Nominaal vanaf pensioen (dec 2034) en Vermogen Inflatie over de hele looptijd: Robs spaarbijdrage was 415,28/mnd (Inflatie: geïndexeerd) te laag. Enel/IMU (61,00) blijft staan.';
 const DASHBOARD_VERSION_PREV_2026_09_25a = '2026-09-25a - Nieuwe tegel Archief (Rob, 25-09: "archief-achtig iets van vorige maanden, simpel, overzichtelijk" — gekozen: maandkaarten met gestapelde staafgrafiek). Afgesloten salarisperiodes (vanaf de eerste met salaris t/m de periode vóór de lopende) live berekend via de centrale optelmotor (alleTransactiesInPeriode/isSpendRow/effectiveBucket), dus altijd consistent met Maand-tab en trendgrafieken. Grafiek: per maand een staaf gestapeld per categorie (top 5 over het archief + Overige), inkomen als streepje; tik op een staaf opent die maandkaart. Maandkaart: uitgaven en over (inkomen − uitgaven); open: Inkomen/Vaste lasten/Dagelijks/Over plus categorieën. Geen bevroren snapshot (nog niet gevraagd).';
 const DASHBOARD_VERSION_PREV_2026_09_24l = '2026-09-24l - Herstel ZZP-werk uit de parallelle chat van 23-09 (versies ZZP 23a-c, gemaakt op een andere kopie van index.html en daardoor niet in deze lijn): (1) nieuwe-factuurformulier: toetsenbord blijft open (geen render() per cijfer, zzpNfUpdateCalc), invoer met komma (zzpNum, inputmode=decimal); (2) factuurbrede keuze Tarieven Excl./Incl. btw (zzp_omzet.prijzen_incl_btw); (3) btw-soort per regel 21%/9%/0%/Vrijgesteld (zzp_omzet_regels.btw_soort), gemengde btw op 1 factuur via zzpOmzetSplits() in omzetlijst, bankkoppeling, factuur-PDF, Jaarrekening-PDF en btw-kwartalen (1a/1b/1e/vrijgesteld apart); (4) btw-aftrek algemene kosten volgt zzp_vrijgesteld_gebruik i.p.v. handelsnaam. Database stond al goed.';
 const DASHBOARD_VERSION_PREV_2026_09_24k = '2026-09-24k - Nominaal (Rob, 24-09: "in nominaal mag je dan wel uitgaan van die 6322"): vanaf december 2034 rekent Robs bijdrage met het pensioen zoals geïndexeerd bij ingang (jan 2035, ca. 6.322 netto/mnd, vast) − uitgaven (ongeïndexeerd) − privé 1.000. Inflatie ongewijzigd (pensioen blijft daar 2%/jr doorgroeien).';
@@ -6464,17 +6465,18 @@ function ikv2pctIndex(jaar, maand){
   // gebruikt (Deurwaarder/Lasten/cao-plug) — niet apart onderbouwd voor uitgaven specifiek, puur consistent
   // met de bestaande methode. Ankerpunt aug 2026. Kan op elk moment vervangen worden door een andere aanname
   // (bv. per categorie een ander groeipercentage) als Rob dat liever heeft.
-  const jarenSindsAnker = (jaar-2026) + (maand-8)/12;
-  return Math.pow(1.02, jarenSindsAnker);
+  // Rob, 25-09-2026: "elke maand nu beetje ophoging zien is ook raar" + startpunt oktober 2026 = stand van zaken,
+  // dan hoeft oktober geen inflatie. Nu: 1 stap per jaar per 1 juli (zelfde ritme als Robs cao en de privé-buffer),
+  // okt 2026 t/m jun 2027 = 1,00; jul 2027 = 1,02; jul 2028 = 1,0404 enz.
+  const stappen = Math.max(0, (jaar-2027) + (maand>=7 ? 1 : 0));
+  return Math.pow(1.02, stappen);
 }
 // Rob, 07-09-2026: "privé pas indexen in juli 27 (net als de rest)" — de privé-buffer bleef tot nu toe al
 // vanaf aug 2026 meegroeien met ikv2pctIndex (samen met alles andere op de Inflatie-tab). Rob wil 'm bewust
 // plat op het ankerbedrag houden tot juli 2027, en pas dán beginnen met dezelfde 2%/jr-aanname — ander
 // ankerpunt (juli 2027 i.p.v. aug 2026), verder identieke rekenmethode.
 function ikvPriveIndex(jaar, maand){
-  if(jaar < 2027 || (jaar === 2027 && maand < 7)) return 1;
-  const jarenSindsAnker = (jaar-2027) + (maand-7)/12;
-  return Math.pow(1.02, jarenSindsAnker);
+  return ikv2pctIndex(jaar, maand); // sinds 25-09-2026 zelfde jaarstap per 1 juli als de rest
 }
 // Op Robs verzoek (14-08-2026): Inflatie-tegel werkt hetzelfde als Nominaal, maar de Rob/Lindy-posten komen
 // hier uit de precieze salarismotoren (potjesMaandelijksBedragIkv) i.p.v. de vaste VERMOGEN_MAANDEN-tabel.
