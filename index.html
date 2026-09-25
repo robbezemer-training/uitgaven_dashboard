@@ -1206,7 +1206,9 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-09-25d - Onze inflatie (Rob, 25-09). Nieuwe tabel inflatie_cijfers (CBS maandelijks + CPB-ramingen, append-only). Vermogen Inflatie toont één regel: prijzen (vaste lasten zelfde leverancier) · uitgaven (alles excl. hypotheek/Casa 3S/reizen/trip/zakelijk) · CBS (laatste maand) · stap jul. Meting: laatste w afgesloten periodes vs zelfde w een jaar eerder, w=min(12, beschikbaar−12), vanaf w≥3. Jaarstap per 1 juli = gemeten uitgaven, anders CPB-raming van dat jaar (MEV 2027: 2027 = 2,7%), anders 2%. CBS wordt bij laden live opgehaald (opendata.cbs.nl 86141NED) en nieuwe maanden weggeschreven.';
+const DASHBOARD_VERSION = '2026-09-25f - Projectie-inflatie toont nu de bron: "projectie 2,7% (CPB)" / (onze prijzen) / (onze uitgaven) / (aanname) (Rob, 25-09). Volgorde: onze uitgaven → onze prijzen → CPB → 2%. Onze prijzen al vanaf 12 afgesloten periodes (juni 2027): eerste 3 vs laatste 3 periodes, vaste lasten zelfde leverancier, niet geannualiseerd; jaar-op-jaarvenster neemt het over zodra w≥3.';
+const DASHBOARD_VERSION_PREV_2026_09_25e = '2026-09-25e - Label "stap jul" in de inflatieregel hernoemd naar "projectie" (Rob, 25-09: term stap niet duidelijk). Zelfde waarde: het percentage waarmee de Inflatie-projectie per 1 juli ophoogt.';
+const DASHBOARD_VERSION_PREV_2026_09_25d = '2026-09-25d - Onze inflatie (Rob, 25-09). Nieuwe tabel inflatie_cijfers (CBS maandelijks + CPB-ramingen, append-only). Vermogen Inflatie toont één regel: prijzen (vaste lasten zelfde leverancier) · uitgaven (alles excl. hypotheek/Casa 3S/reizen/trip/zakelijk) · CBS (laatste maand) · stap jul. Meting: laatste w afgesloten periodes vs zelfde w een jaar eerder, w=min(12, beschikbaar−12), vanaf w≥3. Jaarstap per 1 juli = gemeten uitgaven, anders CPB-raming van dat jaar (MEV 2027: 2027 = 2,7%), anders 2%. CBS wordt bij laden live opgehaald (opendata.cbs.nl 86141NED) en nieuwe maanden weggeschreven.';
 const DASHBOARD_VERSION_PREV_2026_09_25c = '2026-09-25c - Inflatie-indexatie in jaarstappen i.p.v. maandelijks glijden (Rob, 25-09: "elke maand nu beetje ophoging zien is ook raar"; startpunt oktober 2026 = stand van zaken, oktober geen inflatie). ikv2pctIndex: 1,02^n met één stap per 1 juli vanaf 2027 (okt 2026–jun 2027 = 1,00), zelfde ritme als Robs cao en de privé-buffer; ikvPriveIndex volgt nu ikv2pctIndex. Geldt voor uitgaven (excl. hypotheek), privé-buffer, deurwaarder en geïndexeerd pensioen. Lindy blijft in eigen cao-stappen per 1 november.';
 const DASHBOARD_VERSION_PREV_2026_09_25b = '2026-09-25b - Dubbeltelling Casa 3S-rente uit liveUitgavenMaandAnchor (Rob, 25-09: "Ja"): vastRestTotaal bevatte nog 415,28 Casa 3S-rente terwijl hypotheekBedrag (HYPOTHEEK_MAANDEN.bruto) die al bevat. Raakte Vermogen Nominaal vanaf pensioen (dec 2034) en Vermogen Inflatie over de hele looptijd: Robs spaarbijdrage was 415,28/mnd (Inflatie: geïndexeerd) te laag. Enel/IMU (61,00) blijft staan.';
 const DASHBOARD_VERSION_PREV_2026_09_25a = '2026-09-25a - Nieuwe tegel Archief (Rob, 25-09: "archief-achtig iets van vorige maanden, simpel, overzichtelijk" — gekozen: maandkaarten met gestapelde staafgrafiek). Afgesloten salarisperiodes (vanaf de eerste met salaris t/m de periode vóór de lopende) live berekend via de centrale optelmotor (alleTransactiesInPeriode/isSpendRow/effectiveBucket), dus altijd consistent met Maand-tab en trendgrafieken. Grafiek: per maand een staaf gestapeld per categorie (top 5 over het archief + Overige), inkomen als streepje; tik op een staaf opent die maandkaart. Maandkaart: uitgaven en over (inkomen − uitgaven); open: Inkomen/Vaste lasten/Dagelijks/Over plus categorieën. Geen bevroren snapshot (nog niet gevraagd).';
@@ -7233,6 +7235,17 @@ function inflatieMeting(){
       let a=0, b=0; Object.keys(vNu).forEach(k=>{ if(vToen[k]>0 && vNu[k]>0){ a+=vNu[k]; b+=vToen[k]; } });
       if(b>0) res.prijzen = Math.round((a/b-1)*1000)/10;
     }
+    // Rob, 25-09-2026: onze prijzen al vanaf juni 2027 — zodra er 12 afgesloten periodes zijn maar nog geen
+    // jaar-op-jaarvenster: eerste 3 periodes vs laatste 3 (vaste lasten, zelfde leverancier; seizoen speelt
+    // daar nauwelijks, de jaarlijkse wijzigingen per 1 januari vallen ertussen). Niet geannualiseerd.
+    if(res.prijzen==null && n>=12){
+      const perVendor = arr => { const m = {}; arr.forEach(p=>alleTransactiesInPeriode(p.jaar,p.maand)
+        .filter(r=>isSpendRow(r) && effectiveBucket(r)==='vast' && !INFLATIE_UITSLUITEN.includes(r.category))
+        .forEach(r=>{ const k=vendorKey(r.vendor); m[k]=(m[k]||0)-r.amount; })); return m; };
+      const vNu = perVendor(P.slice(n-3)), vToen = perVendor(P.slice(0,3));
+      let a=0, b=0; Object.keys(vNu).forEach(k=>{ if(vToen[k]>0 && vNu[k]>0){ a+=vNu[k]; b+=vToen[k]; } });
+      if(b>0) res.prijzen = Math.round((a/b-1)*1000)/10;
+    }
   }catch(e){}
   _inflatieCache = res;
   return res;
@@ -7244,21 +7257,25 @@ function inflatieLaatste(bron, filterFn){
 }
 function inflatieCbsLaatste(){ return inflatieLaatste('CBS'); }
 function inflatieCpbRaming(jaar){ const r = inflatieLaatste('CPB', r=>r.periode.slice(0,4)===String(jaar)); return r ? Number(r.waarde) : null; }
-function inflatieStapPct(jaar){
+function inflatieStap(jaar){
+  // volgorde (Rob, 25-09-2026): onze uitgaven → onze prijzen → CPB-raming van dat jaar → 2%
   const m = inflatieMeting();
-  if(m.uitgaven!=null) return m.uitgaven;
+  if(m.uitgaven!=null) return {pct:m.uitgaven, bron:'onze uitgaven'};
+  if(m.prijzen!=null) return {pct:m.prijzen, bron:'onze prijzen'};
   const cpb = inflatieCpbRaming(jaar);
-  return cpb!=null ? cpb : INFLATIE_TERUGVAL_PCT;
+  if(cpb!=null) return {pct:cpb, bron:'CPB'};
+  return {pct:INFLATIE_TERUGVAL_PCT, bron:'aanname'};
 }
+function inflatieStapPct(jaar){ return inflatieStap(jaar).pct; }
 function renderInflatieRegel(){
   const m = inflatieMeting(), cbs = inflatieCbsLaatste();
   const pct = v => v==null ? '–' : v.toLocaleString('nl-NL',{minimumFractionDigits:1, maximumFractionDigits:1})+'%';
   const cbsLabel = cbs ? `${pct(Number(cbs.waarde))} (${MAAND_NAMEN_NL[Number(cbs.periode.slice(5,7))-1].slice(0,3)})` : '–';
   const volgendJaar = (HUIDIGE_PERIODE_MAAND>=7 ? HUIDIGE_PERIODE_JAAR+1 : HUIDIGE_PERIODE_JAAR);
-  const stap = inflatieStapPct(Math.max(2027, volgendJaar));
+  const stap = inflatieStap(Math.max(2027, volgendJaar));
   const item = (l,v)=>`<span style="white-space:nowrap;">${l} <span style="color:var(--paper);">${v}</span></span>`;
   return `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;">
-    ${item('prijzen', pct(m.prijzen))}${item('uitgaven', pct(m.uitgaven))}${item('CBS', cbsLabel)}${item('stap jul', pct(stap))}
+    ${item('prijzen', pct(m.prijzen))}${item('uitgaven', pct(m.uitgaven))}${item('CBS', cbsLabel)}${item('projectie', pct(stap.pct)+' ('+stap.bron+')')}
   </div>`;
 }
 async function laadInflatieCijfers(){
