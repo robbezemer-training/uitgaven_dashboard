@@ -133,6 +133,14 @@
     font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px; line-height:1;
     border-radius:999px; padding:4px 8px; min-width:18px; text-align:center;
   }
+  .tebevestigen-balk{
+    display:flex; align-items:center; justify-content:space-between; width:100%; margin-top:24px;
+    background: var(--panel); border:1px solid var(--rose); border-radius:12px; padding:10px 14px;
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px; color:inherit; cursor:pointer; text-align:left;
+  }
+  .tebevestigen-balk:active{ transform: scale(0.98); }
+  .tebevestigen-balk-badge{ position:static; }
+  .tebevestigen-balk + .tile-grid--home{ margin-top:14px; }
   .app-tile:active{ transform: scale(0.95); border-color: var(--brass-dim); background: #202632; }
   .app-tile.empty{ border-style: dashed; opacity: 0.35; cursor: default; }
   .app-tile-icon{
@@ -1206,7 +1214,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-09-26a - Restschuldaftrek stopt na sep 2031 (Rob, 26-09: "restschuld aftrek stopt in 2032, dat kan in het systeem"). Restschuldregeling: verkoop vorige woning sep 2016, 15 jaar aftrek. hypotheekSchoon trekt vanaf okt 2031 de rente van de restschulddelen (…892, …922) af van de aftrekbare basis; hypotheekDeelBrutoNetto en hypotheekMetAflossing gebruiken dezelfde regel (hypotheekDeelAftrekbaar). Overige aftrektermijnen (2030/2036, politiek) bewust nog niet in de app. parameter_historie id 43.';
+const DASHBOARD_VERSION = '2026-09-26d - Belasting-tegel als rekenstraat op Robs verzoek ("niet alleen resultaatcijfers, ik wil het snappen en zien hoe het in elkaar zit"). belasting_posten kreeg kolom soort (regel/uitkomst/info): regels tellen op naar een uitkomst, zodat elke stap (loon + overig werk = inkomsten uit werk, forfait − rente = eigen woning, schijf × grondslag, premies, kortingen, loonheffing, voorlopige aanslag = te betalen) zichtbaar is; alle posten 2023-2025 opnieuw opgebouwd en in Python tegen de aangiftes gecontroleerd. Tab Box 1 vervangen door Berekening (rekenstraat per persoon). Nieuwe tab ZZP (niet voor Lindy): koppelt de aangifte aan de ZZP-administratie via de view zzp_ib_jaar_advies (aangegeven / administratie / verschil per onderdeel) plus het belastingeffect = verschil resultaat x marginaal tarief (nieuwe kolom belasting_aangifte.marginaal_tarief) en een controle of het resultaat in de aangifte gelijk is aan zzp_ib_aangifte. Box 3 2026 als prognose (peildatum 1-1-2026) uit Robs Excel Casa_Tre_Sorelle_financien, gecorrigeerd: woning op waarde 1-1-2025 onbewoonde staat (67.000) i.p.v. 245.000, forfaits 2026 (1,28/6,00/2,70), heffingsvrij 118.714; Excel-variant ter vergelijking inclusief vermindering buitenland. Vorige versie (2026-09-26c - Belasting-tegel gevuld met de aangifte IB 2025 (Robs eigen kopie van 27-03-2026, BSN-nummers bewust niet overgenomen, leningnummers alleen als laatste 3 cijfers). Nieuwe Supabase-tabellen belasting_aangifte (per jaar/persoon/versie de kerncijfers: verzamelinkomen, IB, premie VV, heffingskortingen, loonheffing, voorlopige aanslag, te betalen/terug, Zvw) en belasting_posten (detailregels per box/groep, box=termijn voor latere aanslagtermijnen), RLS zoals de zzp_*-tabellen maar leesbaar voor Lindy. Nieuwe loadBelastingTables() (ook voor Lindy). renderBelastingView(): jaarkeuze plus Overzicht (Rob/Lindy/Samen), Box 1 (per persoon, per groep met subtotaal), Box 3 en Termijnen; per persoon telt de laatste versie van dat jaar. Tarieven 2025 uit de aangifte in parameter_historie gezet. Vorige versie (2026-09-26b - Beginscherm herschikt op Robs verzoek (26-09: "Te bevestigen alleen vertonen als er wat open staat en dan dunne balk over de hele breedte... Dan losse tegel onder ZZP bij. Reizen naar rechterkant onder C3S"). (1) Te bevestigen is geen tegel meer: renderHomeScreen() toont een dunne balk over de volle breedte boven de tegels, alleen als teBevestigenAantal()>0; staat er niets open, dan is er geen balk. render() stuurt vanuit de Te-bevestigen-weergave automatisch terug naar het beginscherm zodra de lijst leeg is, en het wisselmenu toont Te bevestigen alleen als er iets openstaat. (2) Nieuwe tegel Belasting (sectie belasting, eigen icoon) onder ZZP in de linkerkolom, met renderBelastingView(): tabs Overzicht/Box 1/Box 3/Termijnen (state belastingTab), nog zonder data. (3) Reizen van links naar rechts, onder Casa 3S. Kolommen nu links: Salaris, Hypotheek, Energie, ZZP, Belasting; rechts: September, Archief, Vermogen, Casa 3S, Reizen. Vorige versie (2026-09-26a - Restschuldaftrek stopt na sep 2031 (Rob, 26-09: "restschuld aftrek stopt in 2032, dat kan in het systeem"). Restschuldregeling: verkoop vorige woning sep 2016, 15 jaar aftrek. hypotheekSchoon trekt vanaf okt 2031 de rente van de restschulddelen (…892, …922) af van de aftrekbare basis; hypotheekDeelBrutoNetto en hypotheekMetAflossing gebruiken dezelfde regel (hypotheekDeelAftrekbaar). Overige aftrektermijnen (2030/2036, politiek) bewust nog niet in de app. parameter_historie id 43.)))';
 const DASHBOARD_VERSION_PREV_2026_09_25j = '2026-09-25j - Deellijst Hypotheek toont de einddatum rentevast zoals op het Rabo-hypotheekoverzicht van 18-09-2026 (30-09-2031 = "tot sep 2031", 30-04-2035 = "tot apr 2035", 30-09-2041, 30-09-2051) i.p.v. de maand erna. Overzicht vergeleken met het schema: maandbedragen per deel gelijk (op 1 cent), restant hoofdsom €813.307,00 vs schema €813.308,90 (afrondingsverschil in 6 lineaire delen), lineaire delen 949/957/906/930 eindigen mrt 2047 zoals de bank.';
 const DASHBOARD_VERSION_PREV_2026_09_25i = '2026-09-25i - Rentevaste periode Deel 3 Lineair (3854945906) en Deel 4 Lineair (3854945930) gecorrigeerd van 10 naar 20 jaar: vast tot okt 2041 i.p.v. okt 2031 (Rob, 25-09, uit zijn Excel: Rente periode 20). Alleen DELEN_META.rentevastTot aangepast; geen bedragen gewijzigd. Keuzekaart en deellijst tonen nu "vast tot 2041" voor deze twee.';
 const DASHBOARD_VERSION_PREV_2026_09_25h = '2026-09-25h - Aflossen: ook beide aflossingsvrije delen kiesbaar (Rob, 25-09: "ja beide aflos vrije dan") — Casa 3S (4,05%, vast tot 2035, niet aftrekbaar) en NL aflosvrij (2,25%, vast tot 2051). Casa 3S-rente wordt bij aflossen niet van de belastingaftrek afgetrokken (hypotheekMetAflossing/hypotheekDeelBrutoNetto), want die telde daar nooit mee. Keuzekaart toont per deel rente% en "vast tot" als dat na okt 2031 ligt; aflosmoment blijft okt 2031 (één moment, boete niet gemodelleerd).';
@@ -3185,6 +3193,7 @@ async function loadOverrides(){
       _uitschieterGrenzenCache = null; // nieuwe data binnen, cache ongeldig
       await loadTransactionsTable(); // vult ook pendingRaboTx/pendingIngTx/pendingIngccTx/pendingAmexTx (confirmed=false)
       if(!IS_READONLY) await loadZzpTables(); // zzp_*-tabellen voor de ZZP-tegel
+      await loadBelastingTables(); // belasting_*-tabellen voor de Belasting-tegel (ook Lindy)
       await loadReisVerdeling(); // reis_*-tabellen: posten, verdeling, medereizigers, begroting per reis
       overridesSource = 'live';
     }
@@ -7447,10 +7456,11 @@ const SECTIONS = [
   {id:'casaproject', label:'Casa 3S · Sorelle', icon:'home', accent:'var(--c-wonen)'},
   {id:'energie', label:'Energie', icon:'energie', accent:'var(--c-nuts)'},
   {id:'zzp', label:'ZZP', icon:'zzp', accent:'var(--c-zakelijk)'},
+  {id:'belasting', label:'Belasting', icon:'belasting', accent:'var(--brass)'},
 ];
 const HOME_TILE_COLUMNS = {
-  left: ['reizen','salaris','hypotheek','energie','zzp'],
-  right: ['tebevestigen','afgelopen','archief','vermogen','casaproject'],
+  left: ['salaris','hypotheek','energie','zzp','belasting'],
+  right: ['afgelopen','archief','vermogen','casaproject','reizen'],
 };
 function sectionIcon(key){
   const svgOpen = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
@@ -7465,6 +7475,7 @@ function sectionIcon(key){
     check: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>',
     energie: '<path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"></path>',
     archief: '<polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line>',
+    belasting: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="17" x2="15" y2="11"></line><circle cx="9.5" cy="11.5" r="0.9"></circle><circle cx="14.5" cy="16.5" r="0.9"></circle>',
     zzp: '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>'
   };
   if(key==='euro') return `<span class="app-tile-icon txt" style="color:var(--brass)">€</span>`;
@@ -7873,8 +7884,12 @@ function renderTeBevestigenView(){
   `;
   return pendingBlok + naderBlok;
 }
+function teBevestigenAantal(){
+  return nieuweTeBevestigenTransacties().length + pendingTxLijst().length;
+}
 function renderHomeScreen(){
-  const teBevestigenCount = nieuweTeBevestigenTransacties().length + pendingTxLijst().length;
+  const teBevestigenCount = teBevestigenAantal();
+  const teBevestigenBalk = teBevestigenCount>0 ? `<button class="tebevestigen-balk" data-goto-section="tebevestigen"><span>Te bevestigen</span><span class="app-tile-badge tebevestigen-balk-badge">${teBevestigenCount}</span></button>` : '';
   const tileBtn = id=>{
     const s = SECTIONS.find(x=>x.id===id);
     if(!s || (s.id==='zzp' && IS_READONLY)) return '';
@@ -7891,6 +7906,7 @@ function renderHomeScreen(){
       </div>
       <button class="refresh-btn" data-hard-refresh="1" aria-label="Ververs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg></button>
     </header>
+    ${teBevestigenBalk}
     <div class="tile-grid tile-grid--home" style="display:flex;align-items:flex-start;gap:14px;">
       <div style="flex:1;display:flex;flex-direction:column;gap:14px;">${HOME_TILE_COLUMNS.left.map(tileBtn).join('')}</div>
       <div style="flex:1;display:flex;flex-direction:column;gap:14px;">${HOME_TILE_COLUMNS.right.map(tileBtn).join('')}</div>
@@ -9077,6 +9093,137 @@ function zzpPuntenTab(){
   const rij = p=>`<div style="padding:8px 0;border-bottom:1px solid var(--rule);font-size:13px;line-height:1.4;">${p.omschrijving}<br><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);">${p.jaar ? p.jaar : 'alle jaren'}${p.deadline ? ' \u00b7 uiterlijk '+p.deadline.split('-').reverse().join('-') : ''}</span></div>`;
   return `<div class="card ledger-card"><div class="card-label"><span>Open punten</span><span class="ledger-count">${open.length}</span></div>${open.map(rij).join('')}</div>`;
 }
+let belastingTab = 'overzicht', belastingJaar = null;
+let BELASTING = {aangifte:[], posten:[], zzp:[], geladen:false};
+async function loadBelastingTables(){
+  const get = async (pad)=>{ const r = await fetch(SUPABASE_URL+'/rest/v1/'+pad, {headers: SUPABASE_HEADERS}); return r.ok ? await r.json() : null; };
+  try{
+    const [aangifte, posten, zzpAdvies] = await Promise.all([
+      get('belasting_aangifte?select=jaar,persoon,versie,status,verzamelinkomen,box1,box3,inkomstenbelasting,premie_vv,heffingskortingen,loonheffing,voorlopig_ontvangen,voorlopig_betaald,te_betalen,zvw,marginaal_tarief&order=jaar.asc,versie.asc'),
+      get('belasting_posten?select=jaar,persoon,versie,box,groep,post,bedrag,soort,datum,volgorde&order=jaar.asc,volgorde.asc'),
+      get('zzp_ib_jaar_advies?select=*&order=jaar.asc'),
+    ]);
+    if(!aangifte || !posten) return;
+    BELASTING.aangifte = aangifte.map(a=>{ const o={...a}; ['verzamelinkomen','box1','box3','inkomstenbelasting','premie_vv','heffingskortingen','loonheffing','voorlopig_ontvangen','voorlopig_betaald','te_betalen','zvw','marginaal_tarief'].forEach(k=>{ o[k] = o[k]===null ? null : Number(o[k]); }); return o; });
+    BELASTING.posten = posten.map(p=>({...p, bedrag:Number(p.bedrag), soort:p.soort||'regel'}));
+    BELASTING.zzp = (zzpAdvies||[]).map(r=>{ const o={jaar:r.jaar}; Object.keys(r).forEach(k=>{ if(k!=='jaar') o[k] = r[k]===null ? null : Number(r[k]); }); return o; });
+    BELASTING.geladen = true;
+  }catch(e){ /* offline: tegel toont dan niets tot de volgende succesvolle load */ }
+}
+function belastingAangifte(jaar, persoon){
+  const rs = BELASTING.aangifte.filter(a=>a.jaar===jaar && a.persoon===persoon);
+  return rs.length ? rs[rs.length-1] : null;
+}
+function belastingPosten(jaar, persoon, box){
+  const a = persoon==='samen' ? null : belastingAangifte(jaar, persoon);
+  let rs = BELASTING.posten.filter(p=>p.jaar===jaar && p.persoon===persoon && p.box===box);
+  if(a) rs = rs.filter(p=>p.versie===a.versie);
+  else if(rs.length){ const v = rs.map(p=>p.versie).sort().pop(); rs = rs.filter(p=>p.versie===v); }
+  return rs.sort((x,y)=>(x.volgorde||0)-(y.volgorde||0));
+}
+function belastingSaldo(v){
+  if(v===null || v===undefined) return '\u2013';
+  return zzpE0(v);
+}
+function belastingDatum(d){ if(!d) return ''; const [y,m,dd] = d.split('-'); return dd+'-'+m+'-'+y; }
+function belastingGroepenKaart(titel, rechts, posten){
+  if(!posten.length) return `<div class="card ledger-card"><div class="card-label"><span>${titel}</span></div><div style="color:var(--muted);font-size:13px;">Nog geen gegevens</div></div>`;
+  const groepen = [];
+  posten.forEach(p=>{ let g = groepen.find(x=>x.naam===(p.groep||'')); if(!g){ g={naam:p.groep||'', rs:[]}; groepen.push(g); } g.rs.push(p); });
+  const rij = p=>{
+    const soort = p.soort||'regel';
+    if(soort==='uitkomst') return `<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0 4px;margin:2px 0 4px;border-top:1px solid var(--rule);font-size:13px;font-weight:600;"><span style="min-width:0;">= ${p.post}</span><span style="font-family:'IBM Plex Mono',monospace;white-space:nowrap;">${zzpE0(p.bedrag)}</span></div>`;
+    if(soort==='info') return `<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0 2px;font-size:12px;color:var(--brass);"><span style="min-width:0;">${p.post}</span><span style="font-family:'IBM Plex Mono',monospace;white-space:nowrap;">${zzpE0(p.bedrag)}</span></div>`;
+    const teken = Math.round(p.bedrag)<0 ? '\u2212' : '+';
+    return `<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:12.5px;color:var(--paper-dim);"><span style="min-width:0;"><span style="display:inline-block;width:14px;color:var(--muted);font-family:'IBM Plex Mono',monospace;">${teken}</span>${p.post}</span><span style="font-family:'IBM Plex Mono',monospace;white-space:nowrap;">${zzpE0(Math.abs(p.bedrag))}</span></div>`;
+  };
+  const html = groepen.map(g=>`<div style="margin-top:14px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;margin-bottom:4px;">${g.naam}</div>${g.rs.map(rij).join('')}</div>`).join('');
+  return `<div class="card ledger-card"><div class="card-label"><span>${titel}</span><span class="ledger-count">${rechts||''}</span></div>${html}</div>`;
+}
+function belastingZzpKaart(j){
+  const z = BELASTING.zzp.find(x=>x.jaar===j);
+  if(!z) return `<div class="card ledger-card"><div class="card-label"><span>ZZP ${j}</span></div><div style="color:var(--muted);font-size:13px;">Nog geen gegevens</div></div>`;
+  const ag = z.aangegeven_resultaat!==null;
+  const e = v=>v===null||v===undefined ? '\u2013' : zzpE0(v);
+  const d = (a,b)=>a===null||a===undefined ? '' : zzpE0(b-a);
+  const r = belastingAangifte(j,'rob');
+  const post = belastingPosten(j,'rob','box1').find(p=>/^Overig werk/.test(p.post));
+  const kostenAg = ag ? (z.aangegeven_overige_kosten||0) : null;
+  let h = `<div class="card ledger-card"><div class="card-label"><span>Overig werk Rob ${j}</span><span class="ledger-count">${ag ? 'aangifte vs administratie' : 'loopt'}</span></div>`
+    + zzpKop3('aangegeven','administratie','verschil')
+    + zzpRij3('Inkomsten', e(z.aangegeven_inkomsten), e(z.inkomsten), d(z.aangegeven_inkomsten, z.inkomsten))
+    + zzpRij3('Afschrijving', e(z.aangegeven_afschrijving), e(z.afschrijving), d(z.aangegeven_afschrijving, z.afschrijving))
+    + zzpRij3('Kosten', e(kostenAg), e(z.directe_kosten), d(kostenAg, z.directe_kosten))
+    + zzpRij3('Reiskosten en parkeren', ag ? e(0) : '\u2013', e(z.doorbelaste_kosten), d(ag?0:null, z.doorbelaste_kosten))
+    + zzpRij3('Resultaat', e(z.aangegeven_resultaat), e(z.resultaat), ag ? zzpE0(z.resultaat - z.aangegeven_resultaat) : '', {rand:true, sterk:true, kleur: ag ? zzpVerschilKleur(z.resultaat - z.aangegeven_resultaat) : null});
+  if(ag && post && Math.round(post.bedrag)!==Math.round(z.aangegeven_resultaat)){
+    h += zzpRij3('In aangifte (box 1)', zzpE0(post.bedrag), '', zzpE0(post.bedrag - z.aangegeven_resultaat), {kleur:'var(--rose)'});
+  }
+  if(ag && r && r.marginaal_tarief){
+    const verschil = z.resultaat - z.aangegeven_resultaat;
+    const effect = verschil * r.marginaal_tarief / 100;
+    h += `<div style="margin-top:12px;"><div style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;margin-bottom:4px;">Effect op de aangifte</div>`
+      + belastingRegel('Verschil resultaat', verschil)
+      + belastingRegel(`Tarief schijf 3: ${String(r.marginaal_tarief.toFixed(2)).replace('.',',')}%`, null)
+      + belastingUitkomst(Math.round(effect)>0 ? 'Extra te betalen' : (Math.round(effect)<0 ? 'Extra terug' : 'Geen effect'), Math.abs(effect))
+      + `</div>`;
+  }
+  return h + `</div>`;
+}
+function belastingRegel(l, v){ return `<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:12.5px;color:var(--paper-dim);"><span>${l}</span><span style="font-family:'IBM Plex Mono',monospace;white-space:nowrap;">${v===null?'':zzpE0(v)}</span></div>`; }
+function belastingUitkomst(l, v){ return `<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0 4px;border-top:1px solid var(--rule);margin-top:2px;font-size:13px;font-weight:600;"><span>= ${l}</span><span style="font-family:'IBM Plex Mono',monospace;white-space:nowrap;">${zzpE0(v)}</span></div>`; }
+function renderBelastingView(){
+  if(!BELASTING.geladen) return `<div class="card" style="text-align:center;color:var(--muted);">laden\u2026</div>`;
+  const jaren = [...new Set(BELASTING.aangifte.map(a=>a.jaar).concat(BELASTING.posten.map(p=>p.jaar)))].sort();
+  if(!jaren.length) return `<div class="card" style="text-align:center;color:var(--muted);">Nog geen gegevens</div>`;
+  if(belastingJaar===null || !jaren.includes(belastingJaar)) belastingJaar = jaren[jaren.length-1];
+  const j = belastingJaar;
+  const jaarKop = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">${jaren.map(x=>`<button class="month-tab${x===j?' active':''}" data-belasting-jaar="${x}">${x}</button>`).join('')}</div>`;
+  const tabs = [['overzicht','Overzicht'],['berekening','Berekening'],['box3','Box 3']].concat(IS_READONLY ? [] : [['zzp','ZZP']]).concat([['termijnen','Termijnen']]);
+  if(!tabs.some(t=>t[0]===belastingTab)) belastingTab = 'overzicht';
+  const tabKop = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">${tabs.map(t=>`<button class="month-tab${t[0]===belastingTab?' active':''}" data-belasting-tab="${t[0]}">${t[1]}</button>`).join('')}</div>`;
+  const r = belastingAangifte(j,'rob'), l = belastingAangifte(j,'lindy');
+  let body = '';
+  if(belastingTab==='overzicht'){
+    if(!r && !l){ body = `<div class="card ledger-card"><div class="card-label"><span>Aangifte ${j}</span></div><div style="color:var(--muted);font-size:13px;">Nog geen gegevens</div></div>`; }
+    else {
+      const v = (a,k)=>a && a[k]!==null && a[k]!==undefined ? a[k] : null;
+      const som = k=>(v(r,k)||0)+(v(l,k)||0);
+      const e = x=>x===null ? '\u2013' : zzpE0(x);
+      const rij = (lab,k,o)=>zzpRij3(lab, e(v(r,k)), e(v(l,k)), e(som(k)), o);
+      const neg = (lab,k)=>zzpRij3(lab, v(r,k)===null?'\u2013':zzpE0(-v(r,k)), v(l,k)===null?'\u2013':zzpE0(-v(l,k)), zzpE0(-som(k)));
+      const totR = r ? (r.te_betalen||0)+(r.zvw||0) : null, totL = l ? (l.te_betalen||0)+(l.zvw||0) : null, totS = (totR||0)+(totL||0);
+      const kleur = x=>x===null ? null : (Math.round(x)>0 ? 'var(--rose)' : 'var(--teal)');
+      const a0 = r || l;
+      const status = a0.status + ' ' + belastingDatum(a0.versie);
+      body = `<div class="card ledger-card"><div class="card-label"><span>Aangifte ${j}</span><span class="ledger-count">${status}</span></div>`
+        + zzpKop3('Rob','Lindy','Samen')
+        + rij('Verzamelinkomen','verzamelinkomen')
+        + rij('Inkomstenbelasting','inkomstenbelasting',{rand:true})
+        + rij('Premie volksverzekeringen','premie_vv')
+        + neg('Heffingskortingen','heffingskortingen')
+        + neg('Ingehouden loonheffing','loonheffing')
+        + (Math.round(som('voorlopig_ontvangen')) ? rij('Voorlopige aanslag ontvangen','voorlopig_ontvangen') : '')
+        + (Math.round(som('voorlopig_betaald')) ? neg('Voorlopige aanslag betaald','voorlopig_betaald') : '')
+        + zzpRij3('Te betalen IB en premies', belastingSaldo(v(r,'te_betalen')), belastingSaldo(v(l,'te_betalen')), belastingSaldo(som('te_betalen')), {rand:true, sterk:true})
+        + rij('Bijdrage Zvw','zvw')
+        + zzpRij3('Te betalen totaal', belastingSaldo(totR), belastingSaldo(totL), belastingSaldo(totS), {rand:true, sterk:true, kleur:kleur(totS)})
+        + `</div>`;
+    }
+  } else if(belastingTab==='berekening'){
+    body = belastingGroepenKaart('Rob', r ? belastingDatum(r.versie) : '', belastingPosten(j,'rob','box1'))
+         + belastingGroepenKaart('Lindy', l ? belastingDatum(l.versie) : '', belastingPosten(j,'lindy','box1'));
+  } else if(belastingTab==='box3'){
+    const b3 = belastingPosten(j,'samen','box3');
+    body = belastingGroepenKaart('Box 3 ' + j, (r || l) ? belastingDatum((r||l).versie) : (b3.length ? 'prognose' : ''), b3);
+  } else if(belastingTab==='zzp'){
+    body = belastingZzpKaart(j);
+  } else {
+    const t = ['rob','lindy','samen'].flatMap(p=>belastingPosten(j,p,'termijn'));
+    body = belastingGroepenKaart('Termijnen ' + j, '', t);
+  }
+  return jaarKop + tabKop + body;
+}
 function renderZzpView(){
   if(!ZZP.geladen) return `<div class="card" style="text-align:center;color:var(--muted);">laden\u2026</div>`;
   const tabs = [['btw','Btw'],['ib','IB'],['jaar','Jaarrekening'],['facturen','Facturen'],['punten','Punten']];
@@ -9094,7 +9241,7 @@ function renderDetailShell(bodyHtml){
       <div class="detail-title">${sec.label}</div>
       <button class="refresh-btn" data-hard-refresh="1" aria-label="Ververs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg></button>
       <button class="switch-btn" data-toggle-switch="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
-      ${quickSwitchOpen ? `<div class="switch-menu">${SECTIONS.filter(s=>!(s.id==='zzp' && IS_READONLY)).map(s=>`<button data-goto-section="${s.id}" class="${s.id===view?'active':''}">${s.label}</button>`).join('')}</div>` : ''}
+      ${quickSwitchOpen ? `<div class="switch-menu">${SECTIONS.filter(s=>!(s.id==='zzp' && IS_READONLY) && !(s.id==='tebevestigen' && teBevestigenAantal()===0)).map(s=>`<button data-goto-section="${s.id}" class="${s.id===view?'active':''}">${s.label}</button>`).join('')}</div>` : ''}
     </div>
     ${bodyHtml}
     <div class="scroll-fab-stack">
@@ -9126,11 +9273,12 @@ function renderBuildFooter(){
 }
 function render(){
   _inflatieCache = null;
+  if(screen==='detail' && view==='tebevestigen' && teBevestigenAantal()===0){ screen='home'; quickSwitchOpen=false; }
   document.body.classList.toggle('ro', IS_READONLY);
   if(screen==='home'){
     document.getElementById('app').innerHTML = renderHomeScreen() + renderBuildFooter();
   } else {
-    const body = view==='tebevestigen' ? renderTeBevestigenView() : (view==='afgelopen' ? renderVolgendeMaandView() : (view==='reizen' ? renderReizenView() : (view==='casaproject' ? renderCasaProjectView() : (view==='salaris' ? renderSalarisView() : (view==='salaris-rob' ? renderSalarisRobView() : (view==='salaris-lindy' ? renderSalarisLindyView() : (view==='hypotheek' ? renderHypotheekView() : (view==='energie' ? renderEnergieView() : (view==='zzp' ? renderZzpView() : (view==='archief' ? renderArchiefView() : renderVermogenView()))))))))));
+    const body = view==='tebevestigen' ? renderTeBevestigenView() : (view==='afgelopen' ? renderVolgendeMaandView() : (view==='reizen' ? renderReizenView() : (view==='casaproject' ? renderCasaProjectView() : (view==='salaris' ? renderSalarisView() : (view==='salaris-rob' ? renderSalarisRobView() : (view==='salaris-lindy' ? renderSalarisLindyView() : (view==='hypotheek' ? renderHypotheekView() : (view==='energie' ? renderEnergieView() : (view==='zzp' ? renderZzpView() : view==='belasting' ? renderBelastingView() : (view==='archief' ? renderArchiefView() : renderVermogenView()))))))))));
     document.getElementById('app').innerHTML = renderDetailShell(body) + renderBuildFooter();
   }
   document.querySelectorAll('[data-goto-reis-trip]').forEach(el=>el.addEventListener('click',()=>{
@@ -9150,6 +9298,8 @@ function render(){
     url.searchParams.set('_r', Date.now());
     window.location.replace(url.toString());
   }));
+  document.querySelectorAll('[data-belasting-jaar]').forEach(el=>el.addEventListener('click',()=>{ belastingJaar = Number(el.dataset.belastingJaar); render(); }));
+  document.querySelectorAll('[data-belasting-tab]').forEach(el=>el.addEventListener('click',()=>{ belastingTab = el.dataset.belastingTab; render(); }));
   document.querySelectorAll('[data-zzp-tab]').forEach(el=>el.addEventListener('click',()=>{ zzpTab = el.dataset.zzpTab; render(); }));
   document.querySelectorAll('[data-zzp-jaar]').forEach(el=>el.addEventListener('click',()=>{ zzpJaar = Number(el.dataset.zzpJaar); render(); }));
   document.querySelectorAll('[data-zzp-ibjaar]').forEach(el=>el.addEventListener('click',()=>{ zzpIbJaar = Number(el.dataset.zzpIbjaar); render(); }));
