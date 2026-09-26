@@ -1206,7 +1206,12 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-09-25f - Projectie-inflatie toont nu de bron: "projectie 2,7% (CPB)" / (onze prijzen) / (onze uitgaven) / (aanname) (Rob, 25-09). Volgorde: onze uitgaven → onze prijzen → CPB → 2%. Onze prijzen al vanaf 12 afgesloten periodes (juni 2027): eerste 3 vs laatste 3 periodes, vaste lasten zelfde leverancier, niet geannualiseerd; jaar-op-jaarvenster neemt het over zodra w≥3.';
+const DASHBOARD_VERSION = '2026-09-26a - Restschuldaftrek stopt na sep 2031 (Rob, 26-09: "restschuld aftrek stopt in 2032, dat kan in het systeem"). Restschuldregeling: verkoop vorige woning sep 2016, 15 jaar aftrek. hypotheekSchoon trekt vanaf okt 2031 de rente van de restschulddelen (…892, …922) af van de aftrekbare basis; hypotheekDeelBrutoNetto en hypotheekMetAflossing gebruiken dezelfde regel (hypotheekDeelAftrekbaar). Overige aftrektermijnen (2030/2036, politiek) bewust nog niet in de app. parameter_historie id 43.';
+const DASHBOARD_VERSION_PREV_2026_09_25j = '2026-09-25j - Deellijst Hypotheek toont de einddatum rentevast zoals op het Rabo-hypotheekoverzicht van 18-09-2026 (30-09-2031 = "tot sep 2031", 30-04-2035 = "tot apr 2035", 30-09-2041, 30-09-2051) i.p.v. de maand erna. Overzicht vergeleken met het schema: maandbedragen per deel gelijk (op 1 cent), restant hoofdsom €813.307,00 vs schema €813.308,90 (afrondingsverschil in 6 lineaire delen), lineaire delen 949/957/906/930 eindigen mrt 2047 zoals de bank.';
+const DASHBOARD_VERSION_PREV_2026_09_25i = '2026-09-25i - Rentevaste periode Deel 3 Lineair (3854945906) en Deel 4 Lineair (3854945930) gecorrigeerd van 10 naar 20 jaar: vast tot okt 2041 i.p.v. okt 2031 (Rob, 25-09, uit zijn Excel: Rente periode 20). Alleen DELEN_META.rentevastTot aangepast; geen bedragen gewijzigd. Keuzekaart en deellijst tonen nu "vast tot 2041" voor deze twee.';
+const DASHBOARD_VERSION_PREV_2026_09_25h = '2026-09-25h - Aflossen: ook beide aflossingsvrije delen kiesbaar (Rob, 25-09: "ja beide aflos vrije dan") — Casa 3S (4,05%, vast tot 2035, niet aftrekbaar) en NL aflosvrij (2,25%, vast tot 2051). Casa 3S-rente wordt bij aflossen niet van de belastingaftrek afgetrokken (hypotheekMetAflossing/hypotheekDeelBrutoNetto), want die telde daar nooit mee. Keuzekaart toont per deel rente% en "vast tot" als dat na okt 2031 ligt; aflosmoment blijft okt 2031 (één moment, boete niet gemodelleerd).';
+const DASHBOARD_VERSION_PREV_2026_09_25g = '2026-09-25g - Hypotheek-tab schuift weer door (Rob, 25-09: "maakt niet de sprongen naar de actieve maand"). hypotheekHuidigeMaand() zocht de maandelijkse Rabo-afschrijving alleen in RABO_TX_SEP/ING_TX_SEP (lopende salarisperiode); de betaling van de 2e valt in de vorige periode, dus bleef de tab op augustus staan. Nu over alleBekendeTransacties(): september (betaling 02-09 gevonden), oktober zodra de afschrijving van 02-10 verwerkt is.';
+const DASHBOARD_VERSION_PREV_2026_09_25f = '2026-09-25f - Projectie-inflatie toont nu de bron: "projectie 2,7% (CPB)" / (onze prijzen) / (onze uitgaven) / (aanname) (Rob, 25-09). Volgorde: onze uitgaven → onze prijzen → CPB → 2%. Onze prijzen al vanaf 12 afgesloten periodes (juni 2027): eerste 3 vs laatste 3 periodes, vaste lasten zelfde leverancier, niet geannualiseerd; jaar-op-jaarvenster neemt het over zodra w≥3.';
 const DASHBOARD_VERSION_PREV_2026_09_25e = '2026-09-25e - Label "stap jul" in de inflatieregel hernoemd naar "projectie" (Rob, 25-09: term stap niet duidelijk). Zelfde waarde: het percentage waarmee de Inflatie-projectie per 1 juli ophoogt.';
 const DASHBOARD_VERSION_PREV_2026_09_25d = '2026-09-25d - Onze inflatie (Rob, 25-09). Nieuwe tabel inflatie_cijfers (CBS maandelijks + CPB-ramingen, append-only). Vermogen Inflatie toont één regel: prijzen (vaste lasten zelfde leverancier) · uitgaven (alles excl. hypotheek/Casa 3S/reizen/trip/zakelijk) · CBS (laatste maand) · stap jul. Meting: laatste w afgesloten periodes vs zelfde w een jaar eerder, w=min(12, beschikbaar−12), vanaf w≥3. Jaarstap per 1 juli = gemeten uitgaven, anders CPB-raming van dat jaar (MEV 2027: 2027 = 2,7%), anders 2%. CBS wordt bij laden live opgehaald (opendata.cbs.nl 86141NED) en nieuwe maanden weggeschreven.';
 const DASHBOARD_VERSION_PREV_2026_09_25c = '2026-09-25c - Inflatie-indexatie in jaarstappen i.p.v. maandelijks glijden (Rob, 25-09: "elke maand nu beetje ophoging zien is ook raar"; startpunt oktober 2026 = stand van zaken, oktober geen inflatie). ikv2pctIndex: 1,02^n met één stap per 1 juli vanaf 2027 (okt 2026–jun 2027 = 1,00), zelfde ritme als Robs cao en de privé-buffer; ikvPriveIndex volgt nu ikv2pctIndex. Geldt voor uitgaven (excl. hypotheek), privé-buffer, deurwaarder en geïndexeerd pensioen. Lindy blijft in eigen cao-stappen per 1 november.';
@@ -3952,7 +3957,7 @@ let energieOpenTegel = null; // "chart" | "tarief-gas" | "tarief-stroom" | "maan
 // waardoor bv. de grafiek open+gemarkeerd bleef terwijl je een tarief-tegel opende — Rob, 27-08-2026: "geselecteerd
 // blijft hangen als je ander selecteert"). Nu sluit het openen van een tegel altijd alle andere in deze tab.
 let salarisJaarExpand = null; // welke jaar-tegel in Salaris (Rob) is uitgeklapt, of null
-let hypotheekGekozenDelen = []; // array van DELEN_META-indices die de gebruiker handmatig heeft aangevinkt om vervroegd af te lossen (alleen de 7 niet-aflossingsvrije delen komen in aanmerking)
+let hypotheekGekozenDelen = []; // array van DELEN_META-indices die de gebruiker handmatig heeft aangevinkt om vervroegd af te lossen (sinds 25-09-2026 alle 9 delen, incl. beide aflossingsvrije)
 let hypotheekJaarExpand = null; // welke jaar-tegel in Hypotheek is uitgeklapt, of null
 let hypotheekMaandExpand = null; // welke maand-rij in Hypotheek is uitgeklapt, of null
 let hypotheekTegelExpand = null; // 'bruto' | 'hoofdsom' | 'woz' | 'aflossen' | null — accordion: maar 1 tegel tegelijk open
@@ -6924,9 +6929,20 @@ function hypotheekVolgendeDrempel(vanafR, grensPct){
   const r = HYPOTHEEK_MAANDEN.find(x => (x.y*12+x.m) >= vanafIdx && x.restschuld < grens);
   return r || null;
 }
+// Rob, 26-09-2026: restschuldregeling (art. 3.120a Wet IB) — verkoop vorige woning sep 2016, rente 15 jaar aftrekbaar:
+// t/m de termijn van sep 2031, vanaf okt 2031 niet meer (2032 = eerste volle jaar zonder). Vastgelegd in parameter_historie id 43.
+function hypotheekDeelAftrekbaar(r, i){
+  if(i===HYPOTHEEK_CASA_INDEX) return false;
+  if(HYPOTHEEK_RESTSCHULD_INDICES.includes(i) && (r.y*12+r.m) > HYPOTHEEK_RESTSCHULD_AFTREK_TM_MND) return false;
+  return true;
+}
+function hypotheekRestschuldRenteNietAftrekbaar(r){
+  if((r.y*12+r.m) <= HYPOTHEEK_RESTSCHULD_AFTREK_TM_MND || !r.delen) return 0;
+  return HYPOTHEEK_RESTSCHULD_INDICES.reduce((t,i)=>t+((r.delen[i]&&r.delen[i][3])||0),0);
+}
 function hypotheekSchoon(r){
   const renteAflosvrijExclC3S = r.renteAflosvrij - (r.casa3sRente||0);
-  const aftrekbareBasis = r.renteLineair + renteAflosvrijExclC3S - r.forfait;
+  const aftrekbareBasis = r.renteLineair + renteAflosvrijExclC3S - r.forfait - hypotheekRestschuldRenteNietAftrekbaar(r);
   const tarief = (r.renteLineair + r.renteAflosvrij - r.forfait) ? r.belastingteruggave / (r.renteLineair + r.renteAflosvrij - r.forfait) : 0.3697;
   const belastingAftrek = Math.round(aftrekbareBasis * tarief * 100)/100;
   const netto = Math.round((r.bruto - belastingAftrek)*100)/100;
@@ -6939,7 +6955,7 @@ function hypotheekDeelBrutoNetto(r, i){
   const [saldo,,aflos,rente] = d;
   const schoon = hypotheekSchoon(r);
   const bruto = (aflos||0)+(rente||0);
-  const netto = bruto - (rente||0)*schoon.tarief;
+  const netto = bruto - (hypotheekDeelAftrekbaar(r,i) ? (rente||0)*schoon.tarief : 0); // Casa 3S en restschuld na sep 2031: geen aftrek
   return {saldo, bruto: Math.round(bruto*100)/100, netto: Math.round(netto*100)/100};
 }
 // Past een handmatig gekozen set deelleningen toe op een maand r (alleen zinvol vanaf het eerste
@@ -6950,11 +6966,12 @@ function hypotheekMetAflossing(r, gekozenIndices){
     const schoon = hypotheekSchoon(r);
     return {bruto:r.bruto, netto:schoon.netto, verwijderdAflos:0, verwijderdRente:0};
   }
-  let verwijderdAflos=0, verwijderdRente=0;
-  gekozenIndices.forEach(i=>{ const d=r.delen[i]; if(d){ verwijderdAflos+=(d[2]||0); verwijderdRente+=(d[3]||0); } });
+  let verwijderdAflos=0, verwijderdRente=0, verwijderdAftrekbaar=0;
+  gekozenIndices.forEach(i=>{ const d=r.delen[i]; if(d){ verwijderdAflos+=(d[2]||0); verwijderdRente+=(d[3]||0); if(hypotheekDeelAftrekbaar(r,i)) verwijderdAftrekbaar+=(d[3]||0); } });
   const schoon = hypotheekSchoon(r);
   const nieuweBruto = Math.round((r.bruto - verwijderdAflos - verwijderdRente)*100)/100;
-  const nieuweAftrek = Math.round((schoon.belastingAftrek - verwijderdRente*schoon.tarief)*100)/100;
+  // Casa 3S-rente telt niet mee in de aftrek (zie hypotheekSchoon), dus ook niet terugdraaien bij aflossen
+  const nieuweAftrek = Math.round((schoon.belastingAftrek - verwijderdAftrekbaar*schoon.tarief)*100)/100;
   const nieuweNetto = Math.round((nieuweBruto - nieuweAftrek)*100)/100;
   return {bruto:nieuweBruto, netto:nieuweNetto, verwijderdAflos, verwijderdRente};
 }
@@ -6966,10 +6983,13 @@ function hypotheekMetAflossing(r, gekozenIndices){
    rentevaste periode, zonder de einddatum te wijzigen. Vandaar dat Rob de dekkingsgraad (m.r.dekking)
    wil "monitoren": zakt die verder (WOZ omhoog / restschuld omlaag), dan volgt mogelijk weer een
    rentestap naar beneden, nog steeds vast tot dezelfde einddatum hieronder. */
-const DELEN_META = [{"naam":"Aflosvrij Casa 3S (3553965479)","type":"Aflossingsvrij","rentevastTot":2035,"startJaar":2025,"startMaand":5},{"naam":"Aflosvrij (3854945884)","type":"Aflossingsvrij","rentevastTot":2051,"startJaar":2021,"startMaand":10},{"naam":"Deel 5 Lineair (3854945965)","type":"Lineair","rentevastTot":2031,"startJaar":2021,"startMaand":10},{"naam":"Deel 1 restschuld lineair (3854945892)","type":"Lineair","rentevastTot":2031,"startJaar":2021,"startMaand":10},{"naam":"Deel 2 restschuld lineair (3854945922)","type":"Lineair","rentevastTot":2031,"startJaar":2021,"startMaand":10},{"naam":"Deel 1 Lineair (3854945949)","type":"Lineair","rentevastTot":2031,"startJaar":2021,"startMaand":10},{"naam":"Deel 2 Lineair (3854945957)","type":"Lineair","rentevastTot":2031,"startJaar":2021,"startMaand":10},{"naam":"Deel 3 Lineair (3854945906)","type":"Lineair","rentevastTot":2031,"startJaar":2021,"startMaand":10},{"naam":"Deel 4 Lineair (3854945930)","type":"Lineair","rentevastTot":2031,"startJaar":2021,"startMaand":10}];
+const DELEN_META = [{"naam":"Aflosvrij Casa 3S (3553965479)","type":"Aflossingsvrij","rentevastTot":2035,"startJaar":2025,"startMaand":5},{"naam":"Aflosvrij (3854945884)","type":"Aflossingsvrij","rentevastTot":2051,"startJaar":2021,"startMaand":10},{"naam":"Deel 5 Lineair (3854945965)","type":"Lineair","rentevastTot":2031,"startJaar":2021,"startMaand":10},{"naam":"Deel 1 restschuld lineair (3854945892)","type":"Lineair","rentevastTot":2031,"startJaar":2021,"startMaand":10},{"naam":"Deel 2 restschuld lineair (3854945922)","type":"Lineair","rentevastTot":2031,"startJaar":2021,"startMaand":10},{"naam":"Deel 1 Lineair (3854945949)","type":"Lineair","rentevastTot":2031,"startJaar":2021,"startMaand":10},{"naam":"Deel 2 Lineair (3854945957)","type":"Lineair","rentevastTot":2031,"startJaar":2021,"startMaand":10},{"naam":"Deel 3 Lineair (3854945906)","type":"Lineair","rentevastTot":2041,"startJaar":2021,"startMaand":10},{"naam":"Deel 4 Lineair (3854945930)","type":"Lineair","rentevastTot":2041,"startJaar":2021,"startMaand":10}];
 const DELEN_VOLGORDE = [0,1,3,4,5,6,7,8,2]; // weergavevolgorde: Deel 1-4 (restschuld + gewoon lineair) eerst, Deel 5 Lineair (965) daaronder — los van de opslagvolgorde in de data
-const HYPOTHEEK_RENTEVAST_EIND_TOTAAL_MND = 2031*12+10; // okt 2031 — alle 7 niet-aflossingsvrije delen lopen tot deze zelfde datum af, dus dit is hét eerst mogelijke boetevrije aflosmoment
-const HYPOTHEEK_KANDIDAAT_INDICES = DELEN_META.map((m,i)=>i).filter(i=>DELEN_META[i].type!=='Aflossingsvrij'); // de 7 delen die in aanmerking komen
+const HYPOTHEEK_RENTEVAST_EIND_TOTAAL_MND = 2031*12+10; // okt 2031 — einde rentevast van 5 lineaire delen (Deel 1-2 restschuld, Deel 1, 2, 5). Deel 3 en 4 lineair staan 20 jaar vast, tot okt 2041 (Rob, 25-09-2026, uit zijn hypotheek-Excel)
+const HYPOTHEEK_KANDIDAAT_INDICES = DELEN_META.map((m,i)=>i); // Rob, 25-09-2026: ook beide aflossingsvrije delen (Casa 3S 4,05% en NL 2,25%) kiesbaar
+const HYPOTHEEK_CASA_INDEX = DELEN_META.findIndex(m=>/Casa/i.test(m.naam)); // Casa 3S-rente is niet aftrekbaar
+const HYPOTHEEK_RESTSCHULD_AFTREK_TM_MND = 2031*12+9;
+const HYPOTHEEK_RESTSCHULD_INDICES = DELEN_META.map((m,i)=>i).filter(i=>/restschuld/i.test(DELEN_META[i].naam));
 function renderHypJaarAccordion(periodes){
   return periodes.map(p=>{
     const expanded = hypotheekJaarExpand === p.jaarLabel;
@@ -7003,7 +7023,7 @@ function renderHypDelenLijst(r){
     const nuTotaalMaanden = r.y*12 + r.m;
     const restMaanden = eindTotaalMaanden - nuTotaalMaanden;
     const restJr = Math.floor(restMaanden/12), restMnd = restMaanden%12;
-    const vastLabel = afgelost ? 'vervroegd afgelost' : (restMaanden>0 ? `${restJr}j${restMnd?restMnd+'m':''} vast · tot ${MAAND_NAMEN_NL[meta.startMaand-1].slice(0,3)} ${meta.rentevastTot}` : `verlopen (${meta.rentevastTot})`);
+    const vastLabel = afgelost ? 'vervroegd afgelost' : (restMaanden>0 ? `${restJr}j${restMnd?restMnd+'m':''} vast · tot ${MAAND_NAMEN_NL[(meta.startMaand+10)%12].slice(0,3)} ${meta.startMaand===1?meta.rentevastTot-1:meta.rentevastTot}` : `verlopen (${meta.rentevastTot})`);
     return `<li class="bar-row">
       <div class="bar-row-top"><span class="bar-name">${meta.naam}${meta.type!=='Lineair'?` (${meta.type})`:''}</span><span class="bar-amt">${fmt(saldo)}</span></div>
       <div style="font-size:11px;color:${afgelost?'var(--dot-ok)':'var(--muted)'};margin-top:1px;">${afgelost ? vastLabel : `${rente!=null?rente.toFixed(2)+'%':'—'} · ${vastLabel}`}</div>
@@ -7061,15 +7081,15 @@ function renderAflosDelenKeuzeCard(opts){
   const gekozenHuidige = hypotheekGekozenDelen;
   return `<div class="card">
       ${opts.toonTitel===false ? '' : `<div class="card-label">Vervroegd aflossen — welke delen?</div>`}
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Boetevrij mogelijk vanaf ${MAAND_NAMEN_NL[aflosMogelijkVanaf.m-1]} ${aflosMogelijkVanaf.y} (einde rentevaste periode van alle 7 niet-aflossingsvrije delen). Tik een deel aan/uit; bedragen zijn op basis van het saldo in ${MAAND_NAMEN_NL[referentieAflos.m-1]} ${referentieAflos.y} — dat is het moment waarop je daadwerkelijk zou aflossen, niet vandaag.</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Aflosmoment ${MAAND_NAMEN_NL[aflosMogelijkVanaf.m-1]} ${aflosMogelijkVanaf.y}</div>
       <ul class="bar-list">
-        ${DELEN_VOLGORDE.filter(i=>DELEN_META[i].type!=='Aflossingsvrij').map(i=>{
+        ${DELEN_VOLGORDE.filter(i=>HYPOTHEEK_KANDIDAAT_INDICES.includes(i)).map(i=>{
           const meta = DELEN_META[i];
           const {saldo, bruto, netto} = hypotheekDeelBrutoNetto(referentieAflos, i);
           const aan = gekozenHuidige.includes(i);
           return `<li class="bar-row" data-hyp-deel-toggle="${i}" style="cursor:pointer;background:${aan?'rgba(255,255,255,0.06)':'transparent'};border-radius:8px;">
             <div class="bar-row-top"><span class="bar-name">${aan?'☑':'☐'} ${meta.naam}</span><span class="bar-amt">${fmt(saldo)}</span></div>
-            <div style="font-size:11px;color:var(--muted);margin-top:1px;">bruto ${fmt(bruto)}/mnd · netto ${fmt(netto)}/mnd</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:1px;">${referentieAflos.delen[i]?referentieAflos.delen[i][1].toFixed(2)+'% · ':''}bruto ${fmt(bruto)}/mnd · netto ${fmt(netto)}/mnd${meta.rentevastTot*12+meta.startMaand > HYPOTHEEK_RENTEVAST_EIND_TOTAAL_MND ? ` · vast tot ${meta.rentevastTot}` : ''}</div>
           </li>`;
         }).join('')}
       </ul>
@@ -7104,12 +7124,15 @@ function renderAflosDelenKeuzeCard(opts){
 // "augustus" en klopt exact met de echte huidige stand. Geen aparte "welke maand is nu"-logica meer nodig voor
 // Hypotheek: de kalendermaand zelf is nu weer gewoon correct.
 function hypotheekHuidigeMaand(){
+  const hypAlleTx = (typeof alleBekendeTransacties==='function') ? alleBekendeTransacties() : [...RABO_TX_SEP, ...ING_TX_SEP];
   let jaar = 2026, maand = 8;
   while(true){
     const nextMaand = maand===12 ? 1 : maand+1;
     const nextJaar = maand===12 ? jaar+1 : jaar;
     const maandKey = nextJaar+'-'+String(nextMaand).padStart(2,'0');
-    const heeftBetaling = [...RABO_TX_SEP, ...ING_TX_SEP].some(r=>r.category==='Hypotheek' && r.amount<0 && r.date.startsWith(maandKey));
+    // Rob, 25-09-2026: keek alleen in RABO_TX_SEP/ING_TX_SEP (lopende periode) — de betaling van de 2e valt in de
+    // vorige salarisperiode, dus schoof de tab nooit door. Nu over alle bekende transacties.
+    const heeftBetaling = hypAlleTx.some(r=>r.category==='Hypotheek' && r.amount<0 && r.date.startsWith(maandKey));
     if(!heeftBetaling) break;
     jaar = nextJaar; maand = nextMaand;
   }
@@ -7192,7 +7215,7 @@ function renderHypotheekView(){
     <div class="card" data-hyp-aflos-toggle="1" style="cursor:pointer;margin-top:12px;${hypotheekTegelExpand==='aflossen'?'border-color:var(--brass);border-width:2px;':''}">
       <div class="card-label">Vervroegd aflossen — welke delen?${hypotheekTegelExpand==='aflossen'?' ▾':' ▸'}</div>
       <div class="stat-figure">${gekozenHuidige.length ? fmt(somSaldoAflos) : 'Nog geen delen gekozen'}</div>
-      <div class="stat-sub">${gekozenHuidige.length ? `${gekozenHuidige.length} ${gekozenHuidige.length===1?'deel':'delen'} · boetevrij vanaf ${MAAND_NAMEN_NL[aflosMogelijkVanaf.m-1]} ${aflosMogelijkVanaf.y}` : `Boetevrij mogelijk vanaf ${MAAND_NAMEN_NL[aflosMogelijkVanaf.m-1]} ${aflosMogelijkVanaf.y}`}</div>
+      <div class="stat-sub">${gekozenHuidige.length ? `${gekozenHuidige.length} ${gekozenHuidige.length===1?'deel':'delen'} · aflosmoment ${MAAND_NAMEN_NL[aflosMogelijkVanaf.m-1]} ${aflosMogelijkVanaf.y}` : `Aflosmoment ${MAAND_NAMEN_NL[aflosMogelijkVanaf.m-1]} ${aflosMogelijkVanaf.y}`}</div>
     </div>
     ${hypotheekTegelExpand==='aflossen' ? `<div style="margin-top:-8px;">${renderAflosDelenKeuzeCard({toonVermogenKnop:true, toonTitel:false})}</div>` : ''}
     <div class="card-label" style="margin:18px 0 8px;">Per jaar (tik voor de maanden)</div>
