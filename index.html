@@ -1299,7 +1299,10 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-06j - Sankey (jaar en per maand, Rob 06-10-2026): geen maximum van 9 posten meer, de Sankey groeit verticaal. Elke post vanaf 1,5% van de uitgaven (min. EUR 25) krijgt een eigen regel, ook een eenmalige hoge post; alleen kleinere posten samen onder Overig. Casa 3S blijft altijd zichtbaar.';
+const DASHBOARD_VERSION = '2026-10-06m - Vermogen 2e spoor (Rob, 06-10-2026): aanname interieur eind juni 2027 betaald. Potjes-grafiek krijgt een tweede, gestippelde lijn = vermogen na C3S-uitgaven en reizen, min het open interieurbedrag vanaf juni 2027 (live uit de Interieur-tegel, daalt vanzelf als er echt betaald wordt). Sleepbalk toont beide; jaar- en maandtegels tonen vanaf juni 2027 een tweede regel na interieur. Hoofdlijn, C3S-doel en PDF ongewijzigd.';
+const DASHBOARD_VERSION_PREV_2026_10_06l = '2026-10-06l - Interieur alleen in C3S (Rob, 06-10-2026: niet in Vermogen; uitgavenpatroon pas als het echt betaald is). c3sTotaalOpenBedrag = weer alleen de verbouwing, dus geen geplande interieur-uitgave in de Vermogen-projectie, het C3S-doel of de PDF/Excel-potsamenvatting. Een interieuraankoop raakt de C3S-pot pas als echte betaling: als c3s_facturen-regel gekoppeld aan een int-post (betaald) gaat hij van het potsaldo af en telt hij als betaald in de Interieur-tegel.';
+const DASHBOARD_VERSION_PREV_2026_10_06k = '2026-10-06k - Casa 3S Interieur (Rob, 06-10-2026): eigen categorie interieur in c3s_posten (110 posten per ruimte, begroot 27.655, al betaald 829; keuken 6.000 blijft in verbouwing mat-07, 2.000 extra in interieur). Nieuwe sectietegel Interieur, los van de verbouwing: bovenste Begroot/Betaald/Open = alleen verbouwing. Vermogen: C3S-pot telt interieur mee als aparte uitgave (Casa 3S — interieur) naast de huisbetaling in februari 2027; Excel en PDF (NL) met Interieur-sectie.';
+const DASHBOARD_VERSION_PREV_2026_10_06j = '2026-10-06j - Sankey (jaar en per maand, Rob 06-10-2026): geen maximum van 9 posten meer, de Sankey groeit verticaal. Elke post vanaf 1,5% van de uitgaven (min. EUR 25) krijgt een eigen regel, ook een eenmalige hoge post; alleen kleinere posten samen onder Overig. Casa 3S blijft altijd zichtbaar.';
 const DASHBOARD_VERSION_PREV_2026_10_06i = '2026-10-06i - Overzicht (Rob, 06-10-2026): bovenste grafiek altijd 12 maanden breed (rollend of kalenderjaar, volgt de keuzeknoppen die nu bovenaan staan), rustiger: dunnere balken, lege plek voor maanden zonder data, eindtotaal bij de lijn. Sankey compacter getekend (groter op iPhone) en max 520px breed (niet meer enorm op iMac). Doorklik alleen nog op verzamelposten (onderverdeling per categorie); maandverdeling per post weg. Trip onder Reizen. Casa 3S altijd eigen post, nooit onder Overig.';
 const DASHBOARD_VERSION_PREV_2026_10_06h = '2026-10-06h - Jaar-Sankey in Overzicht (Rob, 06-10-2026): standaard ingeklapt (tik op de kop om te openen). Tik op een post rechts: groep met meerdere categorieen -> balken per onderliggende categorie (tik op een categorie -> maandverdeling); losse categorie, Sparen of Over -> maandverdeling met gemiddelde-lijn. Volgt de gekozen basis (12 mnd of kalenderjaar). Maand-Sankeys ongewijzigd.';
 const DASHBOARD_VERSION_PREV_2026_10_06g = '2026-10-06g - Overzicht per jaar (Rob, 06-10-2026: heatmap en jaar-Sankey kiesbaar rollend of kalenderjaar). Keuzeknoppen boven de heatmap: 12 mnd (laatste 12 afgesloten maanden) of een kalenderjaar (= belastingjaar, salarisperiodes jan t/m dec). Heatmap toont de gekozen maanden; daaronder een Sankey over dezelfde maanden opgeteld. Maandkaarten en balkgrafiek ongewijzigd. Bevat 06e (Tandarts vaste last) en 06f (Casa 3S labelmaand).';
@@ -3648,11 +3651,11 @@ function c3sStatusLabelVoorExport(p, heuristicGestartIds){
 function c3sExporteerExcel(){
   const heuristicGestartIds = c3sHeuristicGestartIds();
   const wb = XLSX.utils.book_new();
-  const CAT_LABELS = {aankoop:'Koop', werkzaamheid:'Bouw', materiaal:'Afwerking'};
+  const CAT_LABELS = {aankoop:'Koop', werkzaamheid:'Bouw', materiaal:'Afwerking', interieur:'Interieur'};
   const subOrder = ['Ruwbouw & sloop','Cisterna','Imhoff','Zwembad','Opbouw','Installaties','Nog te bepalen'];
   const kop = ['Categorie','Omschrijving','Status','Excl. IVA','IVA %','Incl. IVA','Betaald','Opmerking'];
   const aoa = [kop];
-  ['aankoop','werkzaamheid','materiaal'].forEach(cat=>{
+  ['aankoop','werkzaamheid','materiaal','interieur'].forEach(cat=>{
     const posten = C3S_POSTEN.filter(p=>p.categorie===cat).sort((a,b)=>a.volgorde-b.volgorde);
     if(posten.length===0) return;
     aoa.push([`— ${CAT_LABELS[cat].toUpperCase()} —`, '', '', '', '', '', '', '']); // hoofdcategorie-subkop, simpel gehouden als tekstrij (geen celstyling beschikbaar in deze XLSX-build)
@@ -3713,7 +3716,7 @@ function c3sExporteerExcel(){
 }
 function betaaldVoorPostExport(p){
   // Zelfde logica als betaaldVoorPost() in renderCasaProjectView, hier los beschikbaar voor de export (buiten die closure).
-  if(p.categorie==='aankoop'){
+  if(p.categorie==='aankoop' || p.categorie==='interieur'){
     // Live gekoppelde facturen zijn leidend zodra ze er zijn (zorgt dat nieuwe betalingen automatisch
     // meetellen, zoals Rob vroeg) — anders terugval op het statische bedrag (voor posten die als losse
     // overboeking zijn betaald, zonder gekoppelde factuur in C3S_FACTUREN).
@@ -3732,8 +3735,8 @@ function betaaldVoorPostExport(p){
   return som;
 }
 const C3S_PDF_LABELS = {
-  nl: {titel:'Casa Tre Sorelle — verbouwingsoverzicht', categorie:'Categorie', omschrijving:'Omschrijving', status:'Status', exclIva:'Excl. IVA', inclIva:'Incl. IVA', betaald:'Betaald', totaal:'Totaal', koop:'Koop', bouw:'Bouw', afwerking:'Afwerking', facturen:'Facturen', aannemer:'Aannemer', datum:'Datum', gegenereerd:'Gegenereerd op'},
-  it: {titel:'Casa Tre Sorelle — panoramica ristrutturazione', categorie:'Categoria', omschrijving:'Descrizione', status:'Stato', exclIva:'Escl. IVA', inclIva:'Incl. IVA', betaald:'Pagato', totaal:'Totale', koop:'Acquisto', bouw:'Ristrutturazione', afwerking:'Rifiniture', facturen:'Fatture', aannemer:'Impresa', datum:'Data', gegenereerd:'Generato il'},
+  nl: {titel:'Casa Tre Sorelle — verbouwingsoverzicht', categorie:'Categorie', omschrijving:'Omschrijving', status:'Status', exclIva:'Excl. IVA', inclIva:'Incl. IVA', betaald:'Betaald', totaal:'Totaal', koop:'Koop', bouw:'Bouw', afwerking:'Afwerking', interieur:'Interieur', facturen:'Facturen', aannemer:'Aannemer', datum:'Datum', gegenereerd:'Gegenereerd op'},
+  it: {titel:'Casa Tre Sorelle — panoramica ristrutturazione', categorie:'Categoria', omschrijving:'Descrizione', status:'Stato', exclIva:'Escl. IVA', inclIva:'Incl. IVA', betaald:'Pagato', totaal:'Totale', koop:'Acquisto', bouw:'Ristrutturazione', afwerking:'Rifiniture', interieur:'Arredamento', facturen:'Fatture', aannemer:'Impresa', datum:'Data', gegenereerd:'Generato il'},
 };
 const C3S_STATUS_LABEL_IT = {niet:'No', wellicht:'Forse', akkoord:'Approvato', gestart:'Iniziato', klaar:'Completato'};
 // IT-vertalingen van de Bouw-subcategorieën, alleen gebruikt in de Bouw PDF (IT/NL) zodat ALLE koppen
@@ -4025,9 +4028,9 @@ function c3sGenereerBouwPdf(){
 function c3sGenereerPdf(taal){
   const L = C3S_PDF_LABELS[taal];
   const heuristicGestartIds = c3sHeuristicGestartIds();
-  const CAT_LABELS = {aankoop:L.koop, werkzaamheid:L.bouw, materiaal:L.afwerking};
+  const CAT_LABELS = {aankoop:L.koop, werkzaamheid:L.bouw, materiaal:L.afwerking, interieur:L.interieur};
   const subOrder = ['Ruwbouw & sloop','Cisterna','Imhoff','Zwembad','Opbouw','Installaties','Nog te bepalen'];
-  const sectieHtml = ['aankoop','werkzaamheid','materiaal'].map(cat=>{
+  const sectieHtml = ['aankoop','werkzaamheid','materiaal','interieur'].map(cat=>{
     const posten = C3S_POSTEN.filter(p=>p.categorie===cat).sort((a,b)=>a.volgorde-b.volgorde);
     // Groepeer op subcategorie. Alleen een subkop-rij tonen als deze hoofdcategorie meer dan 1 subcategorie
     // heeft (bij Bouw dus wel, bij Koop/Afwerking meestal niet) — simpel gehouden, geen aparte tabellen of
@@ -5110,6 +5113,7 @@ function c3sEffectieveStatus(p, heuristicGestartIds){
   const manual = c3sVoortgangOverrides[p.id];
   if(manual) return {value:manual, auto:false, reden:''};
   const st = c3sPostStatus(p);
+  if(p.categorie==='interieur') return {value: st==='betaald'?'klaar':(st==='deels'?'gestart':'akkoord'), auto:true, reden:''};
   if(st==='betaald') return {value:'klaar', auto:true, reden:'auto: betaald'};
   if(st==='deels') return {value:'gestart', auto:true, reden:'auto: deels betaald'};
   if(heuristicGestartIds.includes(p.id)) return {value:'gestart', auto:true, reden:'indicatief: uit voorschot Lanzillotti'};
@@ -5124,6 +5128,7 @@ const C3S_STATUS4_META = {
   klaar:{label:'Klaar', color:'var(--teal)'}
 };
 function c3sPostStatus(p){
+  if(p.categorie==='interieur'){ const b=c3sBudget(p), x=betaaldVoorPostExport(p); return b>0 && x>=b-0.5 ? 'betaald' : (x>0 ? 'deels' : 'open'); }
   if(p.categorie==='aankoop') return (p.betaald||0) >= c3sBudget(p)-0.5 ? 'betaald' : (p.betaald>0 ? 'deels' : 'open');
   if(p.akkoord==null) return 'niet-akkoord';
   const facturen = c3sFacturenVoorPost(p.id);
@@ -5158,7 +5163,7 @@ function renderCasaProjectView(){
   // Betaald per post: voor aankoop rechtstreeks uit p.betaald; voor werkzaamheid/materiaal via gekoppelde betaalde facturen
   // (bedrag verdeeld over gekoppelde posten naar rato akkoordbedrag)
   function betaaldVoorPost(p){
-    if(p.categorie==='aankoop'){
+    if(p.categorie==='aankoop' || p.categorie==='interieur'){
       const live = c3sFacturenVoorPost(p.id).filter(f=>f.betaald).reduce((s,f)=>s+f.bedrag,0);
       return live>0 ? live : (p.betaald||0);
     }
@@ -5173,15 +5178,16 @@ function renderCasaProjectView(){
     });
     return som;
   }
-  const totaalBegrootNetto = C3S_POSTEN.reduce((s,p)=>s+c3sBudgetNetto(p),0); // excl. IVA
+  const C3S_VERBOUWING_POSTEN = C3S_POSTEN.filter(p=>!c3sIsInterieur(p)); // bovenste totalen = verbouwing; interieur heeft een eigen sectietegel
+  const totaalBegrootNetto = C3S_VERBOUWING_POSTEN.reduce((s,p)=>s+c3sBudgetNetto(p),0); // excl. IVA
   // Op Robs verzoek (13-08-2026): dit moet een ÉCHTE, live optelling van de losse posten zijn — geen los
   // vastgezet getal — zodat een wijziging aan een post (bedrag, status, nieuwe factuur) automatisch in het
   // totaal doorwerkt. De eerdere versie zette dit tijdelijk vast op Robs Excel-cijfer (C3S_TOTAAL_BEGROOT_
   // LEIDEND) om een acute mismatch te maskeren — dat was het verkeerde soort fix. De échte oorzaak (Akkoord
   // kreeg voorrang boven Offerte in c3sBudgetNetto, zie de toelichting daar) is nu gefixt, dus de posten-som
   // zelf klopt weer en kan weer leidend zijn.
-  const totaalBegroot = C3S_POSTEN.reduce((s,p)=>s+c3sBudget(p),0);
-  const totaalBetaald = C3S_POSTEN.reduce((s,p)=>s+betaaldVoorPost(p),0) + c3sBetaaldOngekoppeld();
+  const totaalBegroot = C3S_VERBOUWING_POSTEN.reduce((s,p)=>s+c3sBudget(p),0);
+  const totaalBetaald = C3S_VERBOUWING_POSTEN.reduce((s,p)=>s+betaaldVoorPost(p),0) + c3sBetaaldOngekoppeld();
   const totaalFacturenBetaald = C3S_FACTUREN.filter(f=>f.betaald).reduce((s,f)=>s+f.bedrag,0);
   const totaalFacturenOpen = C3S_FACTUREN.filter(f=>!f.betaald).reduce((s,f)=>s+f.bedrag,0);
   const nogNietGefactureerd = C3S_POSTEN.filter(p=>p.categorie==='werkzaamheid' && c3sBudget(p)>0 && c3sFacturenVoorPost(p.id).length===0);
@@ -5264,6 +5270,7 @@ function renderCasaProjectView(){
     aankoop: ['Koopkosten','Project'],
     werkzaamheid: ['Ruwbouw & sloop','Cisterna','Imhoff','Zwembad','Opbouw','Installaties','Nog te bepalen'],
     materiaal: ['Materialen'],
+    interieur: ['Woonkamer','Keuken','Slaapkamer 1','Slaapkamer 2','Badkamers','Hal','Extra','Buiten'],
   };
   function postenLijstHtml(cat, filterSubcat){
     let posten = C3S_POSTEN.filter(p=>p.categorie===cat).sort((a,b)=>a.volgorde-b.volgorde);
@@ -5402,7 +5409,7 @@ function renderCasaProjectView(){
                 <div style="margin-top:6px;">
                   <div style="font-size:10.5px;color:var(--muted);margin-bottom:4px;">Voorstel — gesorteerd op waarschijnlijkheid (tekstovereenkomst + eerdere koppelingen van deze aannemer). Controleer en pas aan.</div>
                   <select multiple data-c3s-fact-select="${factIdx}" style="width:100%;min-height:130px;font-size:11.5px;background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:6px;">
-                    ${(c3sFactuurAlleTonen[factIdx]===true ? c3sFactuurKandidaten(f) : c3sFactuurKandidaten(f).slice(0,12)).map(p=>`<option value="${p.id}" ${(f.post_ids||[]).includes(p.id)?'selected':''}>${p.categorie==='aankoop'?'[koop] ':p.categorie==='materiaal'?'[afw] ':'[bouw] '}${p.omschrijving}</option>`).join('')}
+                    ${(c3sFactuurAlleTonen[factIdx]===true ? c3sFactuurKandidaten(f) : c3sFactuurKandidaten(f).slice(0,12)).map(p=>`<option value="${p.id}" ${(f.post_ids||[]).includes(p.id)?'selected':''}>${p.categorie==='aankoop'?'[koop] ':p.categorie==='materiaal'?'[afw] ':p.categorie==='interieur'?'[int] ':'[bouw] '}${p.omschrijving}</option>`).join('')}
                   </select>
                   <div style="margin-top:6px;display:flex;gap:8px;align-items:center;">
                     <button data-c3s-fact-save="${factIdx}" style="background:var(--brass);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">Opslaan koppeling</button>
@@ -5447,6 +5454,7 @@ function renderCasaProjectView(){
         ['project','Project', groepTotalen('aankoop','Project'), ()=>postenLijstHtml('aankoop','Project')],
         ['bouw','Bouw', groepTotalen('werkzaamheid', null, true), ()=>postenLijstHtml('werkzaamheid')],
         ['afwerking','Afwerking', groepTotalen('materiaal'), ()=>postenLijstHtml('materiaal')],
+        ['interieur','Interieur', groepTotalen('interieur'), ()=>postenLijstHtml('interieur')],
         ['facturen','Facturen', {begroot:bouwFacturenBetaald+bouwFacturenOpen, betaald:bouwFacturenBetaald, open:bouwFacturenOpen}, ()=>facturenContent],
       ];
       return `<div style="margin-top:18px;">
@@ -5535,8 +5543,9 @@ let C3S_ONTTREKKINGEN = [
 function c3sProjectNogTeBetalen(){
   // Live optelling — dezelfde volledige berekening als c3sTotaalOpenBedrag (posten-gekoppeld + ongekoppelde
   // facturen zoals de Lanzillotti-voorschotten), zodat deze twee nooit meer uit elkaar kunnen lopen.
-  const totaalBegroot = C3S_POSTEN.reduce((s,p)=>s+c3sBudget(p),0);
-  const totaalBetaald = C3S_POSTEN.reduce((s,p)=>s+betaaldVoorPostExport(p),0) + c3sBetaaldOngekoppeld();
+  const posten = C3S_POSTEN.filter(p=>!c3sIsInterieur(p)); // interieur telt pas mee als het echt betaald is
+  const totaalBegroot = posten.reduce((s,p)=>s+c3sBudget(p),0);
+  const totaalBetaald = posten.reduce((s,p)=>s+betaaldVoorPostExport(p),0) + c3sBetaaldOngekoppeld();
   return {totaalBegroot, totaalBetaald, nogTeBetalen: totaalBegroot-totaalBetaald};
 }
 // Rob, 27-08-2026: het saldo moet automatisch meelopen met de tx's i.p.v. een los, elke keer
@@ -6526,11 +6535,12 @@ function reisBetalingenPerMaand(){
   });
   return map;
 }
-function renderVermogenChart(series, idLabel){
+function renderVermogenChart(series, idLabel, series2){
   const w=900,h=200,pad=10;
   const n = series.length;
-  const max = Math.max(...series)*1.05;
-  const min = Math.min(0, Math.min(...series)*1.05);
+  const alle = series2 ? series.concat(series2) : series;
+  const max = Math.max(...alle)*1.05;
+  const min = Math.min(0, Math.min(...alle)*1.05);
   const stepX = (w-pad*2)/(n-1);
   const pts = series.map((v,i)=>{ const x=pad+i*stepX; const y=h-pad-((v-min)/(max-min||1))*(h-pad*2); return [x,y]; });
   const linePath = pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
@@ -6541,18 +6551,19 @@ function renderVermogenChart(series, idLabel){
     <defs><linearGradient id="${idLabel}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#c9a227" stop-opacity="0.3"/><stop offset="100%" stop-color="#c9a227" stop-opacity="0"/>
     </linearGradient></defs>
-    <path d="${areaPath}" fill="url(#${idLabel})"/>${zeroLine}<path d="${linePath}" fill="none" stroke="#c9a227" stroke-width="2"/></svg>`;
+    <path d="${areaPath}" fill="url(#${idLabel})"/>${zeroLine}<path d="${linePath}" fill="none" stroke="#c9a227" stroke-width="2"/>${series2 ? (()=>{ const p2 = series2.map((v,i)=>{ const x=pad+i*stepX; const y=h-pad-((v-min)/(max-min||1))*(h-pad*2); return (i===0?'M':'L')+x.toFixed(1)+','+y.toFixed(1); }).join(' '); return `<path d="${p2}" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-dasharray="6,4"/>`; })() : ''}</svg>`;
 }
 // Rob, 27-08-2026: sleepbalk gegeneraliseerd — voorheen alleen op de Potjes-grafiek (renderPotjesChart),
 // nu herbruikbaar voor elke grafiek via renderScrubbaarChart(). unit=null -> waarde als bedrag (fmt()),
 // unit='m³'/'kWh' etc. -> waarde als tarief (€X.XXX/eenheid, 3 decimalen) — dekt zowel Potjes/Energie-totalen
 // als de Tarief-gas/stroom-grafieken. scrubKey moet uniek zijn binnen de pagina (meerdere grafieken kunnen
 // tegelijk op één scherm staan, elk met een eigen scrubKey + bijbehorend data-scrub-readout-element).
-function renderScrubbaarChart(series, labels, idLabel, scrubKey, unit){
-  const svg = renderVermogenChart(series, idLabel);
+function renderScrubbaarChart(series, labels, idLabel, scrubKey, unit, series2){
+  const svg = renderVermogenChart(series, idLabel, series2);
   const labelsJson = JSON.stringify(labels).replace(/"/g,'&quot;');
   const valuesJson = JSON.stringify(series).replace(/"/g,'&quot;');
-  return `<div class="potjes-chart-wrap" data-scrub-chart="${scrubKey}" data-labels="${labelsJson}" data-values="${valuesJson}" ${unit?`data-unit="${unit}"`:''} style="position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none;">
+  const values2Attr = series2 ? `data-values2="${JSON.stringify(series2).replace(/"/g,'&quot;')}"` : '';
+  return `<div class="potjes-chart-wrap" data-scrub-chart="${scrubKey}" data-labels="${labelsJson}" data-values="${valuesJson}" ${values2Attr} ${unit?`data-unit="${unit}"`:''} style="position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none;">
     ${svg}
     <div class="potjes-scrub-line" style="position:absolute;top:0;bottom:0;width:1px;background:var(--paper);opacity:0;pointer-events:none;"></div>
     <div class="potjes-scrub-dot" style="position:absolute;width:8px;height:8px;margin-left:-4px;margin-top:-4px;border-radius:50%;background:#c9a227;border:2px solid var(--bg);opacity:0;pointer-events:none;"></div>
@@ -6575,8 +6586,11 @@ function renderPotjesChart(maanden){
   // slepen de dichtstbijzijnde maand+bedrag toont via een verticale lijn + label (rechtstreekse DOM-updates in
   // attachPotjesChartScrub(), geen volledige re-render per beweging — dat zou hakkelen bij het slepen).
   const labelsArr = maanden.map(r=>r.label);
+  const totalen2 = totalen.map((v,i)=>v - interieurAftrekVoorLabel(maanden[i].label));
+  const heeft2 = totalen2.some((v,i)=>Math.abs(v-totalen[i])>0.5);
   return `<div class="potjes-chart-wrap-outer">
-    ${renderScrubbaarChart(totalen, labelsArr, 'vGradPotjes', 'potjes', null)}
+    ${renderScrubbaarChart(totalen, labelsArr, 'vGradPotjes', 'potjes', null, heeft2 ? totalen2 : null)}
+    ${heeft2 ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;"><span style="color:var(--teal);">- - -</span> na interieur (aanname: betaald juni 2027)</div>` : ''}
   </div>
   ${asHtml}`;
 }
@@ -6650,8 +6664,27 @@ function renderMomentenLijst(momenten){
 function c3sBetaaldOngekoppeld(){
   return C3S_FACTUREN.filter(f=>f.betaald && (!f.post_ids || f.post_ids.length===0)).reduce((s,f)=>s+f.bedrag,0);
 }
+function c3sIsInterieur(p){ return p.categorie==='interieur'; }
+// Rob, 06-10-2026: interieur staat alleen in C3S (eigen sectietegel), niet in Vermogen. Er wordt geen geplande
+// interieur-uitgave geprojecteerd; een aankoop telt pas mee als hij echt betaald is (c3s_facturen gekoppeld aan
+// een int-post), dan gaat hij via berekenC3SGeschatSaldo() van het potsaldo af. c3sTotaalOpenBedrag = verbouwing.
+function c3sVerbouwingOpenBedrag(){
+  return C3S_POSTEN.filter(p=>!c3sIsInterieur(p)).reduce((s,p)=>s + c3sBudget(p) - betaaldVoorPostExport(p), 0) - c3sBetaaldOngekoppeld();
+}
+function c3sInterieurOpenBedrag(){
+  return C3S_POSTEN.filter(c3sIsInterieur).reduce((s,p)=>s + c3sBudget(p) - betaaldVoorPostExport(p), 0);
+}
 function c3sTotaalOpenBedrag(){
-  return C3S_POSTEN.reduce((s,p)=>s + c3sBudget(p) - betaaldVoorPostExport(p), 0) - c3sBetaaldOngekoppeld();
+  return c3sVerbouwingOpenBedrag();
+}
+// Rob, 06-10-2026: 2e vermogensspoor — aanname dat het interieur eind juni 2027 betaald is. Alleen voor de
+// gestippelde tweede lijn in Vermogen; de hoofdlijn rekent interieur pas mee als het echt betaald is.
+const C3S_INTERIEUR_AANNAME_MAAND = {jaar:2027, maand:6};
+function interieurAftrekVoorLabel(label){
+  const pm = parseVermogenMaandLabel(label);
+  if(!pm) return 0;
+  const k = pm.jaar*12+pm.maand, a = C3S_INTERIEUR_AANNAME_MAAND.jaar*12+C3S_INTERIEUR_AANNAME_MAAND.maand;
+  return k>=a ? Math.max(0, c3sInterieurOpenBedrag()) : 0;
 }
 function vermogenMaandenLive(){
   return vermogenMaandenMetPensioen(vermogenMaandenLiveBasis());
@@ -7340,7 +7373,7 @@ function renderPotjesView(maandelijksBedragFn, theorieFn){
       return `<div class="card" style="margin-bottom:10px;${jOpen?'border-color:var(--brass);border-width:2px;':''}">
         <div data-potjes-jaar="${g.jaar}" style="cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;">
           <span style="font-weight:600;font-size:18px;">${g.jaar}${jOpen?' ▾':' ▸'}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:${eind<0?'var(--rose)':'var(--teal)'};">${fmt(eind)}</span>
+          <span style="text-align:right;"><div style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:${eind<0?'var(--rose)':'var(--teal)'};">${fmt(eind)}</div>${(()=>{ const a = interieurAftrekVoorLabel(g.maanden[g.maanden.length-1].label); return a ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);">na interieur ${fmt(eind-a)}</div>` : ''; })()}</span>
         </div>
         ${jOpen ? `<div style="margin-top:10px;">${g.maanden.map(r=>{
       const isOpen = vermogenPotjesMaandExpand===r.label;
@@ -7353,7 +7386,7 @@ function renderPotjesView(maandelijksBedragFn, theorieFn){
       return `<div class="card" id="potjes-maand-${slugifyMaandLabel(r.label)}" data-potjes-maand="${r.label}" style="cursor:pointer;margin-bottom:8px;${isOpen?'border-color:var(--brass);border-width:2px;':''}">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper);">${r.label}${isOpen?' ▾':' ▸'}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:${totaalVan(r)<0?'var(--rose)':'var(--teal)'};">${fmt(totaalVan(r))}</span>
+          <span style="text-align:right;"><div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:${totaalVan(r)<0?'var(--rose)':'var(--teal)'};">${fmt(totaalVan(r))}</div>${(()=>{ const a = interieurAftrekVoorLabel(r.label); return a ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);">na interieur ${fmt(totaalVan(r)-a)}</div>` : ''; })()}</span>
         </div>
         ${isOpen ? `
         ${r.aflosBedrag!=null ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;margin-top:4px;border-bottom:1px solid var(--rule);"><span style="font-size:13px;color:var(--brass);font-weight:600;">Aflossing hypotheek</span><span style="font-size:15px;color:var(--brass);font-weight:600;">−${fmt(r.aflosBedrag)}</span></div>` : ''}
@@ -10710,12 +10743,14 @@ function render(){
   document.querySelectorAll('[data-scrub-chart]').forEach(wrap=>{
     const labels = JSON.parse(wrap.dataset.labels);
     const values = JSON.parse(wrap.dataset.values);
+    const values2 = wrap.dataset.values2 ? JSON.parse(wrap.dataset.values2) : null;
     const unit = wrap.dataset.unit || null;
     const key = wrap.dataset.scrubChart;
     const n = values.length;
     const w=900, h=200, pad=10;
-    const max = Math.max(...values)*1.05;
-    const min = Math.min(0, Math.min(...values)*1.05);
+    const alleWaarden = values2 ? values.concat(values2) : values;
+    const max = Math.max(...alleWaarden)*1.05;
+    const min = Math.min(0, Math.min(...alleWaarden)*1.05);
     const stepX = (w-pad*2)/(n-1);
     const lijn = wrap.querySelector('.potjes-scrub-line');
     const dot = wrap.querySelector('.potjes-scrub-dot');
@@ -10732,7 +10767,7 @@ function render(){
       const yPct = (yVal/h)*100;
       lijn.style.left = xPct+'%'; lijn.style.opacity = '0.5';
       dot.style.left = xPct+'%'; dot.style.top = yPct+'%'; dot.style.opacity = '1';
-      if(readout) readout.textContent = `${labels[i]} · ${waardeTekst(values[i])}`;
+      if(readout) readout.textContent = `${labels[i]} · ${waardeTekst(values[i])}` + (values2 && Math.abs(values2[i]-values[i])>0.5 ? ` · na interieur ${waardeTekst(values2[i])}` : '');
     };
     const hide = ()=>{
       lijn.style.opacity='0'; dot.style.opacity='0';
