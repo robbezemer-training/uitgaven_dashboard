@@ -1299,7 +1299,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-06h - Jaar-Sankey in Overzicht (Rob, 06-10-2026): standaard ingeklapt (tik op de kop om te openen). Tik op een post rechts: groep met meerdere categorieen -> balken per onderliggende categorie (tik op een categorie -> maandverdeling); losse categorie, Sparen of Over -> maandverdeling met gemiddelde-lijn. Volgt de gekozen basis (12 mnd of kalenderjaar). Maand-Sankeys ongewijzigd.';
+const DASHBOARD_VERSION = '2026-10-06i - Overzicht (Rob, 06-10-2026): bovenste grafiek altijd 12 maanden breed (rollend of kalenderjaar, volgt de keuzeknoppen die nu bovenaan staan), rustiger: dunnere balken, lege plek voor maanden zonder data, eindtotaal bij de lijn. Sankey compacter getekend (groter op iPhone) en max 520px breed (niet meer enorm op iMac). Doorklik alleen nog op verzamelposten (onderverdeling per categorie); maandverdeling per post weg. Trip onder Reizen. Casa 3S altijd eigen post, nooit onder Overig.';
+const DASHBOARD_VERSION_PREV_2026_10_06h = '2026-10-06h - Jaar-Sankey in Overzicht (Rob, 06-10-2026): standaard ingeklapt (tik op de kop om te openen). Tik op een post rechts: groep met meerdere categorieen -> balken per onderliggende categorie (tik op een categorie -> maandverdeling); losse categorie, Sparen of Over -> maandverdeling met gemiddelde-lijn. Volgt de gekozen basis (12 mnd of kalenderjaar). Maand-Sankeys ongewijzigd.';
 const DASHBOARD_VERSION_PREV_2026_10_06g = '2026-10-06g - Overzicht per jaar (Rob, 06-10-2026: heatmap en jaar-Sankey kiesbaar rollend of kalenderjaar). Keuzeknoppen boven de heatmap: 12 mnd (laatste 12 afgesloten maanden) of een kalenderjaar (= belastingjaar, salarisperiodes jan t/m dec). Heatmap toont de gekozen maanden; daaronder een Sankey over dezelfde maanden opgeteld. Maandkaarten en balkgrafiek ongewijzigd. Bevat 06e (Tandarts vaste last) en 06f (Casa 3S labelmaand).';
 const DASHBOARD_VERSION_PREV_2026_10_06f = '2026-10-06f - Casa 3S-seizoensposten op labelmaand (Rob, 06-10-2026): Enel (om de maand) en IMU telden mee in elke periode die de maand raakte, waardoor Enel elke periode en IMU in twee perioden achter elkaar meetelde. Nu alleen de labelmaand van de salarisperiode, net als SEIZOEN_VAST (06e). IMU-maanden naar jun/dec (aanslagen half juni/half december; betaling 15-06 viel in periode juni). Bevat ook 06e (Tandarts vaste last).';
 const DASHBOARD_VERSION_PREV_2026_10_06e = '2026-10-06e - Tandarts naar Vaste lasten (Rob, 06-10-2026: halfjaarlijkse controle okt + apr/mei). Nieuw generiek mechanisme SEIZOEN_VAST: vendor_patronen met type vast + actieve_maanden (excl. Casa 3S/Muziek) tellen alleen mee in de periode met die labelmaand (mei = 24-04 t/m 23-05), nooit dubbel. Tandarts: €185,02 in mei en okt (vendor_patronen Infomedics (tandarts)). Ook in jaarbasis (gemiddelde/12) en trendgrafiek. OVERRIDES_FALLBACK ververst.';
@@ -8059,35 +8060,49 @@ function archiefMaandLabel(p, kort){
   if(kort) return n.slice(0,3);
   return n.charAt(0).toUpperCase()+n.slice(1)+(p.jaar!==HUIDIGE_PERIODE_JAAR ? ' '+p.jaar : '');
 }
+function archiefTwaalfSlots(periodes){
+  // Rob, 06-10-2026: grafiek altijd 12 maanden breed. Rollend = 12 labelmaanden t/m de laatste afgesloten periode;
+  // kalenderjaar = jan t/m dec. Maanden zonder afgesloten periode blijven een lege plek.
+  const perKey = Object.fromEntries(periodes.map(p=>[p.key,p]));
+  const laatste = periodes[periodes.length-1];
+  let j, m;
+  if(archiefJaarBasis==='rollend'){ j = laatste.jaar; m = laatste.maand - 11; while(m<1){ m+=12; j--; } }
+  else { j = archiefJaarBasis; m = 1; }
+  const slots = [];
+  for(let i=0;i<12;i++){ slots.push({jaar:j, maand:m, key:j+'-'+m, p:perKey[j+'-'+m]||null}); m++; if(m>12){ m=1; j++; } }
+  return slots;
+}
 function renderArchiefChart(periodes, topCats, openKey){
-  // Rob, 02-10-2026: balken = onder de streep per maand (boven nul = meer dan spaardoel, onder nul = tekort),
-  // lijn = lopend totaal. "De bedoeling is dat de lijn naar boven blijft gaan."
-  const w=340, h=170, n=periodes.length;
-  let cum=0; const lop = periodes.map(p=>cum+=p.onderStreep);
-  const maxAbs = Math.max(1, ...periodes.map(p=>Math.abs(p.onderStreep)), ...lop.map(v=>Math.abs(v))) * 1.1;
-  const z = 80, sc = 62/maxAbs;
-  const slot = w/n, bw = Math.min(30, slot*0.56);
-  const bars = periodes.map((p,i)=>{
-    const cx = slot*i + slot/2, x = cx-bw/2, v=p.onderStreep, hh=Math.max(1,Math.abs(v)*sc), y = v>=0 ? z-hh : z;
-    const dim = openKey && openKey!==p.key ? ' opacity="0.45"' : '';
-    return `<g data-archief-bar="${p.key}" style="cursor:pointer;"${dim}>
-      <rect x="${(slot*i).toFixed(1)}" y="0" width="${slot.toFixed(1)}" height="${h}" fill="transparent"></rect>
-      <rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${hh.toFixed(1)}" rx="2" fill="var(--${v>=0?'dot-ok':'dot-over'})"></rect>
-      <text x="${cx.toFixed(1)}" y="${h-4}" text-anchor="middle" font-size="10" fill="var(--muted)">${archiefMaandLabel(p,true)}</text>
-    </g>`;
-  }).join('');
-  const pts = lop.map((v,i)=>`${(slot*i+slot/2).toFixed(1)},${(z-v*sc).toFixed(1)}`).join(' ');
-  const laatste = lop[lop.length-1]||0;
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;display:block;">
-    <line x1="0" x2="${w}" y1="${z}" y2="${z}" stroke="var(--rule)" stroke-width="1"></line>
-    ${bars}
-    <polyline points="${pts}" fill="none" stroke="var(--brass)" stroke-width="2" pointer-events="none"></polyline>
-    ${lop.map((v,i)=>`<circle cx="${(slot*i+slot/2).toFixed(1)}" cy="${(z-v*sc).toFixed(1)}" r="2.5" fill="var(--brass)" pointer-events="none"></circle>`).join('')}
-  </svg>
-  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:6px;">
-    <span>balk = onder de streep · lijn = lopend totaal</span>
-    <span style="color:var(--${laatste>=0?'teal':'rose'});">totaal ${laatste>=0?'+':''}${fmt(laatste)}</span>
-  </div>`;
+  // Rob, 02-10-2026: balken = onder de streep per maand, lijn = lopend totaal. 06-10-2026: 12 maanden breed, rustiger.
+  const slots = archiefTwaalfSlots(periodes);
+  const w=360, h=190, top=18, onder=24, slot=w/12, bw=slot*0.46;
+  let cum=0; const lop = slots.map(s=>s.p ? (cum+=s.p.onderStreep) : null);
+  const waarden = [...slots.filter(s=>s.p).map(s=>s.p.onderStreep), ...lop.filter(v=>v!=null), 0];
+  const maxV = Math.max(...waarden), minV = Math.min(...waarden), span = Math.max(1, maxV-minV)*1.12;
+  const sc = (h-top-onder)/span, z = top + (maxV + span*0.06)*sc;
+  const y = v=>z - v*sc;
+  let svg = `<line x1="0" x2="${w}" y1="${z.toFixed(1)}" y2="${z.toFixed(1)}" stroke="var(--rule)" stroke-width="1"></line>`;
+  slots.forEach((s,i)=>{
+    const cx = slot*i+slot/2;
+    const nieuwJaar = s.maand===1 && i>0;
+    if(nieuwJaar) svg += `<line x1="${(slot*i).toFixed(1)}" x2="${(slot*i).toFixed(1)}" y1="${top}" y2="${h-onder+4}" stroke="var(--rule)" stroke-dasharray="2 3"></line>`;
+    const lab = MAAND_NAMEN_NL[s.maand-1].slice(0,1).toUpperCase()+MAAND_NAMEN_NL[s.maand-1].slice(1,3);
+    svg += `<text x="${cx.toFixed(1)}" y="${h-8}" text-anchor="middle" font-size="9.5" fill="var(--${s.p?'muted':'rule'})">${lab}</text>`;
+    if(!s.p){ svg += `<circle cx="${cx.toFixed(1)}" cy="${z.toFixed(1)}" r="1.6" fill="var(--rule)"></circle>`; return; }
+    const v = s.p.onderStreep, hh = Math.max(1.5, Math.abs(v)*sc), yy = v>=0 ? z-hh : z;
+    const dim = openKey && openKey!==s.key ? ' opacity="0.45"' : '';
+    svg += `<g data-archief-bar="${s.key}" style="cursor:pointer;"${dim}><rect x="${(slot*i).toFixed(1)}" y="0" width="${slot.toFixed(1)}" height="${h}" fill="transparent"></rect>
+      <rect x="${(cx-bw/2).toFixed(1)}" y="${yy.toFixed(1)}" width="${bw.toFixed(1)}" height="${hh.toFixed(1)}" rx="3" fill="var(--${v>=0?'dot-ok':'dot-over'})" fill-opacity="0.75"></rect></g>`;
+  });
+  const pts = slots.map((s,i)=>lop[i]==null?null:[slot*i+slot/2, y(lop[i])]).filter(Boolean);
+  if(pts.length){
+    svg += `<polyline points="${pts.map(([a,b])=>a.toFixed(1)+','+b.toFixed(1)).join(' ')}" fill="none" stroke="var(--brass)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"></polyline>`;
+    const [lx,ly] = pts[pts.length-1], laatste = lop.filter(v=>v!=null).slice(-1)[0];
+    svg += `<circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="3.5" fill="var(--brass)" pointer-events="none"></circle>`;
+    const rechts = lx > w-60;
+    svg += `<text x="${(rechts?lx-6:lx+6).toFixed(1)}" y="${(ly-7).toFixed(1)}" text-anchor="${rechts?'end':'start'}" font-size="10.5" font-weight="600" fill="var(--${laatste>=0?'teal':'rose'})" pointer-events="none">${laatste>=0?'+':'−'}${fmt(Math.abs(laatste))}</text>`;
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;max-width:640px;height:auto;display:block;margin:0 auto;">${svg}</svg>`;
 }
 function renderArchiefHeatmap(periodes, openKey){
   // Rob, 02-10-2026: categorie x maand, hoe voller hoe meer. Zelfde kleuren als de Sankey (inkomen groen,
@@ -8125,11 +8140,13 @@ function renderArchiefHeatmap(periodes, openKey){
 const ARCHIEF_SANKEY_GROEPEN = {
   'Wonen': ['Hypotheek','Nutsvoorzieningen','Wonen'],
   'Auto en vervoer': ['Auto','Autokosten','Parkeren','Vervoer'],
-  'Uit eten en uitjes': ['Luxe & uit eten','Trip','Entertainment'],
+  'Uit eten en uitjes': ['Luxe & uit eten','Entertainment'],
+  'Reizen': ['Reizen','Trip'], // Rob, 06-10-2026: Trip hoort bij Reizen
   'Zorg en verzekering': ['Zorgverzekering','Verzekeringen','Medisch','Tandarts'],
 };
+const ARCHIEF_SANKEY_ALTIJD = ['Casa 3S']; // Rob, 06-10-2026: C3S altijd als eigen post in de Sankey, nooit onder Overig
 function archiefSankeyGroepLeden(p){
-  // zelfde indeling als renderArchiefSankey: naam rechts -> onderliggende categorieen
+  // naam rechts -> onderliggende categorieen; zelfde indeling als renderArchiefSankey
   const groep = {}, leden = {};
   Object.entries(p.perCat).forEach(([c,v])=>{
     if(v<0) return;
@@ -8138,42 +8155,30 @@ function archiefSankeyGroepLeden(p){
   });
   let uit = Object.entries(groep).filter(([,v])=>v>0.5).sort((a,b)=>b[1]-a[1]);
   const res = {};
-  if(uit.length>9){ res['Overig'] = uit.slice(8).flatMap(([g])=>leden[g]); uit = uit.slice(0,8); }
+  if(uit.length>9){
+    const vast = uit.filter(([g])=>ARCHIEF_SANKEY_ALTIJD.includes(g));
+    const vrij = uit.filter(([g])=>!ARCHIEF_SANKEY_ALTIJD.includes(g));
+    const ruimte = Math.max(0, 8-vast.length);
+    const rest = vrij.slice(ruimte);
+    uit = [...vrij.slice(0,ruimte), ...vast].sort((a,b)=>b[1]-a[1]);
+    uit.forEach(([g])=>{ res[g] = leden[g]; });
+    res['Overig'] = rest.flatMap(([g])=>leden[g]);
+    return res;
+  }
   uit.forEach(([g])=>{ res[g] = leden[g]; });
   return res;
 }
-let archiefSankeyOpen = false, archiefSankeyCat = null, archiefSankeySub = null; // Rob, 06-10-2026: jaar-Sankey uitklapbaar + doorklikken
-function renderArchiefMaandBalken(sel, waardeFn, titel){
-  const vals = sel.map(p=>Math.max(0, waardeFn(p)||0));
-  const max = Math.max(1, ...vals), w=340, h=150, n=sel.length, slot=w/n, bw=Math.min(26, slot*0.6), basis=h-16, sc=(basis-14)/max;
-  const tot = vals.reduce((a,b)=>a+b,0), gem = n ? tot/n : 0;
-  const bars = vals.map((v,i)=>{ const cx=slot*i+slot/2, hh=Math.max(v>0?1.5:0, v*sc);
-    return `<rect x="${(cx-bw/2).toFixed(1)}" y="${(basis-hh).toFixed(1)}" width="${bw.toFixed(1)}" height="${hh.toFixed(1)}" rx="2" fill="var(--ingcc)"></rect>`
-      + (v>0.5 ? `<text x="${cx.toFixed(1)}" y="${(basis-hh-3).toFixed(1)}" text-anchor="middle" font-size="8.5" fill="var(--muted)">${Math.round(v)}</text>` : '')
-      + `<text x="${cx.toFixed(1)}" y="${h-3}" text-anchor="middle" font-size="10" fill="var(--muted)">${archiefMaandLabel(sel[i],true)}</text>`; }).join('');
-  const gy = (basis-gem*sc).toFixed(1);
-  return `<div style="display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 4px;"><span class="card-label">${titel}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${fmt(tot)}</span></div>
-    <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;display:block;">
-      <line x1="0" x2="${w}" y1="${basis}" y2="${basis}" stroke="var(--rule)"></line>${bars}
-      <line x1="0" x2="${w}" y1="${gy}" y2="${gy}" stroke="var(--brass)" stroke-dasharray="3 3"></line>
-      <text x="${w-2}" y="${(Number(gy)-3).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--brass)">gem. ${fmt(gem)}</text>
-    </svg>`;
-}
-function renderArchiefSankeyDrill(sel, som){
+let archiefSankeyOpen = false, archiefSankeyCat = null; // Rob, 06-10-2026: jaar-Sankey uitklapbaar; tik op verzamelpost = onderverdeling
+function renderArchiefSankeyDrill(som){
   const naam = archiefSankeyCat; if(!naam) return '';
-  if(naam==='Sparen') return renderArchiefMaandBalken(sel, p=>p.sparen, 'Sparen');
-  if(naam==='Over') return renderArchiefMaandBalken(sel, p=>p.onderStreep, 'Over');
-  const leden = archiefSankeyGroepLeden(som)[naam] || [naam];
-  const perMaand = c => p=>p.perCat[c]||0;
-  if(leden.length===1) return renderArchiefMaandBalken(sel, perMaand(leden[0]), naam);
+  const leden = archiefSankeyGroepLeden(som)[naam] || [];
+  if(leden.length<2) return '';
   const rijen = leden.map(c=>[c, Math.max(0, som.perCat[c]||0)]).filter(([,v])=>v>0.5).sort((a,b)=>b[1]-a[1]);
   const max = Math.max(1, ...rijen.map(r=>r[1])), tot = rijen.reduce((t,r)=>t+r[1],0);
-  const lijst = rijen.map(([c,v])=>{ const aan = archiefSankeySub===c;
-    return `<div data-archief-sankey-sub="${c}" style="cursor:pointer;margin:6px 0;${archiefSankeySub&&!aan?'opacity:0.5;':''}">
-      <div style="display:flex;justify-content:space-between;font-size:12.5px;"><span>${c}${aan?' ▾':' ▸'}</span><span style="font-family:'IBM Plex Mono',monospace;">${fmt(v)}</span></div>
-      <div style="height:7px;border-radius:3px;background:var(--rule);margin-top:3px;"><div style="height:7px;border-radius:3px;background:var(--ingcc);width:${(v/max*100).toFixed(1)}%;"></div></div></div>`; }).join('');
-  const sub = (archiefSankeySub && leden.includes(archiefSankeySub)) ? renderArchiefMaandBalken(sel, perMaand(archiefSankeySub), archiefSankeySub) : '';
-  return `<div style="display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 4px;"><span class="card-label">${naam}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${fmt(tot)}</span></div>${lijst}${sub}`;
+  const lijst = rijen.map(([c,v])=>`<div style="margin:6px 0;">
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;"><span>${c}</span><span style="font-family:'IBM Plex Mono',monospace;">${fmt(v)}</span></div>
+      <div style="height:7px;border-radius:3px;background:var(--rule);margin-top:3px;"><div style="height:7px;border-radius:3px;background:var(--ingcc);width:${(v/max*100).toFixed(1)}%;"></div></div></div>`).join('');
+  return `<div style="max-width:520px;margin:0 auto;"><div style="display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 4px;"><span class="card-label">${naam}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${fmt(tot)}</span></div>${lijst}</div>`;
 }
 function renderArchiefSankey(p, titel, klikbaar){
   // Rob, 02-10-2026: "is wel vet" — inkomen (en evt. tekort uit buffer) -> maand -> sparen + uitgavengroepen (+ evt. over).
@@ -8182,13 +8187,11 @@ function renderArchiefSankey(p, titel, klikbaar){
   // Uitgaven bruto per groep; terugbetalingen (categorieen met netto negatief bedrag) komen links binnen als
   // eigen stroom. Links = inkomen + terugbetalingen (+ tekort) = rechts = sparen + bruto uitgaven (+ over).
   let neg = 0;
-  Object.entries(p.perCat).forEach(([c,v])=>{
-    if(v<0){ neg += v; return; }
-    const g = Object.keys(ARCHIEF_SANKEY_GROEPEN).find(k=>ARCHIEF_SANKEY_GROEPEN[k].includes(c)) || c;
-    groep[g] = (groep[g]||0) + v;
-  });
-  let uit = Object.entries(groep).filter(([,v])=>v>0.5).sort((a,b)=>b[1]-a[1]);
-  if(uit.length>9){ const rest = uit.slice(8).reduce((t,[,v])=>t+v,0); uit = uit.slice(0,8); uit.push(['Overig', rest]); }
+  Object.values(p.perCat).forEach(v=>{ if(v<0) neg += v; });
+  const indeling = archiefSankeyGroepLeden(p);
+  const ledenVan = {};
+  let uit = Object.entries(indeling).map(([g,cs])=>{ ledenVan[g]=cs; return [g, cs.reduce((t,c)=>t+Math.max(0,p.perCat[c]||0),0)]; })
+    .filter(([,v])=>v>0.5).sort((a,b)=> a[0]==='Overig' ? 1 : b[0]==='Overig' ? -1 : b[1]-a[1]);
   const rechts = [['Sparen', p.sparen, 'var(--c-sparen)'], ...uit.map(([n,v])=>[n,v, n==='Overig'?'var(--c-overig)':'var(--ingcc)'])];
   if(p.onderStreep>0.5) rechts.push(['Over', p.onderStreep, 'var(--dot-ok)']);
   const links = Object.entries(p.bronnen||{}).filter(([,v])=>v>0.5).sort((a,b)=>b[1]-a[1]).map(([n,v])=>[n,v,'var(--dot-ok)']);
@@ -8196,7 +8199,7 @@ function renderArchiefSankey(p, titel, klikbaar){
   if(p.onderStreep<-0.5) links.push(['Tekort uit buffer', -p.onderStreep, 'var(--dot-over)']);
   const T = Math.max(links.reduce((t,x)=>t+x[1],0), rechts.reduce((t,x)=>t+x[1],0));
   if(T<=0) return '';
-  const W=440, H=300, gap=5, nw=8, lx=122, mx=212, rx=302;
+  const W=360, H=300, gap=5, nw=8, lx=100, mx=176, rx=252; // Rob 06-10: groter op iPhone, max 520px breed op iMac
   const sc = (H - gap*(Math.max(links.length,rechts.length)-1)) / T;
   const mh = T*sc;
   const curve = (x0,y0,x1,y1,h,c)=>`<path d="M${x0},${y0.toFixed(1)} C${((x0+x1)/2).toFixed(1)},${y0.toFixed(1)} ${((x0+x1)/2).toFixed(1)},${y1.toFixed(1)} ${x1},${y1.toFixed(1)} L${x1},${(y1+h).toFixed(1)} C${((x0+x1)/2).toFixed(1)},${(y1+h).toFixed(1)} ${((x0+x1)/2).toFixed(1)},${(y0+h).toFixed(1)} ${x0},${(y0+h).toFixed(1)} Z" fill="${c}" opacity="0.32"></path>`;
@@ -8211,14 +8214,15 @@ function renderArchiefSankey(p, titel, klikbaar){
   L.forEach(o=>{ svg += curve(lx+nw,o.y,mx,cy,o.h,o.c) + `<rect x="${lx}" y="${o.y.toFixed(1)}" width="${nw}" height="${Math.max(1.5,o.h).toFixed(1)}" fill="${o.c}"></rect>`
     + `<text x="${lx-5}" y="${o.ly.toFixed(1)}" text-anchor="end" font-size="10" fill="var(--paper)">${o.n}</text><text x="${lx-5}" y="${(o.ly+11).toFixed(1)}" text-anchor="end" font-size="9" fill="var(--muted)">${fmt(o.v)}</text>`; cy+=o.h; });
   cy = my;
-  R.forEach(o=>{ const dim = klikbaar && archiefSankeyCat && archiefSankeyCat!==o.n ? ' opacity="0.4"' : '';
-    const g0 = klikbaar ? `<g data-archief-sankey-cat="${o.n}" style="cursor:pointer;"${dim}><rect x="${rx-4}" y="${(o.y-2).toFixed(1)}" width="${W-rx+4}" height="${Math.max(o.h+4, 26).toFixed(1)}" fill="transparent"></rect>` : '';
+  R.forEach(o=>{ const kan = klikbaar && (ledenVan[o.n]||[]).length>1;
+    const dim = klikbaar && archiefSankeyCat && archiefSankeyCat!==o.n ? ' opacity="0.4"' : '';
+    const g0 = kan ? `<g data-archief-sankey-cat="${o.n}" style="cursor:pointer;"${dim}><rect x="${rx-4}" y="${(o.y-2).toFixed(1)}" width="${W-rx+4}" height="${Math.max(o.h+4, 26).toFixed(1)}" fill="transparent"></rect>` : '';
     svg += curve(mx+nw,cy,rx,o.y,o.h,o.c) + g0 + `<rect x="${rx}" y="${o.y.toFixed(1)}" width="${nw}" height="${Math.max(1.5,o.h).toFixed(1)}" fill="${o.c}"></rect>`
-    + `<text x="${rx+nw+5}" y="${o.ly.toFixed(1)}" font-size="10" fill="var(--paper)"${klikbaar&&archiefSankeyCat===o.n?' font-weight="700"':''}>${o.n}</text><text x="${rx+nw+5}" y="${(o.ly+11).toFixed(1)}" font-size="9" fill="var(--muted)">${fmt(o.v)}</text>` + (klikbaar?'</g>':''); cy+=o.h; });
+    + `<text x="${rx+nw+5}" y="${o.ly.toFixed(1)}" font-size="10" fill="var(--paper)"${kan&&archiefSankeyCat===o.n?' font-weight="700"':''}>${o.n}${kan?(archiefSankeyCat===o.n?' ▾':' ▸'):''}</text><text x="${rx+nw+5}" y="${(o.ly+11).toFixed(1)}" font-size="9" fill="var(--muted)">${fmt(o.v)}</text>` + (kan?'</g>':''); cy+=o.h; });
   const maxLy = hoogte + 8;
-  if(klikbaar) return `<svg viewBox="0 0 ${W} ${maxLy.toFixed(0)}" style="width:100%;height:auto;display:block;margin-top:8px;">${svg}</svg>`;
-  return `<div class="card-label" style="margin:16px 0 6px;">${titel||'Waar ging het heen'}</div>
-    <svg viewBox="0 0 ${W} ${maxLy.toFixed(0)}" style="width:100%;height:auto;display:block;">${svg}</svg>`;
+  const svgEl = `<svg viewBox="0 0 ${W} ${maxLy.toFixed(0)}" style="width:100%;max-width:520px;height:auto;display:block;margin:8px auto 0;">${svg}</svg>`;
+  if(klikbaar) return svgEl;
+  return `<div class="card-label" style="margin:16px 0 6px;">${titel||'Waar ging het heen'}</div>${svgEl}`;
 }
 function renderArchiefView(){
   const periodes = archiefPeriodes();
@@ -8249,12 +8253,12 @@ function renderArchiefView(){
     </div>`;
   }).join('');
   return `
-    <div class="card">${renderArchiefChart(periodes, null, openKey)}</div>
-    <div class="card">${renderArchiefJaarKeuze(periodes)}${(()=>{ const sel = archiefJaarSelectie(periodes);
+    <div class="card">${renderArchiefJaarKeuze(periodes)}${renderArchiefChart(periodes, null, openKey)}</div>
+    <div class="card">${(()=>{ const sel = archiefJaarSelectie(periodes);
       const bereik = sel.length ? `${archiefMaandLabel(sel[0],true)}–${archiefMaandLabel(sel[sel.length-1],true)} ${sel[sel.length-1].jaar}` : '';
       const som = archiefSomPeriodes(sel);
       const kop = `<div data-archief-sankey-toggle="1" style="display:flex;justify-content:space-between;align-items:baseline;cursor:pointer;margin-top:16px;"><span class="card-label">Waar ging het heen · ${bereik}</span><span style="color:var(--muted);">${archiefSankeyOpen?'▾':'▸'}</span></div>`;
-      return renderArchiefHeatmap(sel, openKey) + kop + (archiefSankeyOpen ? renderArchiefSankey(som, '', true) + renderArchiefSankeyDrill(sel, som) : ''); })()}</div>
+      return renderArchiefHeatmap(sel, openKey) + kop + (archiefSankeyOpen ? renderArchiefSankey(som, '', true) + renderArchiefSankeyDrill(som) : ''); })()}</div>
     ${kaarten}
   `;
 }
@@ -10520,10 +10524,9 @@ function render(){
   document.querySelectorAll('[data-hyp-aftrek-toggle]').forEach(el=>el.addEventListener('click',()=>{ hypotheekTegelExpand = (hypotheekTegelExpand==='aftrek') ? null : 'aftrek'; render(); scrollC3sNaarKop('[data-hyp-aftrek-toggle]'); }));
   document.querySelectorAll('[data-hyp-doc]').forEach(el=>el.addEventListener('click',()=>hypotheekOpenDocument(el.dataset.hypDoc)));
   document.querySelectorAll('[data-archief-toggle]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.archiefToggle; const huidig = archiefMaandExpand===undefined ? (archiefPeriodes().slice(-1)[0]||{}).key : archiefMaandExpand; archiefMaandExpand = (huidig===key) ? null : key; render(); if(archiefMaandExpand) scrollC3sNaarKop('[data-archief-toggle="'+key+'"]'); }));
-  document.querySelectorAll('[data-archief-basis]').forEach(el=>el.addEventListener('click',()=>{ const v=el.dataset.archiefBasis; archiefJaarBasis = v==='rollend' ? 'rollend' : Number(v); archiefSankeyCat = null; archiefSankeySub = null; render(); }));
-  document.querySelectorAll('[data-archief-sankey-toggle]').forEach(el=>el.addEventListener('click',()=>{ archiefSankeyOpen = !archiefSankeyOpen; if(!archiefSankeyOpen){ archiefSankeyCat=null; archiefSankeySub=null; } render(); }));
-  document.querySelectorAll('[data-archief-sankey-cat]').forEach(el=>el.addEventListener('click',()=>{ const c=el.dataset.archiefSankeyCat; archiefSankeyCat = archiefSankeyCat===c ? null : c; archiefSankeySub = null; render(); }));
-  document.querySelectorAll('[data-archief-sankey-sub]').forEach(el=>el.addEventListener('click',()=>{ const c=el.dataset.archiefSankeySub; archiefSankeySub = archiefSankeySub===c ? null : c; render(); }));
+  document.querySelectorAll('[data-archief-basis]').forEach(el=>el.addEventListener('click',()=>{ const v=el.dataset.archiefBasis; archiefJaarBasis = v==='rollend' ? 'rollend' : Number(v); archiefSankeyCat = null; render(); }));
+  document.querySelectorAll('[data-archief-sankey-toggle]').forEach(el=>el.addEventListener('click',()=>{ archiefSankeyOpen = !archiefSankeyOpen; if(!archiefSankeyOpen){ archiefSankeyCat=null; } render(); }));
+  document.querySelectorAll('[data-archief-sankey-cat]').forEach(el=>el.addEventListener('click',()=>{ const c=el.dataset.archiefSankeyCat; archiefSankeyCat = archiefSankeyCat===c ? null : c; render(); }));
   document.querySelectorAll('[data-archief-bar]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.archiefBar; archiefMaandExpand = key; render(); scrollC3sNaarKop('[data-archief-toggle="'+key+'"]'); }));
   document.querySelectorAll('[data-hyp-jaar-toggle]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.hypJaarToggle; hypotheekJaarExpand = (hypotheekJaarExpand===key) ? null : key; render(); scrollC3sNaarKop('[data-hyp-jaar-toggle="'+key+'"]'); }));
   document.querySelectorAll('[data-hyp-maand-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const key=el.dataset.hypMaandToggle; hypotheekMaandExpand = (hypotheekMaandExpand===key) ? null : key; render(); }));
