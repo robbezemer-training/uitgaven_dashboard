@@ -1299,7 +1299,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-06i - Overzicht (Rob, 06-10-2026): bovenste grafiek altijd 12 maanden breed (rollend of kalenderjaar, volgt de keuzeknoppen die nu bovenaan staan), rustiger: dunnere balken, lege plek voor maanden zonder data, eindtotaal bij de lijn. Sankey compacter getekend (groter op iPhone) en max 520px breed (niet meer enorm op iMac). Doorklik alleen nog op verzamelposten (onderverdeling per categorie); maandverdeling per post weg. Trip onder Reizen. Casa 3S altijd eigen post, nooit onder Overig.';
+const DASHBOARD_VERSION = '2026-10-06j - Sankey (jaar en per maand, Rob 06-10-2026): geen maximum van 9 posten meer, de Sankey groeit verticaal. Elke post vanaf 1,5% van de uitgaven (min. EUR 25) krijgt een eigen regel, ook een eenmalige hoge post; alleen kleinere posten samen onder Overig. Casa 3S blijft altijd zichtbaar.';
+const DASHBOARD_VERSION_PREV_2026_10_06i = '2026-10-06i - Overzicht (Rob, 06-10-2026): bovenste grafiek altijd 12 maanden breed (rollend of kalenderjaar, volgt de keuzeknoppen die nu bovenaan staan), rustiger: dunnere balken, lege plek voor maanden zonder data, eindtotaal bij de lijn. Sankey compacter getekend (groter op iPhone) en max 520px breed (niet meer enorm op iMac). Doorklik alleen nog op verzamelposten (onderverdeling per categorie); maandverdeling per post weg. Trip onder Reizen. Casa 3S altijd eigen post, nooit onder Overig.';
 const DASHBOARD_VERSION_PREV_2026_10_06h = '2026-10-06h - Jaar-Sankey in Overzicht (Rob, 06-10-2026): standaard ingeklapt (tik op de kop om te openen). Tik op een post rechts: groep met meerdere categorieen -> balken per onderliggende categorie (tik op een categorie -> maandverdeling); losse categorie, Sparen of Over -> maandverdeling met gemiddelde-lijn. Volgt de gekozen basis (12 mnd of kalenderjaar). Maand-Sankeys ongewijzigd.';
 const DASHBOARD_VERSION_PREV_2026_10_06g = '2026-10-06g - Overzicht per jaar (Rob, 06-10-2026: heatmap en jaar-Sankey kiesbaar rollend of kalenderjaar). Keuzeknoppen boven de heatmap: 12 mnd (laatste 12 afgesloten maanden) of een kalenderjaar (= belastingjaar, salarisperiodes jan t/m dec). Heatmap toont de gekozen maanden; daaronder een Sankey over dezelfde maanden opgeteld. Maandkaarten en balkgrafiek ongewijzigd. Bevat 06e (Tandarts vaste last) en 06f (Casa 3S labelmaand).';
 const DASHBOARD_VERSION_PREV_2026_10_06f = '2026-10-06f - Casa 3S-seizoensposten op labelmaand (Rob, 06-10-2026): Enel (om de maand) en IMU telden mee in elke periode die de maand raakte, waardoor Enel elke periode en IMU in twee perioden achter elkaar meetelde. Nu alleen de labelmaand van de salarisperiode, net als SEIZOEN_VAST (06e). IMU-maanden naar jun/dec (aanslagen half juni/half december; betaling 15-06 viel in periode juni). Bevat ook 06e (Tandarts vaste last).';
@@ -8153,19 +8154,15 @@ function archiefSankeyGroepLeden(p){
     const g = Object.keys(ARCHIEF_SANKEY_GROEPEN).find(k=>ARCHIEF_SANKEY_GROEPEN[k].includes(c)) || c;
     groep[g] = (groep[g]||0) + v; (leden[g] = leden[g]||[]).push(c);
   });
-  let uit = Object.entries(groep).filter(([,v])=>v>0.5).sort((a,b)=>b[1]-a[1]);
+  // Rob, 06-10-2026: geen vast maximum meer; de Sankey groeit verticaal. Elke post vanaf 1,5% van de uitgaven
+  // (min. EUR 25) staat er zelf in, dus ook een eenmalige hoge post. Alleen echte kruimels gaan naar Overig.
+  const uit = Object.entries(groep).filter(([,v])=>v>0.5).sort((a,b)=>b[1]-a[1]);
+  const totaal = uit.reduce((t,[,v])=>t+v,0), drempel = Math.max(25, totaal*0.015);
+  const eigen = uit.filter(([g,v])=>v>=drempel || ARCHIEF_SANKEY_ALTIJD.includes(g));
+  const klein = uit.filter(([g,v])=>!(v>=drempel || ARCHIEF_SANKEY_ALTIJD.includes(g)));
   const res = {};
-  if(uit.length>9){
-    const vast = uit.filter(([g])=>ARCHIEF_SANKEY_ALTIJD.includes(g));
-    const vrij = uit.filter(([g])=>!ARCHIEF_SANKEY_ALTIJD.includes(g));
-    const ruimte = Math.max(0, 8-vast.length);
-    const rest = vrij.slice(ruimte);
-    uit = [...vrij.slice(0,ruimte), ...vast].sort((a,b)=>b[1]-a[1]);
-    uit.forEach(([g])=>{ res[g] = leden[g]; });
-    res['Overig'] = rest.flatMap(([g])=>leden[g]);
-    return res;
-  }
-  uit.forEach(([g])=>{ res[g] = leden[g]; });
+  (klein.length>1 ? eigen : uit).forEach(([g])=>{ res[g] = leden[g]; });
+  if(klein.length>1) res['Overig'] = klein.flatMap(([g])=>leden[g]);
   return res;
 }
 let archiefSankeyOpen = false, archiefSankeyCat = null; // Rob, 06-10-2026: jaar-Sankey uitklapbaar; tik op verzamelpost = onderverdeling
