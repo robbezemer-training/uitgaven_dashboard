@@ -252,6 +252,7 @@
     .card-label{ font-size: 10px; letter-spacing: 0.08em; }
     .total-figure{ font-size: 28px; }
     .stat-figure{ font-size: 24px; white-space: normal; }
+    .hero4 .stat-figure{ font-size: clamp(16px, 14.5cqi, 24px); white-space: nowrap; }
     .stat-sub{ font-size: 10px; }
     .view-toggle{ overflow-x: auto; white-space: nowrap; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; margin-bottom: 20px; }
     .view-btn{ margin-right: 16px; font-size: 13.5px; padding: 10px 3px; }
@@ -284,6 +285,11 @@
   .stat-figure.pos{ color: var(--teal); }
   .stat-figure.neg{ color: var(--rose); }
   .stat-sub{ margin-top:8px; font-family:'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--muted); }
+  /* Rob, 07-10-2026 (iMac Safari): bedragen in de vijf tegels passen niet altijd. Tegel is een container;
+     het grote getal breekt nooit af en schaalt mee met de tegelbreedte (max 30px), het subregeltje ook. */
+  .hero4 > .card{ container-type: inline-size; }
+  .hero4 .stat-figure{ white-space: nowrap; font-size: clamp(16px, 14.5cqi, 30px); }
+  .hero4 .stat-sub{ font-size: clamp(9.5px, 7cqi, 11.5px); }
 
   .total-card{ display:flex; flex-direction:column; justify-content: space-between; }
   .total-figure{ font-family:'Space Grotesk', sans-serif; font-weight: 500; font-size: 46px; line-height: 1; letter-spacing: -0.01em; }
@@ -534,7 +540,7 @@ const MONTH_LABELS = {"2026-01":"Jan","2026-02":"Feb","2026-03":"Mrt","2026-04":
 function fmt(n){
   const neg = n < 0;
   const abs = Math.abs(n).toLocaleString('nl-NL', {minimumFractionDigits:2, maximumFractionDigits:2});
-  return (neg? '−€' : '€') + abs;
+  return (neg? '−\u2060€' : '€') + abs; // word joiner: Safari brak anders af na het minteken
 }
 function monthOf(d){ return d.slice(0,7); }
 function isUSVendor(v){ return US_VENDORS.some(k => v.toUpperCase().includes(k)); }
@@ -1304,7 +1310,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-07b - ZZP uitgaven per leverancier vast/dagelijks, net als Paardrijden (Rob, 07-10-2026): categorie uit de vaste-lastenlijst; abonnementen Anthropic/Claude, Adobe en HP Instant Ink vast via vendor_rules, eenmalige zakelijke aankopen (bv. Foto De Vakman) standaard dagelijks.';
+const DASHBOARD_VERSION = '2026-10-07c - Getallen in de vijf hoofdtegels passen weer (Rob, iMac Safari, 07-10-2026): tegel als container, groot bedrag breekt niet af en schaalt mee met de tegelbreedte (16-30px), subregel ook; minteken plakt via word joiner aan het bedrag zodat Safari niet na het minteken afbreekt. Bevat ook 07a/07b.';
+const DASHBOARD_VERSION_PREV_2026_10_07b = '2026-10-07b - ZZP uitgaven per leverancier vast/dagelijks, net als Paardrijden (Rob, 07-10-2026): categorie uit de vaste-lastenlijst; abonnementen Anthropic/Claude, Adobe en HP Instant Ink vast via vendor_rules, eenmalige zakelijke aankopen (bv. Foto De Vakman) standaard dagelijks.';
 const DASHBOARD_VERSION_PREV_2026_10_07a = '2026-10-07a - Paardrijden vast hersteld (Rob, 07-10-2026): de FNR-jaarbijdrage (vendor_patronen vast, okt) maakte Paardrijden een seizoenscategorie, waardoor het vaste deel De Flemming B.V. (485,50, begroting vast_vast) werd vervangen door 27,50 en alle Paardrijden-tx (ook PayPal/Zettle De Flemming) als vast telden. Nu: seizoenspost is binnen Paardrijden een toeslag op het vaste deel (okt 513,00), categorie blijft per leverancier vast/dagelijks; PayPal/Zettle De Flemming expliciet dagelijks in vendor_rules. OVERRIDES_FALLBACK ververst.';
 const DASHBOARD_VERSION_PREV_2026_10_06n = '2026-10-06n - Saldo na interieur in de jaar- en maandtegels van Vermogen krijgt kleur (Rob, 06-10-2026): groen bij positief, rood bij negatief, gedimd (opacity 0,65) zodat de hoofdlijn leidend blijft.';
 const DASHBOARD_VERSION_PREV_2026_10_06m = '2026-10-06m - Vermogen 2e spoor (Rob, 06-10-2026): aanname interieur eind juni 2027 betaald. Potjes-grafiek krijgt een tweede, gestippelde lijn = vermogen na C3S-uitgaven en reizen, min het open interieurbedrag vanaf juni 2027 (live uit de Interieur-tegel, daalt vanzelf als er echt betaald wordt). Sleepbalk toont beide; jaar- en maandtegels tonen vanaf juni 2027 een tweede regel na interieur. Hoofdlijn, C3S-doel en PDF ongewijzigd.';
