@@ -706,7 +706,7 @@ function seizoenVastCategorieen(){ return [...new Set(SEIZOEN_VAST.map(s=>s.cate
 // Rob, 07-10-2026: binnen Paardrijden is vast/dagelijks per leverancier (De Flemming B.V. vast, PayPal/Zettle De
 // Flemming en Epplejeck dagelijks). Een seizoenspost daarbinnen (FNR-jaarbijdrage, okt) is een TOESLAG op het vaste
 // deel (begroting vast_vast) en mag de categorie niet als geheel vast maken.
-const PER_LEVERANCIER_CATS = new Set(["Paardrijden"]);
+const PER_LEVERANCIER_CATS = new Set(["Paardrijden","ZZP uitgaven"]); // ZZP (Rob, 07-10-2026): abonnementen (Anthropic/Claude, Adobe, HP Instant Ink) vast via vendor_rules, eenmalige aankopen standaard dagelijks
 function seizoenIsToeslag(cat){ return PER_LEVERANCIER_CATS.has(cat) || BEGROTING_VAST_VAST[cat]!=null; }
 function seizoenVastBedragVoorMaand(cat, jaar, maand){
   const lbl = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'][maand-1];
@@ -904,7 +904,7 @@ const REIZEN_KEYWORDS = {
 };
 const JUL_INCOME_CATS = ["Salaris","Belastingteruggave","Overig inkomen","ZZP inkomsten"];
 const JUL_INTERN_CATS = ["__INTERN_RABO__","__INTERN_ING__","__INTERN_SPAREN__","__AMEX_BETALING__","__INGCC_BETALING__","__SPAREN_NAAR_C3S__","__SPAREN_NAAR_REIZEN__","__MC_AFLOSSING__","__PAYMENT__","__INTERN_MAUD__"];
-const JUL_VASTE_LASTEN_CATS = ["Hypotheek","Auto","Verzekeringen","Zorgverzekering","Bankkosten","Abonnementen","Nutsvoorzieningen","Telecom","Vakbond","Muziek","Goede doelen","Casa 3S","ZZP uitgaven","Familie","Kado","Tandarts"];
+const JUL_VASTE_LASTEN_CATS = ["Hypotheek","Auto","Verzekeringen","Zorgverzekering","Bankkosten","Abonnementen","Nutsvoorzieningen","Telecom","Vakbond","Muziek","Goede doelen","Casa 3S","Familie","Kado","Tandarts"];
 // Let op: "Paardrijden" bewust NIET in deze lijst. Binnen die categorie is vast/dagelijks per leverancier
 // bepaald via vendorBucketOverrides (De Flemming B.V. + Professioneel Platform Hippische Ondernemers = vast,
 // alle andere Paardrijden-vendors default dagelijks) — zie effectiveBucket(). Bevestigd door Rob 12-08-2026.
@@ -1304,7 +1304,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-07a - Paardrijden vast hersteld (Rob, 07-10-2026): de FNR-jaarbijdrage (vendor_patronen vast, okt) maakte Paardrijden een seizoenscategorie, waardoor het vaste deel De Flemming B.V. (485,50, begroting vast_vast) werd vervangen door 27,50 en alle Paardrijden-tx (ook PayPal/Zettle De Flemming) als vast telden. Nu: seizoenspost is binnen Paardrijden een toeslag op het vaste deel (okt 513,00), categorie blijft per leverancier vast/dagelijks; PayPal/Zettle De Flemming expliciet dagelijks in vendor_rules. OVERRIDES_FALLBACK ververst.';
+const DASHBOARD_VERSION = '2026-10-07b - ZZP uitgaven per leverancier vast/dagelijks, net als Paardrijden (Rob, 07-10-2026): categorie uit de vaste-lastenlijst; abonnementen Anthropic/Claude, Adobe en HP Instant Ink vast via vendor_rules, eenmalige zakelijke aankopen (bv. Foto De Vakman) standaard dagelijks.';
+const DASHBOARD_VERSION_PREV_2026_10_07a = '2026-10-07a - Paardrijden vast hersteld (Rob, 07-10-2026): de FNR-jaarbijdrage (vendor_patronen vast, okt) maakte Paardrijden een seizoenscategorie, waardoor het vaste deel De Flemming B.V. (485,50, begroting vast_vast) werd vervangen door 27,50 en alle Paardrijden-tx (ook PayPal/Zettle De Flemming) als vast telden. Nu: seizoenspost is binnen Paardrijden een toeslag op het vaste deel (okt 513,00), categorie blijft per leverancier vast/dagelijks; PayPal/Zettle De Flemming expliciet dagelijks in vendor_rules. OVERRIDES_FALLBACK ververst.';
 const DASHBOARD_VERSION_PREV_2026_10_06n = '2026-10-06n - Saldo na interieur in de jaar- en maandtegels van Vermogen krijgt kleur (Rob, 06-10-2026): groen bij positief, rood bij negatief, gedimd (opacity 0,65) zodat de hoofdlijn leidend blijft.';
 const DASHBOARD_VERSION_PREV_2026_10_06m = '2026-10-06m - Vermogen 2e spoor (Rob, 06-10-2026): aanname interieur eind juni 2027 betaald. Potjes-grafiek krijgt een tweede, gestippelde lijn = vermogen na C3S-uitgaven en reizen, min het open interieurbedrag vanaf juni 2027 (live uit de Interieur-tegel, daalt vanzelf als er echt betaald wordt). Sleepbalk toont beide; jaar- en maandtegels tonen vanaf juni 2027 een tweede regel na interieur. Hoofdlijn, C3S-doel en PDF ongewijzigd.';
 const DASHBOARD_VERSION_PREV_2026_10_06l = '2026-10-06l - Interieur alleen in C3S (Rob, 06-10-2026: niet in Vermogen; uitgavenpatroon pas als het echt betaald is). c3sTotaalOpenBedrag = weer alleen de verbouwing, dus geen geplande interieur-uitgave in de Vermogen-projectie, het C3S-doel of de PDF/Excel-potsamenvatting. Een interieuraankoop raakt de C3S-pot pas als echte betaling: als c3s_facturen-regel gekoppeld aan een int-post (betaald) gaat hij van het potsaldo af en telt hij als betaald in de Interieur-tegel.';
