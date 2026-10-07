@@ -288,6 +288,12 @@
   /* Rob, 07-10-2026 (iMac Safari): bedragen in de vijf tegels passen niet altijd. Tegel is een container;
      het grote getal breekt nooit af en schaalt mee met de tegelbreedte (max 30px), het subregeltje ook. */
   .hero4 > .card{ container-type: inline-size; }
+  /* Rob, 07-10-2026: bij uitklappen schoven de tegels rechts van de open tegel naar onder de grafiek. Als de tegels
+     naast elkaar staan komt het uitklapdeel nu onder de hele tegelrij; op de telefoon (1 kolom) blijft het direct
+     onder de eigen tegel. */
+  @media (min-width: 481px){
+    .hero4 > .card[style*="grid-column"]{ order: 1; margin-top: 0 !important; border-radius: 6px !important; }
+  }
   .hero4 .stat-figure{ white-space: nowrap; font-size: clamp(16px, 14.5cqi, 30px); }
   .hero4 .stat-sub{ font-size: clamp(9.5px, 7cqi, 11.5px); }
 
@@ -1310,7 +1316,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-07c - Getallen in de vijf hoofdtegels passen weer (Rob, iMac Safari, 07-10-2026): tegel als container, groot bedrag breekt niet af en schaalt mee met de tegelbreedte (16-30px), subregel ook; minteken plakt via word joiner aan het bedrag zodat Safari niet na het minteken afbreekt. Bevat ook 07a/07b.';
+const DASHBOARD_VERSION = '2026-10-07d - Uitklappen hoofdtegels (Rob, 07-10-2026): tegels rechts van de open tegel schoven naar onder de grafiek; bij tegels naast elkaar staat het uitklapdeel nu onder de volledige tegelrij (CSS order), op de telefoon ongewijzigd onder de eigen tegel. Bevat 07a-07c.';
+const DASHBOARD_VERSION_PREV_2026_10_07c = '2026-10-07c - Getallen in de vijf hoofdtegels passen weer (Rob, iMac Safari, 07-10-2026): tegel als container, groot bedrag breekt niet af en schaalt mee met de tegelbreedte (16-30px), subregel ook; minteken plakt via word joiner aan het bedrag zodat Safari niet na het minteken afbreekt. Bevat ook 07a/07b.';
 const DASHBOARD_VERSION_PREV_2026_10_07b = '2026-10-07b - ZZP uitgaven per leverancier vast/dagelijks, net als Paardrijden (Rob, 07-10-2026): categorie uit de vaste-lastenlijst; abonnementen Anthropic/Claude, Adobe en HP Instant Ink vast via vendor_rules, eenmalige zakelijke aankopen (bv. Foto De Vakman) standaard dagelijks.';
 const DASHBOARD_VERSION_PREV_2026_10_07a = '2026-10-07a - Paardrijden vast hersteld (Rob, 07-10-2026): de FNR-jaarbijdrage (vendor_patronen vast, okt) maakte Paardrijden een seizoenscategorie, waardoor het vaste deel De Flemming B.V. (485,50, begroting vast_vast) werd vervangen door 27,50 en alle Paardrijden-tx (ook PayPal/Zettle De Flemming) als vast telden. Nu: seizoenspost is binnen Paardrijden een toeslag op het vaste deel (okt 513,00), categorie blijft per leverancier vast/dagelijks; PayPal/Zettle De Flemming expliciet dagelijks in vendor_rules. OVERRIDES_FALLBACK ververst.';
 const DASHBOARD_VERSION_PREV_2026_10_06n = '2026-10-06n - Saldo na interieur in de jaar- en maandtegels van Vermogen krijgt kleur (Rob, 06-10-2026): groen bij positief, rood bij negatief, gedimd (opacity 0,65) zodat de hoofdlijn leidend blijft.';
