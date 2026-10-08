@@ -1316,7 +1316,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extra\'s en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantiegeld juni en 13e maand nov) en Extra\'s; totale vermogensaanwas cumulatief. Spaarschema in Overzicht telt deurwaarder alleen als ontvangen (zoals Maand-tab). Vermogen: 13e-maand-deurwaarder 800 -> 850. Vorige: 2026-10-08c - C3S Afwijkingen (Rob, 08-10-2026): nieuwe tegel Afwijkingen in C3S (begroot / betaald / verschil, rood = te veel, groen = te weinig) en blok Afwijkingen t.o.v. begroting in PDF alles (NL/IT). Te veel telt zodra betaald > begroot (incl. IVA); te weinig alleen bij status Klaar door Rob gezet. Interieur-tegel staat nu ook standaard dicht. Vorige: 2026-10-08b - Overzicht: Italie-reisafwikkeling (-2.494,22, aug, uit maandgeld aangezuiverd) telt nu ook in Overzicht/Sankey onder Reizen; zat alleen in de Maand-tab (Rob, 08-10-2026). Juni-trip helemaal uit Overzicht via overzicht_datum. Vorige: 2026-10-08a - Overzicht: terugbetalingen bij de periode van de betaling (Rob, 08-10-2026: Trip jul-sep stond negatief door refunds van de juni-trip). Nieuwe kolom transactions.overzicht_datum; Overzicht/Sankey tellen een tx met die datum in de periode van die datum, Maand-tab en saldi blijven op de echte datum. Heijboer-borg (+500, 27-06) en car-rental-refund (+102,34, 06-07) gekoppeld aan juni. Bevat 07d.';
+const DASHBOARD_VERSION = '2026-10-08e - Spaartegel (Rob, 08-10-2026): kop toont alleen Verwacht en Gerealiseerd (gem. per maand); deurwaarder hoort bij verwacht (900/mnd, +850 juni en november) en een ontvangst telt mee in gerealiseerd; blokjes zonder toelichtingstekst. Vorige: 2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extra\'s en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantiegeld juni en 13e maand nov) en Extra\'s; totale vermogensaanwas cumulatief. Spaarschema in Overzicht telt deurwaarder alleen als ontvangen (zoals Maand-tab). Vermogen: 13e-maand-deurwaarder 800 -> 850. Vorige: 2026-10-08c - C3S Afwijkingen (Rob, 08-10-2026): nieuwe tegel Afwijkingen in C3S (begroot / betaald / verschil, rood = te veel, groen = te weinig) en blok Afwijkingen t.o.v. begroting in PDF alles (NL/IT). Te veel telt zodra betaald > begroot (incl. IVA); te weinig alleen bij status Klaar door Rob gezet. Interieur-tegel staat nu ook standaard dicht. Vorige: 2026-10-08b - Overzicht: Italie-reisafwikkeling (-2.494,22, aug, uit maandgeld aangezuiverd) telt nu ook in Overzicht/Sankey onder Reizen; zat alleen in de Maand-tab (Rob, 08-10-2026). Juni-trip helemaal uit Overzicht via overzicht_datum. Vorige: 2026-10-08a - Overzicht: terugbetalingen bij de periode van de betaling (Rob, 08-10-2026: Trip jul-sep stond negatief door refunds van de juni-trip). Nieuwe kolom transactions.overzicht_datum; Overzicht/Sankey tellen een tx met die datum in de periode van die datum, Maand-tab en saldi blijven op de echte datum. Heijboer-borg (+500, 27-06) en car-rental-refund (+102,34, 06-07) gekoppeld aan juni. Bevat 07d.';
 const DASHBOARD_VERSION_PREV_2026_10_07d = '2026-10-07d - Uitklappen hoofdtegels (Rob, 07-10-2026): tegels rechts van de open tegel schoven naar onder de grafiek; bij tegels naast elkaar staat het uitklapdeel nu onder de volledige tegelrij (CSS order), op de telefoon ongewijzigd onder de eigen tegel. Bevat 07a-07c.';
 const DASHBOARD_VERSION_PREV_2026_10_07c = '2026-10-07c - Getallen in de vijf hoofdtegels passen weer (Rob, iMac Safari, 07-10-2026): tegel als container, groot bedrag breekt niet af en schaalt mee met de tegelbreedte (16-30px), subregel ook; minteken plakt via word joiner aan het bedrag zodat Safari niet na het minteken afbreekt. Bevat ook 07a/07b.';
 const DASHBOARD_VERSION_PREV_2026_10_07b = '2026-10-07b - ZZP uitgaven per leverancier vast/dagelijks, net als Paardrijden (Rob, 07-10-2026): categorie uit de vaste-lastenlijst; abonnementen Anthropic/Claude, Adobe en HP Instant Ink vast via vendor_rules, eenmalige zakelijke aankopen (bv. Foto De Vakman) standaard dagelijks.';
@@ -8168,8 +8168,9 @@ function archiefPeriodes(){
     const extras = Math.round((Math.max(0, lindySal-lindyBasis) + som(r=>r.amount>0 && isLindyExtraTx(r))
       + (robBasis ? Math.max(0, robSal-robBasis) : 0)
       + som(r=>r.amount>0 && r.category==='Overig inkomen' && /albert heijn/i.test(r.vendor||'')))*100)/100;
-    const nominaal = Math.round((over - extras - deurw)*100)/100;
-    const doelNom = Math.round((SPAREN_ROB_MAAND + lindyBasis)*100)/100;
+    // Rob, 08-10-2026 (2e ronde): deurwaarder hoort bij verwacht; gerealiseerd telt een ontvangst dus ook mee.
+    const nominaal = Math.round((over - extras)*100)/100;
+    const doelNom = Math.round((SPAREN_ROB_MAAND + lindyBasis + deurwaarderVerwachtPeriode(j, m))*100)/100;
     const bronnen = {};
     inkomenRows.forEach(r=>{
       const lab = (isLindySalarisTx(r)||isLindyExtraTx(r)) ? 'Salaris Lindy' : (r.category==='Salaris' ? 'Salaris Rob' : r.category);
@@ -8397,15 +8398,13 @@ function renderSpaarTegel(periodes){
       <polyline points="${cumPts.map((v,i)=>cx(i).toFixed(1)+','+cy(v).toFixed(1)).join(' ')}" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linejoin="round"></polyline>
       ${cumPts.map((v,i)=>`<circle cx="${cx(i).toFixed(1)}" cy="${cy(v).toFixed(1)}" r="2.5" fill="var(--teal)"><title>${archiefMaandLabel(sel[i],false)}: ${fmt(v)}</title></circle>`).join('')}</svg>` : '';
   const mono = "font-family:'IBM Plex Mono',monospace;";
-  const blok = (label, waarde, kleur, sub)=>`<div style="flex:1;min-width:140px;border:1px solid var(--rule);border-radius:8px;padding:9px 11px;">
+  const blok = (label, waarde, kleur)=>`<div style="flex:1;min-width:140px;border:1px solid var(--rule);border-radius:8px;padding:9px 11px;">
       <div style="font-size:11.5px;color:var(--muted);">${label}</div>
       <div style="${mono}font-size:17px;font-weight:600;${kleur?`color:var(--${kleur});`:''}">${waarde}</div>
-      <div style="font-size:11px;color:var(--muted);">${sub}</div></div>`;
+</div>`;
+  const kop = (label, waarde, kleur)=>`<div style="flex:1;"><div style="font-size:11.5px;color:var(--muted);">${label}</div><div style="${mono}font-size:21px;font-weight:600;${kleur?`color:var(--${kleur});`:''}">${fmt(waarde)}</div></div>`;
   return `<div class="card-label" style="margin-top:14px;">Nominaal gespaard per maand</div>
-    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:4px 0 6px;">
-      <span style="${mono}font-size:22px;font-weight:600;">${fmt(gemNom)} <span style="font-size:12px;font-weight:400;color:var(--muted);">gem. per maand</span></span>
-      <span style="${mono}font-size:13px;color:var(--${verschil>=0?'teal':'rose'});">${verschil>=0?'+':'−'}${fmt(Math.abs(verschil))} t.o.v. doel ${fmt(gemDoel)}</span>
-    </div>
+    <div style="display:flex;gap:12px;margin:6px 0 8px;">${kop('Verwacht', gemDoel)}${kop('Gerealiseerd', gemNom, verschil>=-0.5?'teal':'rose')}</div>
     <svg viewBox="0 0 ${w} ${h}" style="width:100%;max-width:640px;height:auto;display:block;margin:0 auto;">${svg}</svg>
     <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;color:var(--muted);margin:4px 0 12px;">
       <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--teal);opacity:.8;"></span> gespaard</span>
@@ -8413,8 +8412,8 @@ function renderSpaarTegel(periodes){
       <span><span style="display:inline-block;width:14px;border-top:2px solid var(--brass);vertical-align:middle;"></span> gemiddeld</span>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      ${blok('Deurwaarder', (dw.achterstand>0.5?'▲ ':'')+fmt(dw.achterstand), dw.achterstand>0.5?'rose':'teal', `achterstand · ${fmt(dw.ontvangen)} van ${fmt(dw.verwacht)} ontvangen`)}
-      ${blok("Extra's", '+'+fmt(extras), 'teal', '13e maand, vakantiegeld, Lindy extra, AH-zegels')}
+      ${blok('Deurwaarder achterstand', (dw.achterstand>0.5?'▲ ':'')+fmt(dw.achterstand), dw.achterstand>0.5?'rose':'teal')}
+      ${blok("Extra's", '+'+fmt(extras), 'teal')}
     </div>
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;">
       <span class="card-label">Totale vermogensaanwas</span><span style="${mono}font-size:16px;font-weight:600;">${fmt(aanwas)}</span>
