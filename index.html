@@ -1316,7 +1316,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-08a - Overzicht: terugbetalingen bij de periode van de betaling (Rob, 08-10-2026: Trip jul-sep stond negatief door refunds van de juni-trip). Nieuwe kolom transactions.overzicht_datum; Overzicht/Sankey tellen een tx met die datum in de periode van die datum, Maand-tab en saldi blijven op de echte datum. Heijboer-borg (+500, 27-06) en car-rental-refund (+102,34, 06-07) gekoppeld aan juni. Bevat 07d.';
+const DASHBOARD_VERSION = '2026-10-08b - Overzicht: Italie-reisafwikkeling (-2.494,22, aug, uit maandgeld aangezuiverd) telt nu ook in Overzicht/Sankey onder Reizen; zat alleen in de Maand-tab (Rob, 08-10-2026). Juni-trip helemaal uit Overzicht via overzicht_datum. Vorige: 2026-10-08a - Overzicht: terugbetalingen bij de periode van de betaling (Rob, 08-10-2026: Trip jul-sep stond negatief door refunds van de juni-trip). Nieuwe kolom transactions.overzicht_datum; Overzicht/Sankey tellen een tx met die datum in de periode van die datum, Maand-tab en saldi blijven op de echte datum. Heijboer-borg (+500, 27-06) en car-rental-refund (+102,34, 06-07) gekoppeld aan juni. Bevat 07d.';
 const DASHBOARD_VERSION_PREV_2026_10_07d = '2026-10-07d - Uitklappen hoofdtegels (Rob, 07-10-2026): tegels rechts van de open tegel schoven naar onder de grafiek; bij tegels naast elkaar staat het uitklapdeel nu onder de volledige tegelrij (CSS order), op de telefoon ongewijzigd onder de eigen tegel. Bevat 07a-07c.';
 const DASHBOARD_VERSION_PREV_2026_10_07c = '2026-10-07c - Getallen in de vijf hoofdtegels passen weer (Rob, iMac Safari, 07-10-2026): tegel als container, groot bedrag breekt niet af en schaalt mee met de tegelbreedte (16-30px), subregel ook; minteken plakt via word joiner aan het bedrag zodat Safari niet na het minteken afbreekt. Bevat ook 07a/07b.';
 const DASHBOARD_VERSION_PREV_2026_10_07b = '2026-10-07b - ZZP uitgaven per leverancier vast/dagelijks, net als Paardrijden (Rob, 07-10-2026): categorie uit de vaste-lastenlijst; abonnementen Anthropic/Claude, Adobe en HP Instant Ink vast via vendor_rules, eenmalige zakelijke aankopen (bv. Foto De Vakman) standaard dagelijks.';
@@ -8086,9 +8086,15 @@ function archiefPeriodes(){
     const rows = archiefTransactiesInPeriode(j, m);
     const inkomenRows = rows.filter(r=>JUL_INCOME_CATS.includes(r.category));
     if(!inkomenRows.some(r=>r.category==='Salaris')) break;
-    const spend = rows.filter(isSpendRow);
-    const vast = sommeerBedrag(spend.filter(r=>effectiveBucket(r)==='vast'));
-    const dagelijks = sommeerBedrag(spend.filter(r=>effectiveBucket(r)!=='vast'));
+    const spendTx = rows.filter(isSpendRow);
+    // Rob, 08-10-2026: de reisafwikkeling (bv. Italie-tekort -2.494,22 in augustus, aangezuiverd uit maandgeld)
+    // is een synthetische regel die alleen de Maand-tab kende; telt nu ook in Overzicht/Sankey onder Reizen (dagelijks).
+    const afwRows = (typeof reisAfwikkelingVoorMaand==='function' ? reisAfwikkelingVoorMaand(j, m) : [])
+      .filter(a=>a && a.rest!=null && Math.abs(a.rest)>=0.01)
+      .map(a=>({category:'Reizen', amount:Math.round(a.rest*100)/100, vendor:'Reisafwikkeling: '+(a.trip&&a.trip.naam||''), synthetisch:true}));
+    const spend = spendTx.concat(afwRows);
+    const vast = sommeerBedrag(spendTx.filter(r=>effectiveBucket(r)==='vast'));
+    const dagelijks = Math.round((sommeerBedrag(spendTx.filter(r=>effectiveBucket(r)!=='vast')) + sommeerBedrag(afwRows))*100)/100;
     const inkomen = Math.round(inkomenRows.reduce((t,r)=>t+r.amount,0)*100)/100;
     const uitgaven = Math.round((vast+dagelijks)*100)/100;
     // Rob, 02-10-2026: sparen hoort in het maandbeeld. Spaardoel volgens schema, zoals bij Vorige maand:
