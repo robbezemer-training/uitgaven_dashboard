@@ -1316,7 +1316,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-08e - Spaartegel (Rob, 08-10-2026): kop toont alleen Verwacht en Gerealiseerd (gem. per maand); deurwaarder hoort bij verwacht (900/mnd, +850 juni en november) en een ontvangst telt mee in gerealiseerd; blokjes zonder toelichtingstekst. Vorige: 2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extra\'s en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantiegeld juni en 13e maand nov) en Extra\'s; totale vermogensaanwas cumulatief. Spaarschema in Overzicht telt deurwaarder alleen als ontvangen (zoals Maand-tab). Vermogen: 13e-maand-deurwaarder 800 -> 850. Vorige: 2026-10-08c - C3S Afwijkingen (Rob, 08-10-2026): nieuwe tegel Afwijkingen in C3S (begroot / betaald / verschil, rood = te veel, groen = te weinig) en blok Afwijkingen t.o.v. begroting in PDF alles (NL/IT). Te veel telt zodra betaald > begroot (incl. IVA); te weinig alleen bij status Klaar door Rob gezet. Interieur-tegel staat nu ook standaard dicht. Vorige: 2026-10-08b - Overzicht: Italie-reisafwikkeling (-2.494,22, aug, uit maandgeld aangezuiverd) telt nu ook in Overzicht/Sankey onder Reizen; zat alleen in de Maand-tab (Rob, 08-10-2026). Juni-trip helemaal uit Overzicht via overzicht_datum. Vorige: 2026-10-08a - Overzicht: terugbetalingen bij de periode van de betaling (Rob, 08-10-2026: Trip jul-sep stond negatief door refunds van de juni-trip). Nieuwe kolom transactions.overzicht_datum; Overzicht/Sankey tellen een tx met die datum in de periode van die datum, Maand-tab en saldi blijven op de echte datum. Heijboer-borg (+500, 27-06) en car-rental-refund (+102,34, 06-07) gekoppeld aan juni. Bevat 07d.';
+const DASHBOARD_VERSION = '2026-10-09a - Overzicht: spaartegel in dezelfde opzet als de Maand-tab (Rob, 09-10-2026): kop cumulatief gerealiseerd van verwacht; grafiek per maand met verwacht (stippellijn), volgende maand verwacht en prognose op basis van het patroon (laatste 6 maanden); posten Rob, Lindy, Deurwaarder en extras cumulatief; daaronder de cumulatieve grafiek. Vorige: 2026-10-08e - Spaartegel (Rob, 08-10-2026): kop toont alleen Verwacht en Gerealiseerd (gem. per maand); deurwaarder hoort bij verwacht (900/mnd, +850 juni en november) en een ontvangst telt mee in gerealiseerd; blokjes zonder toelichtingstekst. Vorige: 2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extras en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantie...';
 const DASHBOARD_VERSION_PREV_2026_10_07d = '2026-10-07d - Uitklappen hoofdtegels (Rob, 07-10-2026): tegels rechts van de open tegel schoven naar onder de grafiek; bij tegels naast elkaar staat het uitklapdeel nu onder de volledige tegelrij (CSS order), op de telefoon ongewijzigd onder de eigen tegel. Bevat 07a-07c.';
 const DASHBOARD_VERSION_PREV_2026_10_07c = '2026-10-07c - Getallen in de vijf hoofdtegels passen weer (Rob, iMac Safari, 07-10-2026): tegel als container, groot bedrag breekt niet af en schaalt mee met de tegelbreedte (16-30px), subregel ook; minteken plakt via word joiner aan het bedrag zodat Safari niet na het minteken afbreekt. Bevat ook 07a/07b.';
 const DASHBOARD_VERSION_PREV_2026_10_07b = '2026-10-07b - ZZP uitgaven per leverancier vast/dagelijks, net als Paardrijden (Rob, 07-10-2026): categorie uit de vaste-lastenlijst; abonnementen Anthropic/Claude, Adobe en HP Instant Ink vast via vendor_rules, eenmalige zakelijke aankopen (bv. Foto De Vakman) standaard dagelijks.';
@@ -2437,7 +2437,7 @@ function categorieTrendData(categorieNaam, maandenTerug=6, huidigJaar, huidigMaa
   });
   return result;
 }
-function renderCategorieTrendSvg(reeks, verwachting, verwachtingVolgende){
+function renderCategorieTrendSvg(reeks, verwachting, verwachtingVolgende, prognoseVolgende){
   // Rob, 02-09-2026: bij Nutsvoorzieningen klopte de stip van de volgende (nog niet begonnen) maand niet met
   // de Energie-tab-prognose voor DIE maand — de toekomst-stip hergebruikte altijd dezelfde "verwachting"-
   // waarde als de lopende-maand-stippellijn/ruit, ook als de onderliggende formule (energieMaandBedragPrognose,
@@ -2455,7 +2455,7 @@ function renderCategorieTrendSvg(reeks, verwachting, verwachtingVolgende){
   const w=900,h=200,pad=10;
   const n = reeks.length;
   const verstreken = reeks.filter(r=>!r.isToekomst);
-  const alleWaarden = [...reeks.map(r=>r.bedrag), ...reeks.filter(r=>r.verwacht!=null).map(r=>r.verwacht), ...(verwachting!=null?[verwachting]:[]), ...(verwachtingVolgende!=null?[verwachtingVolgende]:[])];
+  const alleWaarden = [...reeks.map(r=>r.bedrag), ...reeks.filter(r=>r.verwacht!=null).map(r=>r.verwacht), ...(verwachting!=null?[verwachting]:[]), ...(verwachtingVolgende!=null?[verwachtingVolgende]:[]), ...(prognoseVolgende!=null?[prognoseVolgende]:[])];
   const max = Math.max(...alleWaarden)*1.05 || 1;
   // Rob, 01-09-2026: "als y-as 0-waarde, dan wel 'lege ruimte' onder de 0" — puntjes op €0 (bv. Paardrijden's
   // vast-bucket in een maand zonder De Flemming-tx) zaten voorheen exact op de onderrand (min=0 wanneer alle
@@ -2506,14 +2506,19 @@ function renderCategorieTrendSvg(reeks, verwachting, verwachtingVolgende){
       ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="var(--ink)" stroke="#c9a227" stroke-width="1.5"/>`
       : `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="#c9a227"/>`;
   }).join('');
+  // Rob, 09-10-2026 (Overzicht sparen): naast de verwachting (open bolletje) ook de prognose voor de volgende
+  // maand op basis van het patroon tot nu toe (leermiddel): open bolletje in teal op dezelfde x.
+  const toekIdx = reeks.findIndex(r=>r.isToekomst);
+  const prognoseDot = (prognoseVolgende!=null && toekIdx>=0)
+    ? `<circle cx="${xFor(toekIdx).toFixed(1)}" cy="${yFor(prognoseVolgende).toFixed(1)}" r="3.5" fill="var(--ink)" stroke="var(--teal)" stroke-width="1.5"/>` : '';
   return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
     <defs><linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#c9a227" stop-opacity="0.3"/><stop offset="100%" stop-color="#c9a227" stop-opacity="0"/>
     </linearGradient></defs>
-    <path d="${areaPath}" fill="url(#trendGrad)"/>${zeroLine}${verwachtLine}<path d="${linePath}" fill="none" stroke="#c9a227" stroke-width="2"/>${dots}${verwachtDotHuidig}</svg>`;
+    <path d="${areaPath}" fill="url(#trendGrad)"/>${zeroLine}${verwachtLine}<path d="${linePath}" fill="none" stroke="#c9a227" stroke-width="2"/>${dots}${verwachtDotHuidig}${prognoseDot}</svg>`;
 }
-function renderCategorieTrendChart(reeks, verwachting, labels, scrubKey, verwachtingVolgende){
-  const svg = renderCategorieTrendSvg(reeks, verwachting, verwachtingVolgende);
+function renderCategorieTrendChart(reeks, verwachting, labels, scrubKey, verwachtingVolgende, prognoseVolgende){
+  const svg = renderCategorieTrendSvg(reeks, verwachting, verwachtingVolgende, prognoseVolgende);
   const labelsJson = JSON.stringify(labels).replace(/"/g,'&quot;');
   // De sleepbalk leest values 1-op-1 als getallen — de toekomstmaand (geen echt bedrag) geeft de
   // verwachting mee i.p.v. 0, zodat slepen tot op de laatste stip geen misleidende "0" toont. Gebruikt
@@ -2898,9 +2903,9 @@ function totaalTrendCategorieenReeks(categorieLijst, maandenTerug=6, huidigJaar,
   }
   return reeks;
 }
-function renderReeksTotaalHtml(reeks, verwachtingTotaal, scrubKey){
-  const labels = reeks.map(r=>`${MAAND_NAMEN_NL[r.maandIdx].slice(0,3)} ${String(r.jaar).slice(2)}${r.isToekomst?' (nog te komen)':(r.isHuidig?' (lopend)':'')}`);
-  const chart = renderCategorieTrendChart(reeks, verwachtingTotaal, labels, scrubKey);
+function renderReeksTotaalHtml(reeks, verwachtingTotaal, scrubKey, verwachtingVolgende, prognoseVolgende){
+  const labels = reeks.map(r=>`${MAAND_NAMEN_NL[r.maandIdx].slice(0,3)} ${String(r.jaar).slice(2)}${r.isToekomst?' (nog te komen)':(r.isHuidig?' (lopend)':'')}${!r.isToekomst && r.verwacht!=null && scrubKey.startsWith('overzicht-') ? ' · verwacht '+fmt(r.verwacht) : ''}`);
+  const chart = renderCategorieTrendChart(reeks, verwachtingTotaal, labels, scrubKey, verwachtingVolgende, prognoseVolgende);
   const asHtml = `<div style="display:flex;justify-content:space-between;margin-top:2px;">
     ${reeks.map(r=>`<span style="font-size:9.5px;color:${r.isToekomst||r.isHuidig?'var(--brass, #c9a227)':'var(--muted)'};">${MAAND_NAMEN_NL[r.maandIdx].slice(0,3)}</span>`).join('')}
   </div>`;
@@ -8178,7 +8183,7 @@ function archiefPeriodes(){
     });
     res.unshift({key:j+'-'+m, jaar:j, maand:m, inkomen, vast, dagelijks, uitgaven, sparen, bronnen,
       over, onderStreep: Math.round((over-sparen)*100)/100, perCat: sommeerPerCategorie(spend),
-      extras, deurw, nominaal, doelNom});
+      extras, deurw, nominaal, doelNom, lindySal, lindyBasis});
   }
   return res;
 }
@@ -8360,64 +8365,75 @@ function renderArchiefSankey(p, titel, klikbaar){
   if(klikbaar) return svgEl;
   return `<div class="card-label" style="margin:16px 0 6px;">${titel||'Waar ging het heen'}</div>${svgEl}`;
 }
-// Rob, 08-10-2026: "duidelijk wat er per maand nominaal kan, niet vertroebeld door de extra's".
-// Staaf = nominaal gespaard (werkelijk bijgekomen zonder extra's en deurwaarder), stippellijn = doel (Rob vast +
-// Lindy's verwachte netto), gele lijn = lopend gemiddelde. Daaronder deurwaarder-teller, extra's en de totale aanwas.
+// Rob, 09-10-2026: spaartegel in Overzicht in dezelfde opzet en stijl als de kaarten in de Maand-tab, alleen sparen.
+// Kop = cumulatief gerealiseerd van verwacht (nominaal, zonder extra's). Grafiek per maand: gerealiseerd (lijn),
+// verwacht per maand (stippellijn), volgende maand verwacht (open bolletje) en prognose op basis van het patroon
+// (open teal bolletje, leermiddel). Daaronder de posten cumulatief en de cumulatieve grafiek.
+// Gerealiseerd per post: Lindy = haar salaris tot haar verwachte netto (meer = extra), deurwaarder = ontvangen,
+// Rob = de rest van wat er nominaal bijkwam. Verwacht: Rob vast, Lindy verwachte netto, deurwaarder volgens schema.
+const SPAAR_PROGNOSE_MAANDEN = 6;
+function spaarPosten(p){
+  const lindy = Math.round(Math.min(p.lindySal||0, p.lindyBasis||0)*100)/100;
+  const deurw = p.deurw||0;
+  return {
+    real: {Rob: Math.round((p.nominaal - lindy - deurw)*100)/100, Lindy: lindy, Deurwaarder: deurw},
+    verw: {Rob: SPAREN_ROB_MAAND, Lindy: Math.round((p.lindyBasis||0)*100)/100, Deurwaarder: deurwaarderVerwachtPeriode(p.jaar, p.maand)},
+  };
+}
+function spaarPrognoseVolgende(periodes){
+  const j = HUIDIGE_PERIODE_JAAR, m = HUIDIGE_PERIODE_MAAND;
+  const lindyV = lindyNettoVoorMaand(j, m) || 0;
+  const verwacht = Math.round((SPAREN_ROB_MAAND + lindyV + deurwaarderVerwachtPeriode(j, m))*100)/100;
+  const recent = periodes.slice(-SPAAR_PROGNOSE_MAANDEN);
+  if(!recent.length) return {jaar:j, maand:m, verwacht, prognose:verwacht};
+  const gem = f=>recent.reduce((t,p)=>t+f(spaarPosten(p).real),0)/recent.length;
+  const lindyRatio = recent.reduce((t,p)=>t+((p.lindyBasis||0)>0 ? Math.min(1,(p.lindySal||0)/p.lindyBasis) : 1),0)/recent.length;
+  const prognose = Math.round((gem(r=>r.Rob) + lindyV*lindyRatio + gem(r=>r.Deurwaarder))*100)/100;
+  return {jaar:j, maand:m, verwacht, prognose};
+}
 function renderSpaarTegel(periodes){
-  const slots = archiefTwaalfSlots(periodes);
   const sel = archiefJaarSelectie(periodes);
-  const w=360, h=190, top=14, onder=24, slot=w/12, bw=slot*0.5;
-  let n=0, cumNom=0; const gem = slots.map(s=>s.p ? (n++, cumNom+=s.p.nominaal, cumNom/n) : null);
-  const waarden = [0, ...slots.filter(s=>s.p).flatMap(s=>[s.p.nominaal, s.p.doelNom]), ...gem.filter(v=>v!=null)];
-  const maxV = Math.max(...waarden), minV = Math.min(...waarden), span = Math.max(1, maxV-minV)*1.1;
-  const sc = (h-top-onder)/span, z = top + (maxV + span*0.04)*sc, y = v=>z - v*sc;
-  let svg = `<line x1="0" x2="${w}" y1="${z.toFixed(1)}" y2="${z.toFixed(1)}" stroke="var(--rule)" stroke-width="1"></line>`;
-  slots.forEach((s,i)=>{
-    const cx = slot*i+slot/2;
-    const lab = MAAND_NAMEN_NL[s.maand-1].slice(0,1).toUpperCase()+MAAND_NAMEN_NL[s.maand-1].slice(1,3);
-    svg += `<text x="${cx.toFixed(1)}" y="${h-8}" text-anchor="middle" font-size="9.5" fill="var(--${s.p?'muted':'rule'})">${lab}</text>`;
-    if(!s.p) return;
-    const v = s.p.nominaal, hh = Math.max(1.5, Math.abs(v)*sc), yy = v>=0 ? z-hh : z;
-    const gehaald = v >= s.p.doelNom - 0.5;
-    svg += `<rect x="${(cx-bw/2).toFixed(1)}" y="${yy.toFixed(1)}" width="${bw.toFixed(1)}" height="${hh.toFixed(1)}" rx="3" fill="var(--${gehaald?'teal':'rose'})" fill-opacity="0.8"><title>${archiefMaandLabel(s.p,false)}: ${fmt(v)} (doel ${fmt(s.p.doelNom)})</title></rect>`;
-    svg += `<line x1="${(slot*i+2).toFixed(1)}" x2="${(slot*(i+1)-2).toFixed(1)}" y1="${y(s.p.doelNom).toFixed(1)}" y2="${y(s.p.doelNom).toFixed(1)}" stroke="var(--muted)" stroke-width="1.6" stroke-dasharray="4 3"></line>`;
+  if(!sel.length) return '';
+  const metVolgende = sel[sel.length-1].key === periodes[periodes.length-1].key;
+  const volg = metVolgende ? spaarPrognoseVolgende(periodes) : null;
+  const pad = (j,m)=>({jaar:j, maandIdx:m-1, key:j+'-'+m});
+  const posten = sel.map(spaarPosten);
+  const cum = {real:{Rob:0,Lindy:0,Deurwaarder:0,"Extra's":0}, verw:{Rob:0,Lindy:0,Deurwaarder:0}};
+  let cR=0, cV=0;
+  const reeksMaand = [], reeksCum = [];
+  sel.forEach((p,i)=>{
+    Object.keys(posten[i].real).forEach(k=>{ cum.real[k]+=posten[i].real[k]; cum.verw[k]+=posten[i].verw[k]; });
+    cum.real["Extra's"] += p.extras||0;
+    cR += p.nominaal; cV += p.doelNom;
+    reeksMaand.push({...pad(p.jaar,p.maand), bedrag:p.nominaal, verwacht:p.doelNom, isHuidig:false, isToekomst:false, open:false});
+    reeksCum.push({...pad(p.jaar,p.maand), bedrag:Math.round(cR*100)/100, verwacht:Math.round(cV*100)/100, isHuidig:false, isToekomst:false, open:false});
   });
-  const pts = slots.map((s,i)=>gem[i]==null?null:[slot*i+slot/2, y(gem[i])]).filter(Boolean);
-  if(pts.length) svg += `<polyline points="${pts.map(([a,b])=>a.toFixed(1)+','+b.toFixed(1)).join(' ')}" fill="none" stroke="var(--brass)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline>`
-    + pts.map(([a,b])=>`<circle cx="${a.toFixed(1)}" cy="${b.toFixed(1)}" r="2.5" fill="var(--brass)"></circle>`).join('');
-  const gemNom = sel.length ? sel.reduce((t,p)=>t+p.nominaal,0)/sel.length : 0;
-  const gemDoel = sel.length ? sel.reduce((t,p)=>t+p.doelNom,0)/sel.length : 0;
-  const verschil = gemNom - gemDoel;
-  const extras = sel.reduce((t,p)=>t+p.extras,0), aanwas = sel.reduce((t,p)=>t+p.over,0);
-  const dw = deurwaarderTeller();
-  let cum=0; const cumPts = sel.map(p=>cum+=p.over);
-  const cw=360, ch=70, cmin=Math.min(0,...cumPts), cmax=Math.max(1,...cumPts), cs=(ch-10)/Math.max(1,cmax-cmin);
-  const cx = i=> sel.length>1 ? 6 + i*(cw-12)/(sel.length-1) : cw/2;
-  const cy = v=> ch-5-(v-cmin)*cs;
-  const cumSvg = cumPts.length ? `<svg viewBox="0 0 ${cw} ${ch}" style="width:100%;max-width:640px;height:auto;display:block;margin:4px auto 0;">
-      <polyline points="${cumPts.map((v,i)=>cx(i).toFixed(1)+','+cy(v).toFixed(1)).join(' ')}" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linejoin="round"></polyline>
-      ${cumPts.map((v,i)=>`<circle cx="${cx(i).toFixed(1)}" cy="${cy(v).toFixed(1)}" r="2.5" fill="var(--teal)"><title>${archiefMaandLabel(sel[i],false)}: ${fmt(v)}</title></circle>`).join('')}</svg>` : '';
-  const mono = "font-family:'IBM Plex Mono',monospace;";
-  const blok = (label, waarde, kleur)=>`<div style="flex:1;min-width:140px;border:1px solid var(--rule);border-radius:8px;padding:9px 11px;">
-      <div style="font-size:11.5px;color:var(--muted);">${label}</div>
-      <div style="${mono}font-size:17px;font-weight:600;${kleur?`color:var(--${kleur});`:''}">${waarde}</div>
-</div>`;
-  const kop = (label, waarde, kleur)=>`<div style="flex:1;"><div style="font-size:11.5px;color:var(--muted);">${label}</div><div style="${mono}font-size:21px;font-weight:600;${kleur?`color:var(--${kleur});`:''}">${fmt(waarde)}</div></div>`;
-  return `<div class="card-label" style="margin-top:14px;">Nominaal gespaard per maand</div>
-    <div style="display:flex;gap:12px;margin:6px 0 8px;">${kop('Verwacht', gemDoel)}${kop('Gerealiseerd', gemNom, verschil>=-0.5?'teal':'rose')}</div>
-    <svg viewBox="0 0 ${w} ${h}" style="width:100%;max-width:640px;height:auto;display:block;margin:0 auto;">${svg}</svg>
-    <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;color:var(--muted);margin:4px 0 12px;">
-      <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--teal);opacity:.8;"></span> gespaard</span>
-      <span><span style="display:inline-block;width:14px;border-top:2px dashed var(--muted);vertical-align:middle;"></span> doel</span>
-      <span><span style="display:inline-block;width:14px;border-top:2px solid var(--brass);vertical-align:middle;"></span> gemiddeld</span>
-    </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      ${blok('Deurwaarder achterstand', (dw.achterstand>0.5?'▲ ':'')+fmt(dw.achterstand), dw.achterstand>0.5?'rose':'teal')}
-      ${blok("Extra's", '+'+fmt(extras), 'teal')}
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;">
-      <span class="card-label">Totale vermogensaanwas</span><span style="${mono}font-size:16px;font-weight:600;">${fmt(aanwas)}</span>
-    </div>${cumSvg}`;
+  if(volg){
+    reeksMaand.push({...pad(volg.jaar,volg.maand), bedrag:0, verwacht:null, isHuidig:false, isToekomst:true, open:true});
+    reeksCum.push({...pad(volg.jaar,volg.maand), bedrag:0, verwacht:null, isHuidig:false, isToekomst:true, open:true});
+  }
+  cR = Math.round(cR*100)/100; cV = Math.round(cV*100)/100;
+  const pct = cV>0 ? Math.round(cR/cV*100) : 100;
+  const goed = cR >= cV - Math.max(25, cV*0.01);
+  const bereik = `${archiefMaandLabel(sel[0],true)}–${archiefMaandLabel(sel[sel.length-1],true)} ${sel[sel.length-1].jaar}`;
+  const mnd = volg ? MAAND_NAMEN_NL[volg.maand-1].slice(0,3) : '';
+  const volgRegel = volg ? `<div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin:2px 0 10px;">
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #c9a227;vertical-align:middle;"></span> ${mnd} verwacht ${fmt(volg.verwacht)}</span>
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--teal);vertical-align:middle;"></span> prognose ${fmt(volg.prognose)}</span></div>` : '';
+  const namen = ['Deurwaarder', "Extra's", 'Lindy', 'Rob'];
+  const sorted = namen.map(n=>[n, Math.round(cum.real[n]*100)/100]);
+  const barHtml = renderBarList(sorted, cR, {
+    showDot: true, matchMode: true, verwachtBijRood: true,
+    budgetFor: n => n==="Extra's" ? null : Math.round(cum.verw[n]*100)/100,
+  });
+  return `<div class="card-label" style="margin-top:6px;">Sparen · ${bereik}</div>
+    <div class="stat-figure" style="color:var(--${goed?'teal':'rose'});">${fmt(cR)}</div>
+    <div class="stat-sub">van verwacht ${fmt(cV)} (${pct}%)</div>
+    ${reeksMaand.length>1 ? renderReeksTotaalHtml(reeksMaand, null, 'overzicht-sparen-maand', volg?volg.verwacht:null, volg?volg.prognose:null) : ''}
+    ${volgRegel}
+    ${barHtml}
+    <div class="bar-total" style="margin-top:14px;"><span>Cumulatief</span><b>${fmt(cR).replace('€','€ ')}</b></div>
+    ${reeksCum.length<2 ? '' : renderReeksTotaalHtml(reeksCum, null, 'overzicht-sparen-cum', volg?Math.round((cV+volg.verwacht)*100)/100:null, volg?Math.round((cR+volg.prognose)*100)/100:null)}`;
 }
 function renderArchiefView(){
   const periodes = archiefPeriodes();
