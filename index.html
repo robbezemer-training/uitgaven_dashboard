@@ -1316,7 +1316,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-09b - ZZP btw (Rob, 09-10-2026, na aangifte Q3 2026): correcties van eerdere tijdvakken staan per betrokken kwartaal in nieuwe tabel zzp_btw_correctie; elk kwartaal vergelijkt advies met effectief aangegeven (na correcties), met regel Gecorrigeerd in Qx en bij het verwerkende kwartaal Correcties eerdere kwartalen plus Ingediend saldo. Kaart volgend kwartaal is een invulblad per rubriek (1a omzet/btw, 1b, 1e, 5b, saldo) met exacte correcties (centen, onder 1 euro telt niet) en de 1.000-euro-grens (daarboven suppletie apart). Supabase: view zzp_btw_tijdvak_controle, zzp_btw_correctie_jaar herbouwd. Vorige: 2026-10-09a - Overzicht: spaartegel in dezelfde opzet als de Maand-tab (Rob, 09-10-2026): kop cumulatief gerealiseerd van verwacht; grafiek per maand met verwacht (stippellijn), volgende maand verwacht en prognose op basis van het patroon (laatste 6 maanden); posten Rob, Lindy, Deurwaarder en extras cumulatief; daaronder de cumulatieve grafiek. Vorige: 2026-10-08e - Spaartegel (Rob, 08-10-2026): kop toont alleen Verwacht en Gerealiseerd (gem. per maand); deurwaarder hoort bij verwacht (900/mnd, +850 juni en november) en een ontvangst telt mee in gerealiseerd; blokjes zonder toelichtingstekst. Vorige: 2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extras en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantie...';
+const DASHBOARD_VERSION = '2026-10-09c - Overzicht spaartegel (Rob, 09-10-2026): posten Deurwaarder, Extra\'s, Lindy en Rob klappen open/dicht zoals in de Maand-tab; uitgeklapt per maand gespaard en plus/min t.o.v. verwacht, plus totaal en totaal verwacht. Vorige: 2026-10-09b - ZZP btw (Rob, 09-10-2026, na aangifte Q3 2026): correcties van eerdere tijdvakken staan per betrokken kwartaal in nieuwe tabel zzp_btw_correctie; elk kwartaal vergelijkt advies met effectief aangegeven (na correcties), met regel Gecorrigeerd in Qx en bij het verwerkende kwartaal Correcties eerdere kwartalen plus Ingediend saldo. Kaart volgend kwartaal is een invulblad per rubriek (1a omzet/btw, 1b, 1e, 5b, saldo) met exacte correcties (centen, onder 1 euro telt niet) en de 1.000-euro-grens (daarboven suppletie apart). Supabase: view zzp_btw_tijdvak_controle, zzp_btw_correctie_jaar herbouwd. Vorige: 2026-10-09a - Overzicht: spaartegel in dezelfde opzet als de Maand-tab (Rob, 09-10-2026): kop cumulatief gerealiseerd van verwacht; grafiek per maand met verwacht (stippellijn), volgende maand verwacht en prognose op basis van het patroon (laatste 6 maanden); posten Rob, Lindy, Deurwaarder en extras cumulatief; daaronder de cumulatieve grafiek. Vorige: 2026-10-08e - Spaartegel (Rob, 08-10-2026): kop toont alleen Verwacht en Gerealiseerd (gem. per maand); deurwaarder hoort bij verwacht (900/mnd, +850 juni en november) en een ontvangst telt mee in gerealiseerd; blokjes zonder toelichtingstekst. Vorige: 2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extras en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantie...';
 const DASHBOARD_VERSION_PREV_2026_10_07d = '2026-10-07d - Uitklappen hoofdtegels (Rob, 07-10-2026): tegels rechts van de open tegel schoven naar onder de grafiek; bij tegels naast elkaar staat het uitklapdeel nu onder de volledige tegelrij (CSS order), op de telefoon ongewijzigd onder de eigen tegel. Bevat 07a-07c.';
 const DASHBOARD_VERSION_PREV_2026_10_07c = '2026-10-07c - Getallen in de vijf hoofdtegels passen weer (Rob, iMac Safari, 07-10-2026): tegel als container, groot bedrag breekt niet af en schaalt mee met de tegelbreedte (16-30px), subregel ook; minteken plakt via word joiner aan het bedrag zodat Safari niet na het minteken afbreekt. Bevat ook 07a/07b.';
 const DASHBOARD_VERSION_PREV_2026_10_07b = '2026-10-07b - ZZP uitgaven per leverancier vast/dagelijks, net als Paardrijden (Rob, 07-10-2026): categorie uit de vaste-lastenlijst; abonnementen Anthropic/Claude, Adobe en HP Instant Ink vast via vendor_rules, eenmalige zakelijke aankopen (bv. Foto De Vakman) standaard dagelijks.';
@@ -8372,6 +8372,7 @@ function renderArchiefSankey(p, titel, klikbaar){
 // Gerealiseerd per post: Lindy = haar salaris tot haar verwachte netto (meer = extra), deurwaarder = ontvangen,
 // Rob = de rest van wat er nominaal bijkwam. Verwacht: Rob vast, Lindy verwachte netto, deurwaarder volgens schema.
 const SPAAR_PROGNOSE_MAANDEN = 6;
+let spaarPostOpen = null; // Rob, 09-10-2026: post in de spaartegel uitklappen = per maand plus/min en totaal verwacht
 function spaarPosten(p){
   const lindy = Math.round(Math.min(p.lindySal||0, p.lindyBasis||0)*100)/100;
   const deurw = p.deurw||0;
@@ -8425,6 +8426,34 @@ function renderSpaarTegel(periodes){
   const barHtml = renderBarList(sorted, cR, {
     showDot: true, matchMode: true, verwachtBijRood: true,
     budgetFor: n => n==="Extra's" ? null : Math.round(cum.verw[n]*100)/100,
+    rowAttrs: n => ` data-spaar-post="${n}" style="cursor:pointer;${spaarPostOpen===n?'font-weight:600;':''}"`,
+    indicator: n => spaarPostOpen===n ? ' ▾' : ' ▸',
+    detailFor: n => {
+      if(spaarPostOpen!==n) return '';
+      const extra = n==="Extra's";
+      const mono = "font-family:'IBM Plex Mono',monospace;";
+      const rijen = sel.map((p,i)=>{
+        const real = extra ? (p.extras||0) : posten[i].real[n];
+        const verw = extra ? 0 : posten[i].verw[n];
+        const d = Math.round((real-verw)*100)/100;
+        const kl = Math.abs(d) < 0.005 ? 'var(--muted)' : (d>0 ? 'var(--teal)' : 'var(--rose)');
+        return `<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.2fr);gap:8px;padding:3px 0;font-size:12.5px;">
+          <span style="color:var(--paper-dim);">${archiefMaandLabel(p,true)}</span>
+          <span style="text-align:right;${mono}">${fmt(real)}</span>
+          <span style="text-align:right;${mono}color:${kl};">${d>0.004?'+':''}${fmt(d)}</span></div>`;
+      }).join('');
+      const totR = Math.round(cum.real[n]*100)/100;
+      const totV = extra ? 0 : Math.round(cum.verw[n]*100)/100;
+      const totD = Math.round((totR-totV)*100)/100;
+      const klT = Math.abs(totD) < 0.005 ? 'var(--muted)' : (totD>0 ? 'var(--teal)' : 'var(--rose)');
+      return `<div class="cat-detail-tile">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.2fr);gap:8px;padding:0 0 4px;${mono}font-size:10.5px;color:var(--muted);"><span></span><span style="text-align:right;">gespaard</span><span style="text-align:right;">+/−</span></div>
+        ${rijen}
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.2fr);gap:8px;padding:8px 0 3px;margin-top:6px;border-top:1px solid var(--rule);font-size:12.5px;font-weight:600;">
+          <span>Totaal</span><span style="text-align:right;${mono}">${fmt(totR)}</span><span style="text-align:right;${mono}color:${klT};">${totD>0.004?'+':''}${fmt(totD)}</span></div>
+        ${extra ? '' : `<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0;color:var(--paper-dim);"><span>Totaal verwacht</span><span style="${mono}">${fmt(totV)}</span></div>`}
+      </div>`;
+    },
   });
   return `<div class="card-label" style="margin-top:6px;">Sparen · ${bereik}</div>
     <div class="stat-figure" style="color:var(--${goed?'teal':'rose'});">${fmt(cR)}</div>
@@ -10780,6 +10809,7 @@ function render(){
   document.querySelectorAll('[data-hyp-doc]').forEach(el=>el.addEventListener('click',()=>hypotheekOpenDocument(el.dataset.hypDoc)));
   document.querySelectorAll('[data-archief-toggle]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.archiefToggle; const huidig = archiefMaandExpand===undefined ? (archiefPeriodes().slice(-1)[0]||{}).key : archiefMaandExpand; archiefMaandExpand = (huidig===key) ? null : key; render(); if(archiefMaandExpand) scrollC3sNaarKop('[data-archief-toggle="'+key+'"]'); }));
   document.querySelectorAll('[data-archief-basis]').forEach(el=>el.addEventListener('click',()=>{ const v=el.dataset.archiefBasis; archiefJaarBasis = v==='rollend' ? 'rollend' : Number(v); archiefSankeyCat = null; render(); }));
+  document.querySelectorAll('[data-spaar-post]').forEach(el=>el.addEventListener('click',(e)=>{ if(e.target.closest('.cat-detail-tile')) return; const n=el.dataset.spaarPost; spaarPostOpen = spaarPostOpen===n ? null : n; render(); }));
   document.querySelectorAll('[data-archief-sankey-toggle]').forEach(el=>el.addEventListener('click',()=>{ archiefSankeyOpen = !archiefSankeyOpen; if(!archiefSankeyOpen){ archiefSankeyCat=null; } render(); }));
   document.querySelectorAll('[data-archief-sankey-cat]').forEach(el=>el.addEventListener('click',()=>{ const c=el.dataset.archiefSankeyCat; archiefSankeyCat = archiefSankeyCat===c ? null : c; render(); }));
   document.querySelectorAll('[data-archief-bar]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.archiefBar; archiefMaandExpand = key; render(); scrollC3sNaarKop('[data-archief-toggle="'+key+'"]'); }));
