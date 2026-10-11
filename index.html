@@ -1317,7 +1317,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-10a - Saldo-tegel (Rob, 10-10-2026): AMEX en ING Mastercard zonder "— openstaand"; Oranje Spaarrekening live berekend (anker + overboekingen van/naar Oranje op Rabo/ING), dus 0 na de 500 naar ING op 09-10. Vorige versie (2026-10-09h - Tegel Energie heet Energie & water; tegel Water heeft een grafiek van het verbruik per jaar met sleepbalk (Rob, 09-10-2026). Vorige versie (2026-10-09g - Categorie Nutsvoorzieningen heet nu Energie & water (Rob, 09-10-2026: "nutsvoorziening vind ik zo stom als naam"); Supabase (transactions, vendor_rules, vendor_patronen, trigger vendor_rules_zet_bevestigen) en code omgezet. Energie-tab: nieuwe tegel Water met verbruik per jaarafrekening (Evides, periode sep-sep) uit nieuwe Supabase-tabel water_jaren (2022-2026, uit Robs Numbers-overzicht en de jaarafrekening 2026: 97 m3, 279,66). Vorige versie (2026-10-09f - Overzicht spaartegel (Rob, 09-10-2026): blok Cumulatief toont het echte gespaarde (incl. extra\'s) tegen verwacht (bedrag, % en kleur), en de cumulatieve grafiek loopt nu ook incl. extra\'s (prognose volgende maand daarop). Kop bovenaan blijft zonder extra\'s. Vorige: 2026-10-09e - Overzicht spaartegel (Rob, 09-10-2026): onder elke post staat nu verwacht met bedrag (ook Lindy, Extra\'s verwacht 0), zodat de posten optellen tot het totale verwacht in de kop; regel heet Cumulatief incl. extra\'s. renderBarList kreeg optie verwachtAltijd. Vorige: 2026-10-09d - Overzicht spaartegel (Rob, 09-10-2026: sparen min tekort uit buffer in de Sankey is ca 12.000, tegel 11.069): regel Cumulatief onder de posten telt nu de extra\'s mee, zodat hij gelijk is aan de som van de posten en aan de Sankey (sparen min tekort uit buffer); de kop blijft zonder extra\'s omdat die met verwacht vergelijkt. Vorige: 2026-10-09c - Overzicht spaartegel (Rob, 09-10-2026): posten Deurwaarder, Extra\'s, Lindy en Rob klappen open/dicht zoals in de Maand-tab; uitgeklapt per maand gespaard en plus/min t.o.v. verwacht, plus totaal en totaal verwacht. Vorige: 2026-10-09b - ZZP btw (Rob, 09-10-2026, na aangifte Q3 2026): correcties van eerdere tijdvakken staan per betrokken kwartaal in nieuwe tabel zzp_btw_correctie; elk kwartaal vergelijkt advies met effectief aangegeven (na correcties), met regel Gecorrigeerd in Qx en bij het verwerkende kwartaal Correcties eerdere kwartalen plus Ingediend saldo. Kaart volgend kwartaal is een invulblad per rubriek (1a omzet/btw, 1b, 1e, 5b, saldo) met exacte correcties (centen, onder 1 euro telt niet) en de 1.000-euro-grens (daarboven suppletie apart). Supabase: view zzp_btw_tijdvak_controle, zzp_btw_correctie_jaar herbouwd. Vorige: 2026-10-09a - Overzicht: spaartegel in dezelfde opzet als de Maand-tab (Rob, 09-10-2026): kop cumulatief gerealiseerd van verwacht; grafiek per maand met verwacht (stippellijn), volgende maand verwacht en prognose op basis van het patroon (laatste 6 maanden); posten Rob, Lindy, Deurwaarder en extras cumulatief; daaronder de cumulatieve grafiek. Vorige: 2026-10-08e - Spaartegel (Rob, 08-10-2026): kop toont alleen Verwacht en Gerealiseerd (gem. per maand); deurwaarder hoort bij verwacht (900/mnd, +850 juni en november) en een ontvangst telt mee in gerealiseerd; blokjes zonder toelichtingstekst. Vorige: 2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extras en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantie...)))';
+const DASHBOARD_VERSION = '2026-10-11a - Reisreservering in twee stappen (Rob, 11-10-2026): 9 mnd voor de reis 1/3 van het budget (vliegtickets), 3 mnd voor de reis de overige 2/3; was het volledige budget in een keer 9 mnd vooraf. Geldt voor idee-reizen in de potjesprojectie (Vermogen); reizen met een eigen potje (Japan) blijven op hun echte saldo. Vorige versie (2026-10-10a - Saldo-tegel (Rob, 10-10-2026): AMEX en ING Mastercard zonder "— openstaand"; Oranje Spaarrekening live berekend (anker + overboekingen van/naar Oranje op Rabo/ING), dus 0 na de 500 naar ING op 09-10. Vorige versie (2026-10-09h - Tegel Energie heet Energie & water; tegel Water heeft een grafiek van het verbruik per jaar met sleepbalk (Rob, 09-10-2026). Vorige versie (2026-10-09g - Categorie Nutsvoorzieningen heet nu Energie & water (Rob, 09-10-2026: "nutsvoorziening vind ik zo stom als naam"); Supabase (transactions, vendor_rules, vendor_patronen, trigger vendor_rules_zet_bevestigen) en code omgezet. Energie-tab: nieuwe tegel Water met verbruik per jaarafrekening (Evides, periode sep-sep) uit nieuwe Supabase-tabel water_jaren (2022-2026, uit Robs Numbers-overzicht en de jaarafrekening 2026: 97 m3, 279,66). Vorige versie (2026-10-09f - Overzicht spaartegel (Rob, 09-10-2026): blok Cumulatief toont het echte gespaarde (incl. extra\'s) tegen verwacht (bedrag, % en kleur), en de cumulatieve grafiek loopt nu ook incl. extra\'s (prognose volgende maand daarop). Kop bovenaan blijft zonder extra\'s. Vorige: 2026-10-09e - Overzicht spaartegel (Rob, 09-10-2026): onder elke post staat nu verwacht met bedrag (ook Lindy, Extra\'s verwacht 0), zodat de posten optellen tot het totale verwacht in de kop; regel heet Cumulatief incl. extra\'s. renderBarList kreeg optie verwachtAltijd. Vorige: 2026-10-09d - Overzicht spaartegel (Rob, 09-10-2026: sparen min tekort uit buffer in de Sankey is ca 12.000, tegel 11.069): regel Cumulatief onder de posten telt nu de extra\'s mee, zodat hij gelijk is aan de som van de posten en aan de Sankey (sparen min tekort uit buffer); de kop blijft zonder extra\'s omdat die met verwacht vergelijkt. Vorige: 2026-10-09c - Overzicht spaartegel (Rob, 09-10-2026): posten Deurwaarder, Extra\'s, Lindy en Rob klappen open/dicht zoals in de Maand-tab; uitgeklapt per maand gespaard en plus/min t.o.v. verwacht, plus totaal en totaal verwacht. Vorige: 2026-10-09b - ZZP btw (Rob, 09-10-2026, na aangifte Q3 2026): correcties van eerdere tijdvakken staan per betrokken kwartaal in nieuwe tabel zzp_btw_correctie; elk kwartaal vergelijkt advies met effectief aangegeven (na correcties), met regel Gecorrigeerd in Qx en bij het verwerkende kwartaal Correcties eerdere kwartalen plus Ingediend saldo. Kaart volgend kwartaal is een invulblad per rubriek (1a omzet/btw, 1b, 1e, 5b, saldo) met exacte correcties (centen, onder 1 euro telt niet) en de 1.000-euro-grens (daarboven suppletie apart). Supabase: view zzp_btw_tijdvak_controle, zzp_btw_correctie_jaar herbouwd. Vorige: 2026-10-09a - Overzicht: spaartegel in dezelfde opzet als de Maand-tab (Rob, 09-10-2026): kop cumulatief gerealiseerd van verwacht; grafiek per maand met verwacht (stippellijn), volgende maand verwacht en prognose op basis van het patroon (laatste 6 maanden); posten Rob, Lindy, Deurwaarder en extras cumulatief; daaronder de cumulatieve grafiek. Vorige: 2026-10-08e - Spaartegel (Rob, 08-10-2026): kop toont alleen Verwacht en Gerealiseerd (gem. per maand); deurwaarder hoort bij verwacht (900/mnd, +850 juni en november) en een ontvangst telt mee in gerealiseerd; blokjes zonder toelichtingstekst. Vorige: 2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extras en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantie...))))';
 const DASHBOARD_VERSION_PREV_2026_10_07d = '2026-10-07d - Uitklappen hoofdtegels (Rob, 07-10-2026): tegels rechts van de open tegel schoven naar onder de grafiek; bij tegels naast elkaar staat het uitklapdeel nu onder de volledige tegelrij (CSS order), op de telefoon ongewijzigd onder de eigen tegel. Bevat 07a-07c.';
 const DASHBOARD_VERSION_PREV_2026_10_07c = '2026-10-07c - Getallen in de vijf hoofdtegels passen weer (Rob, iMac Safari, 07-10-2026): tegel als container, groot bedrag breekt niet af en schaalt mee met de tegelbreedte (16-30px), subregel ook; minteken plakt via word joiner aan het bedrag zodat Safari niet na het minteken afbreekt. Bevat ook 07a/07b.';
 const DASHBOARD_VERSION_PREV_2026_10_07b = '2026-10-07b - ZZP uitgaven per leverancier vast/dagelijks, net als Paardrijden (Rob, 07-10-2026): categorie uit de vaste-lastenlijst; abonnementen Anthropic/Claude, Adobe en HP Instant Ink vast via vendor_rules, eenmalige zakelijke aankopen (bv. Foto De Vakman) standaard dagelijks.';
@@ -6885,7 +6885,10 @@ function reisPotjeSluitLabel(trip){
    (die de Hypotheek-aflossing/IKV-inflatie/PDF-export voedt en op zichzelf blijft werken). */
 // (POTJES_MAANDELIJKS_SPAREN vervallen 26-09-2026: terugval is nu SPAREN_ROB_MAAND + lindyNettoVoorMaand)
 const POTJES_MAANDELIJKS_SPAREN_VERVALLEN = null; // Rob €2.000 + Lindy €2.489,66 — zelfde vaste maandelijkse spaardoel als bij Volgende maand (SPAREN_VAST_DOEL)
-const POTJES_RESERVERING_MAANDEN_VOORAF = 9;
+const POTJES_RESERVERING_MAANDEN_VOORAF = 9; // vliegtickets: deel van het budget 9 mnd voor de reis (Rob, 11-10-2026)
+const POTJES_RESERVERING_REST_MAANDEN_VOORAF = 3; // overig budget 3 mnd voor de reis (Rob, 11-10-2026)
+const POTJES_RESERVERING_TICKETS_DEEL = 1/3; // aanname: vliegtickets = 1/3 van het reisbudget (Rob, 11-10-2026)
+function reisReserveringTickets(trip){ return Math.round((trip.budget||0)*POTJES_RESERVERING_TICKETS_DEEL*100)/100; }
 // Op Robs verzoek (14-08-2026, "staan alle reizen er in in de toekomst?"): niet meer hardcoded op Thailand/
 // Japan — ALLE reizen uit REIZEN_PLANNING met een bekend budget doen automatisch mee zodra hun 9-maanden-
 // reserveringsvenster opent (ongeacht status idee/planning/lopend), elk als eigen potje met transfer vanuit
@@ -7193,7 +7196,10 @@ function potjesTheoretischeRegelsAfsluiten(regels, maandLabel){
     const timingLabel = reisTimingMaandLabel(trip);
     const sluitLabel = reisPotjeSluitLabel(trip) || timingLabel;
     const startLabel = timingLabel ? maandLabelMinusN(timingLabel, POTJES_RESERVERING_MAANDEN_VOORAF) : null;
-    if(effectiveStatus(trip)!=='lopend' && startLabel===maandLabel) regels.push({naam:`${trip.naam} ${trip.jaar||''}`.trim(), bedrag:trip.budget||0, gebeurtenis:true});
+    const restLabel = timingLabel ? maandLabelMinusN(timingLabel, POTJES_RESERVERING_REST_MAANDEN_VOORAF) : null;
+    const tickets = reisReserveringTickets(trip);
+    if(effectiveStatus(trip)!=='lopend' && startLabel===maandLabel) regels.push({naam:`${trip.naam} ${trip.jaar||''} — tickets`.trim(), bedrag:tickets, gebeurtenis:true});
+    if(effectiveStatus(trip)!=='lopend' && restLabel===maandLabel) regels.push({naam:`${trip.naam} ${trip.jaar||''} — overig`.trim(), bedrag:Math.round(((trip.budget||0)-tickets)*100)/100, gebeurtenis:true});
     if(sluitLabel===maandLabel) regels.push({naam:`${trip.naam} ${trip.jaar||''}`.trim(), bedrag:0, gebeurtenis:true});
   });
   return regels;
@@ -7212,7 +7218,8 @@ function berekenPotjesMaanden(aantalMaanden, maandelijksBedragFn){
     const timingLabel = trip ? reisTimingMaandLabel(trip) : null;
     const sluitLabel = trip ? (reisPotjeSluitLabel(trip) || timingLabel) : null;
     const startLabel = timingLabel ? maandLabelMinusN(timingLabel, POTJES_RESERVERING_MAANDEN_VOORAF) : null;
-    tripCache[id] = {trip, sluitKey: sluitLabel?keyOf(sluitLabel):null, startKey: startLabel?keyOf(startLabel):null};
+    const restLabel = timingLabel ? maandLabelMinusN(timingLabel, POTJES_RESERVERING_REST_MAANDEN_VOORAF) : null;
+    tripCache[id] = {trip, sluitKey: sluitLabel?keyOf(sluitLabel):null, startKey: startLabel?keyOf(startLabel):null, restKey: restLabel?keyOf(restLabel):null};
   });
   let c3s = saldi.c3s;
   const vorigTripWaarde = {...Object.fromEntries(POTJES_TRIP_IDS.map(id=>[id, saldi[id]]))};
@@ -7253,7 +7260,7 @@ function berekenPotjesMaanden(aantalMaanden, maandelijksBedragFn){
     c3s = Math.round((c3s + c3sGroei)*100)/100;
     const rij = {kado: saldi.kado}; // Kado heeft geen groeimodel — blijft vlak op het huidige, echte saldo
     POTJES_TRIP_IDS.forEach(id=>{
-      const {trip, sluitKey, startKey} = tripCache[id];
+      const {trip, sluitKey, startKey, restKey} = tripCache[id];
       if(!trip){ rij[id]=null; return; }
       // Op Robs verzoek (14-08-2026): reis voorbij = potje niet meer TONEN (null), niet gewoon €0,00 laten
       // staan. Rob, 25-08-2026, bugfix: dit gold voorheen alleen voor planning/lopend — een "idee"-reis had een
@@ -7269,13 +7276,14 @@ function berekenPotjesMaanden(aantalMaanden, maandelijksBedragFn){
       // exclusief berekent) telt het al wel mee, want dan valt het al binnen het venster. Zodra het venster
       // opengaat, gaat het volledige budget in één keer van C3S af (net als voorheen bij "planning"/"lopend"),
       // en blijft het potje daarna vlak staan tot de reis voorbij is (sluitKey hierboven, nu wél bereikt).
+      // Rob, 11-10-2026: in twee stappen — 9 mnd voor de reis het ticketdeel (1/3), 3 mnd voor de reis de rest.
       if(effectiveStatus(trip)==='idee'){
-        if(startKey!=null && huidigeKey>=startKey){
-          if(vorigTripWaarde[id]!==(trip.budget||0)) c3s = Math.round((c3s - (trip.budget||0))*100)/100;
-          rij[id] = trip.budget||0;
-        } else {
-          rij[id] = 0;
-        }
+        let doel = 0;
+        if(startKey!=null && huidigeKey>=startKey) doel = reisReserveringTickets(trip);
+        if(restKey!=null && huidigeKey>=restKey) doel = trip.budget||0;
+        const delta = Math.round((doel - (vorigTripWaarde[id]||0))*100)/100;
+        if(delta>0) c3s = Math.round((c3s - delta)*100)/100;
+        rij[id] = doel;
         vorigTripWaarde[id] = rij[id];
         return;
       }
@@ -7480,7 +7488,7 @@ function renderPotjesView(maandelijksBedragFn, theorieFn){
       </div>`;
     }).join('')}</div>` : ''}
       </div>`; }).join(''); })()}
-    <footer>Elke maand: het spaarbedrag gaat naar reispotjes binnen hun ${POTJES_RESERVERING_MAANDEN_VOORAF}-maanden-venster (transfer vanuit C3S), de rest naar C3S. Onvoldoende? Dan gaat C3S negatief (rood) en herstelt vanzelf. Op de reisdatum verdwijnt het potje.</footer>
+    <footer>Elke maand: het spaarbedrag gaat naar reispotjes (tickets ${POTJES_RESERVERING_MAANDEN_VOORAF} mnd, rest ${POTJES_RESERVERING_REST_MAANDEN_VOORAF} mnd voor de reis; transfer vanuit C3S), de rest naar C3S. Onvoldoende? Dan gaat C3S negatief (rood) en herstelt vanzelf. Op de reisdatum verdwijnt het potje.</footer>
   `;
 }
 const VERMOGEN_EENMALIGE_POSTEN = {
