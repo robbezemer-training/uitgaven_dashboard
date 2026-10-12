@@ -1062,7 +1062,7 @@ const ENERGIE_LEVERANCIER_PROGNOSE_GAS = {
   // btw, geldig 01-11-2026 t/m 28-02-2027 -- geen schatting maar een contractueel vastgezet tarief, dus hier
   // hardcoded i.p.v. aan energieHuidigTarief() (= laatst bekende, dynamische factuur) overgelaten. Geen eigen
   // m3-opgave voor deze 4 (nog geen voorschotfactuur van Frank), dus die vallen terug op het 3-jaars-gemiddelde.
-  '2026-11': { tarief: 1.0095 },
+  '2026-11': { tarief: 1.0095, m3: 159 }, // Frank Energie termijnfactuur 26775732 (11-10-2026): verwacht nov 159 m3
   '2026-12': { tarief: 1.0095 },
   '2027-1': { tarief: 1.0095 },
   '2027-2': { tarief: 1.0095 },
@@ -1317,7 +1317,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-11a - Reisreservering in twee stappen (Rob, 11-10-2026): 9 mnd voor de reis 1/3 van het budget (vliegtickets), 3 mnd voor de reis de overige 2/3; was het volledige budget in een keer 9 mnd vooraf. Geldt voor idee-reizen in de potjesprojectie (Vermogen); reizen met een eigen potje (Japan) blijven op hun echte saldo. Vorige versie (2026-10-10a - Saldo-tegel (Rob, 10-10-2026): AMEX en ING Mastercard zonder "— openstaand"; Oranje Spaarrekening live berekend (anker + overboekingen van/naar Oranje op Rabo/ING), dus 0 na de 500 naar ING op 09-10. Vorige versie (2026-10-09h - Tegel Energie heet Energie & water; tegel Water heeft een grafiek van het verbruik per jaar met sleepbalk (Rob, 09-10-2026). Vorige versie (2026-10-09g - Categorie Nutsvoorzieningen heet nu Energie & water (Rob, 09-10-2026: "nutsvoorziening vind ik zo stom als naam"); Supabase (transactions, vendor_rules, vendor_patronen, trigger vendor_rules_zet_bevestigen) en code omgezet. Energie-tab: nieuwe tegel Water met verbruik per jaarafrekening (Evides, periode sep-sep) uit nieuwe Supabase-tabel water_jaren (2022-2026, uit Robs Numbers-overzicht en de jaarafrekening 2026: 97 m3, 279,66). Vorige versie (2026-10-09f - Overzicht spaartegel (Rob, 09-10-2026): blok Cumulatief toont het echte gespaarde (incl. extra\'s) tegen verwacht (bedrag, % en kleur), en de cumulatieve grafiek loopt nu ook incl. extra\'s (prognose volgende maand daarop). Kop bovenaan blijft zonder extra\'s. Vorige: 2026-10-09e - Overzicht spaartegel (Rob, 09-10-2026): onder elke post staat nu verwacht met bedrag (ook Lindy, Extra\'s verwacht 0), zodat de posten optellen tot het totale verwacht in de kop; regel heet Cumulatief incl. extra\'s. renderBarList kreeg optie verwachtAltijd. Vorige: 2026-10-09d - Overzicht spaartegel (Rob, 09-10-2026: sparen min tekort uit buffer in de Sankey is ca 12.000, tegel 11.069): regel Cumulatief onder de posten telt nu de extra\'s mee, zodat hij gelijk is aan de som van de posten en aan de Sankey (sparen min tekort uit buffer); de kop blijft zonder extra\'s omdat die met verwacht vergelijkt. Vorige: 2026-10-09c - Overzicht spaartegel (Rob, 09-10-2026): posten Deurwaarder, Extra\'s, Lindy en Rob klappen open/dicht zoals in de Maand-tab; uitgeklapt per maand gespaard en plus/min t.o.v. verwacht, plus totaal en totaal verwacht. Vorige: 2026-10-09b - ZZP btw (Rob, 09-10-2026, na aangifte Q3 2026): correcties van eerdere tijdvakken staan per betrokken kwartaal in nieuwe tabel zzp_btw_correctie; elk kwartaal vergelijkt advies met effectief aangegeven (na correcties), met regel Gecorrigeerd in Qx en bij het verwerkende kwartaal Correcties eerdere kwartalen plus Ingediend saldo. Kaart volgend kwartaal is een invulblad per rubriek (1a omzet/btw, 1b, 1e, 5b, saldo) met exacte correcties (centen, onder 1 euro telt niet) en de 1.000-euro-grens (daarboven suppletie apart). Supabase: view zzp_btw_tijdvak_controle, zzp_btw_correctie_jaar herbouwd. Vorige: 2026-10-09a - Overzicht: spaartegel in dezelfde opzet als de Maand-tab (Rob, 09-10-2026): kop cumulatief gerealiseerd van verwacht; grafiek per maand met verwacht (stippellijn), volgende maand verwacht en prognose op basis van het patroon (laatste 6 maanden); posten Rob, Lindy, Deurwaarder en extras cumulatief; daaronder de cumulatieve grafiek. Vorige: 2026-10-08e - Spaartegel (Rob, 08-10-2026): kop toont alleen Verwacht en Gerealiseerd (gem. per maand); deurwaarder hoort bij verwacht (900/mnd, +850 juni en november) en een ontvangst telt mee in gerealiseerd; blokjes zonder toelichtingstekst. Vorige: 2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extras en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantie...))))';
+const DASHBOARD_VERSION = '2026-10-12a - Energie (Rob, 12-10-2026): de lopende kalendermaand staat direct onder de jaarcijfers (wisselt vanzelf bij een nieuwe maand, meestal nog prognose) en niet nogmaals in de maandlijst. Leveranciersopgave gas (verwacht m3 en tarief uit de Frank-termijnfactuur of Wintervast) staat nu in Supabase (energie_maanden.gas_leverancier_m3/_tarief) i.p.v. in de code; november rekent met 159 m3. Bijvangst: de energie-loader haalde auto_kosten en stroom_auto_bevestigd niet op (tegel Elektrisch rijden rekende daardoor zelf en liet bevestigde laadmaanden na de laatste volledige maand weg); nu wel. Vorige versie (2026-10-11a - Reisreservering in twee stappen (Rob, 11-10-2026): 9 mnd voor de reis 1/3 van het budget (vliegtickets), 3 mnd voor de reis de overige 2/3; was het volledige budget in een keer 9 mnd vooraf. Geldt voor idee-reizen in de potjesprojectie (Vermogen); reizen met een eigen potje (Japan) blijven op hun echte saldo. Vorige versie (2026-10-10a - Saldo-tegel (Rob, 10-10-2026): AMEX en ING Mastercard zonder "— openstaand"; Oranje Spaarrekening live berekend (anker + overboekingen van/naar Oranje op Rabo/ING), dus 0 na de 500 naar ING op 09-10. Vorige versie (2026-10-09h - Tegel Energie heet Energie & water; tegel Water heeft een grafiek van het verbruik per jaar met sleepbalk (Rob, 09-10-2026). Vorige versie (2026-10-09g - Categorie Nutsvoorzieningen heet nu Energie & water (Rob, 09-10-2026: "nutsvoorziening vind ik zo stom als naam"); Supabase (transactions, vendor_rules, vendor_patronen, trigger vendor_rules_zet_bevestigen) en code omgezet. Energie-tab: nieuwe tegel Water met verbruik per jaarafrekening (Evides, periode sep-sep) uit nieuwe Supabase-tabel water_jaren (2022-2026, uit Robs Numbers-overzicht en de jaarafrekening 2026: 97 m3, 279,66). Vorige versie (2026-10-09f - Overzicht spaartegel (Rob, 09-10-2026): blok Cumulatief toont het echte gespaarde (incl. extra\'s) tegen verwacht (bedrag, % en kleur), en de cumulatieve grafiek loopt nu ook incl. extra\'s (prognose volgende maand daarop). Kop bovenaan blijft zonder extra\'s. Vorige: 2026-10-09e - Overzicht spaartegel (Rob, 09-10-2026): onder elke post staat nu verwacht met bedrag (ook Lindy, Extra\'s verwacht 0), zodat de posten optellen tot het totale verwacht in de kop; regel heet Cumulatief incl. extra\'s. renderBarList kreeg optie verwachtAltijd. Vorige: 2026-10-09d - Overzicht spaartegel (Rob, 09-10-2026: sparen min tekort uit buffer in de Sankey is ca 12.000, tegel 11.069): regel Cumulatief onder de posten telt nu de extra\'s mee, zodat hij gelijk is aan de som van de posten en aan de Sankey (sparen min tekort uit buffer); de kop blijft zonder extra\'s omdat die met verwacht vergelijkt. Vorige: 2026-10-09c - Overzicht spaartegel (Rob, 09-10-2026): posten Deurwaarder, Extra\'s, Lindy en Rob klappen open/dicht zoals in de Maand-tab; uitgeklapt per maand gespaard en plus/min t.o.v. verwacht, plus totaal en totaal verwacht. Vorige: 2026-10-09b - ZZP btw (Rob, 09-10-2026, na aangifte Q3 2026): correcties van eerdere tijdvakken staan per betrokken kwartaal in nieuwe tabel zzp_btw_correctie; elk kwartaal vergelijkt advies met effectief aangegeven (na correcties), met regel Gecorrigeerd in Qx en bij het verwerkende kwartaal Correcties eerdere kwartalen plus Ingediend saldo. Kaart volgend kwartaal is een invulblad per rubriek (1a omzet/btw, 1b, 1e, 5b, saldo) met exacte correcties (centen, onder 1 euro telt niet) en de 1.000-euro-grens (daarboven suppletie apart). Supabase: view zzp_btw_tijdvak_controle, zzp_btw_correctie_jaar herbouwd. Vorige: 2026-10-09a - Overzicht: spaartegel in dezelfde opzet als de Maand-tab (Rob, 09-10-2026): kop cumulatief gerealiseerd van verwacht; grafiek per maand met verwacht (stippellijn), volgende maand verwacht en prognose op basis van het patroon (laatste 6 maanden); posten Rob, Lindy, Deurwaarder en extras cumulatief; daaronder de cumulatieve grafiek. Vorige: 2026-10-08e - Spaartegel (Rob, 08-10-2026): kop toont alleen Verwacht en Gerealiseerd (gem. per maand); deurwaarder hoort bij verwacht (900/mnd, +850 juni en november) en een ontvangst telt mee in gerealiseerd; blokjes zonder toelichtingstekst. Vorige: 2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extras en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantie...)))))';
 const DASHBOARD_VERSION_PREV_2026_10_07d = '2026-10-07d - Uitklappen hoofdtegels (Rob, 07-10-2026): tegels rechts van de open tegel schoven naar onder de grafiek; bij tegels naast elkaar staat het uitklapdeel nu onder de volledige tegelrij (CSS order), op de telefoon ongewijzigd onder de eigen tegel. Bevat 07a-07c.';
 const DASHBOARD_VERSION_PREV_2026_10_07c = '2026-10-07c - Getallen in de vijf hoofdtegels passen weer (Rob, iMac Safari, 07-10-2026): tegel als container, groot bedrag breekt niet af en schaalt mee met de tegelbreedte (16-30px), subregel ook; minteken plakt via word joiner aan het bedrag zodat Safari niet na het minteken afbreekt. Bevat ook 07a/07b.';
 const DASHBOARD_VERSION_PREV_2026_10_07b = '2026-10-07b - ZZP uitgaven per leverancier vast/dagelijks, net als Paardrijden (Rob, 07-10-2026): categorie uit de vaste-lastenlijst; abonnementen Anthropic/Claude, Adobe en HP Instant Ink vast via vendor_rules, eenmalige zakelijke aankopen (bv. Foto De Vakman) standaard dagelijks.';
@@ -3390,7 +3390,7 @@ async function loadTransactionsTable(){
   // in de HTML zelf stond) — Rob, 03-09-2026: "index uploaden is niet handig", dus voortaan een SQL-update
   // i.p.v. een nieuwe HTML-versie zodra er een nieuw Enphase/laadapp/U-meter-cijfer binnenkomt.
   try{
-    const eres = await fetch(SUPABASE_URL+'/rest/v1/energie_maanden?select=jaar,maand,gas,electra,teruggeleverd,opgewekt,stroom_betalen,tarief_gas,tarief_stroom,tarief_teruglevering,totaal,stroom_auto,grid_rewards,consumptie_bevestigd,tarief_gas_bevestigd,tarief_stroom_bevestigd,wintervast_actief,tarief_gas_markt_schatting,tarief_gas_markt_bron,updated_at&order=jaar.asc,maand.asc', {headers: SUPABASE_HEADERS});
+    const eres = await fetch(SUPABASE_URL+'/rest/v1/energie_maanden?select=jaar,maand,gas,electra,teruggeleverd,opgewekt,stroom_betalen,tarief_gas,tarief_stroom,tarief_teruglevering,totaal,stroom_auto,grid_rewards,consumptie_bevestigd,tarief_gas_bevestigd,tarief_stroom_bevestigd,wintervast_actief,tarief_gas_markt_schatting,tarief_gas_markt_bron,auto_kosten,stroom_auto_bevestigd,gas_leverancier_m3,gas_leverancier_tarief,updated_at&order=jaar.asc,maand.asc', {headers: SUPABASE_HEADERS});
     if(eres.ok){
       const erows = await eres.json();
       if(erows.length){
@@ -3419,6 +3419,17 @@ async function loadTransactionsTable(){
           });
         });
         ENERGIE_DATA = nieuweData; // wholesale vervangen, net als RABO/ING_TX_* hierboven
+        // Rob, 12-10-2026: leveranciersopgave gas (verwacht m3 + tarief uit de Frank-termijnfactuur, of Wintervast)
+        // staat nu in energie_maanden (gas_leverancier_m3/_tarief); de codelijst is alleen offline-terugval.
+        const levRows = erows.filter(r=>r.gas_leverancier_tarief!=null);
+        if(levRows.length){
+          Object.keys(ENERGIE_LEVERANCIER_PROGNOSE_GAS).forEach(k=>delete ENERGIE_LEVERANCIER_PROGNOSE_GAS[k]);
+          levRows.forEach(r=>{
+            const e = { tarief: Number(r.gas_leverancier_tarief) };
+            if(r.gas_leverancier_m3!=null) e.m3 = Number(r.gas_leverancier_m3);
+            ENERGIE_LEVERANCIER_PROGNOSE_GAS[Number(r.jaar)+'-'+Number(r.maand)] = e;
+          });
+        }
         // Lopend jaar = laatste jaar met een bevestigde verbruiksmaand; latere (prognose)jaren komen pas mee als ze begonnen zijn.
         const bevestigdeJaren = Object.keys(nieuweData).filter(j=>nieuweData[j].some(r=>r.consumptieBevestigd)).sort();
         if(bevestigdeJaren.length){
@@ -9307,7 +9318,7 @@ function renderEnergieView(){
   // (werkelijkTM, het eerste prognose-punt) begint, doorloopt tot december/januari, en eindigt bij de
   // laatst afgesloten maand (werkelijkTM-1, mod 12) onderaan.
   const maandVolgorde = Array.from({length:12}, (_,k) => (werkelijkTM + k) % 12);
-  const rows = maandVolgorde.map(i=>{
+  const maandKaart = i=>{
     const r = recs[i];
     const prognose = isHuidigJaar && i>=werkelijkTM;
     const jm = jaar+'-'+String(i+1).padStart(2,'0');
@@ -9353,7 +9364,13 @@ function renderEnergieView(){
         </div>
       </div>` : ''}
     </div>`;
-  }).join('');
+  };
+  // Rob, 12-10-2026: de lopende kalendermaand staat direct onder de jaarcijfers en wisselt vanzelf bij een nieuwe maand
+  // (meestal nog prognose, vult zich vanzelf); in de lijst eronder staat hij dan niet nogmaals.
+  const vandaagE = new Date();
+  const lopendeMaandIdx = vandaagE.getFullYear()===Number(jaar) ? vandaagE.getMonth() : (werkelijkTM % 12);
+  const lopendeMaandHtml = maandKaart(lopendeMaandIdx).replace('margin-bottom:8px;','');
+  const rows = maandVolgorde.filter(i=>i!==lopendeMaandIdx).map(maandKaart).join('');
 
   // Wintervast-gas-vergelijking (11-09-2026, Robs verzoek): 4 maanden (nov/dec 2026, jan/feb 2027) waarin een
   // vast leveringstarief (€1,0095/m³ excl. btw, Frank Energie Wintervast-aanbod) geldt i.p.v. het normale
@@ -9422,7 +9439,7 @@ function renderEnergieView(){
 
   return `
     <div class="card-label" style="margin:16px 0 8px;">Dit jaar</div>
-    <div style="display:flex;flex-direction:column;gap:8px;">${jaarTegelsHtml}${autoTegelHtml}${waterTegelHtml}</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">${jaarTegelsHtml}${lopendeMaandHtml}${autoTegelHtml}${waterTegelHtml}</div>
     ${wintervastHtml}
 
     <div class="card" data-energie-chart-toggle="1" style="cursor:pointer;margin-top:16px;${energieOpenTegel==='chart'?'border-color:var(--brass);border-width:2px;':''}">
