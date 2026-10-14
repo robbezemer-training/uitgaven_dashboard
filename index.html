@@ -115,6 +115,8 @@
   .tile-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
   .tile-grid--home{ margin-top: 14px; }
   header.header--home{ margin-bottom: 0; padding-bottom: 0; align-items:center; }
+  .brand-eyebrow.home-titel{ display:flex; align-items:center; gap:10px; font-size: clamp(22px, 6.6vw, 40px) !important; white-space:nowrap; }
+  .home-logo{ width:1.15em; height:1.15em; flex:none; border-radius:22%; }
   .c3s-select{
     -webkit-appearance: none; appearance: none;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%23ffffff' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
@@ -1350,7 +1352,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-14b - App heet Florijn (Rob, 14-10-2026): paginatitel en naam op het beginscherm. Vorige versie: 2026-10-14a - App-icoon (Rob, 14-10-2026): ring in groen/goud/licht met F, als beginscherm- en tabbladicoon. Wachtwoord wijzigen gaat via een echt wachtwoordveld (Safari stelt een sterk wachtwoord voor en bewaart het, Face ID vult het later in) i.p.v. een prompt. Bevestigen, Alles bevestigen en Verwijderen in Te bevestigen controleren nu of Supabase de rij echt heeft bijgewerkt; zo niet, dan een melding en de tx blijft staan. Verwijderen raakt alleen nog die ene rij (occurrence). Vorige versie: 2026-10-13c - Reispotje (Rob, 13-10-2026): het potje daalt alleen nog bij een echte overboeking uit het reispotje (bv. Japan naar Rabo/ING om de AMEX-tickets te betalen), niet meer bij de gekoppelde reisuitgave zelf. Tegel Gespaard (potje) toont de stand met peildatum en de stortingen/onttrekkingen; de uitlegtekst is weg. Vorige versie (2026-10-13b - Reisdatum (Rob, 13-10-2026): het datumveld sloot bij elke draai aan dag/maand/jaar meteen af; opslaan gebeurt nu pas bij sluiten van de kalender. Vorige versie (2026-10-13a - Reizen koppelen (Rob, 13-10-2026): in Te bevestigen verschijnt bij categorie Reizen een reiskeuze (alleen reizen in planning of lopend die nog niet zijn afgewikkeld); bevestigen zonder reis kan niet. De gekozen reis gaat als trip_id mee en een nieuwe Supabase-trigger (tx_naar_reispost) maakt er automatisch een reispost van (bij reizen met deelnemers gelijk verdeeld over de eigen deelnemers). Koppelen gaat dus op keuze, niet op reisdatum, want vooruitbetalingen vallen maanden voor de reis. In de reistegel staan Vertrek en Terug als datumvelden die je zelf invult (reizen.start/eind). Vorige versie (2026-10-12a - Energie (Rob, 12-10-2026): de lopende kalendermaand staat direct onder de jaarcijfers (wisselt vanzelf bij een nieuwe maand, meestal nog prognose) en niet nogmaals in de maandlijst. Leveranciersopgave gas (verwacht m3 en tarief uit de Frank-termijnfactuur of Wintervast) staat nu in Supabase (energie_maanden.gas_leverancier_m3/_tarief) i.p.v. in de code; november rekent met 159 m3. Bijvangst: de energie-loader haalde auto_kosten en stroom_auto_bevestigd niet op (tegel Elektrisch rijden rekende daardoor zelf en liet bevestigde laadmaanden na de laatste volledige maand weg); nu wel. Vorige versie (2026-10-11a - Reisreservering in twee stappen (Rob, 11-10-2026): 9 mnd voor de reis 1/3 van het budget (vliegtickets), 3 mnd voor de reis de overige 2/3; was het volledige budget in een keer 9 mnd vooraf. Geldt voor idee-reizen in de potjesprojectie (Vermogen); reizen met een eigen potje (Japan) blijven op hun echte saldo. Vorige versie (2026-10-10a - Saldo-tegel (Rob, 10-10-2026): AMEX en ING Mastercard zonder "— openstaand"; Oranje Spaarrekening live berekend (anker + overboekingen van/naar Oranje op Rabo/ING), dus 0 na de 500 naar ING op 09-10. Vorige versie (2026-10-09h - Tegel Energie heet Energie & water; tegel Water heeft een grafiek van het verbruik per jaar met sleepbalk (Rob, 09-10-2026). Vorige versie (2026-10-09g - Categorie Nutsvoorzieningen heet nu Energie & water (Rob, 09-10-2026: "nutsvoorziening vind ik zo stom als naam"); Supabase (transactions, vendor_rules, vendor_patronen, trigger vendor_rules_zet_bevestigen) en code omgezet. Energie-tab: nieuwe tegel Water met verbruik per jaarafrekening (Evides, periode sep-sep) uit nieuwe Supabase-tabel water_jaren (2022-2026, uit Robs Numbers-overzicht en de jaarafrekening 2026: 97 m3, 279,66). Vorige versie (2026-10-09f - Overzicht spaartegel (Rob, 09-10-2026): blok Cumulatief toont het echte gespaarde (incl. extra\'s) tegen verwacht (bedrag, % en kleur), en de cumulatieve grafiek loopt nu ook incl. extra\'s (prognose volgende maand daarop). Kop bovenaan blijft zonder extra\'s. Vorige: 2026-10-09e - Overzicht spaartegel (Rob, 09-10-2026): onder elke post staat nu verwacht met bedrag (ook Lindy, Extra\'s verwacht 0), zodat de posten optellen tot het totale verwacht in de kop; regel heet Cumulatief incl. extra\'s. renderBarList kreeg optie verwachtAltijd. Vorige: 2026-10-09d - Overzicht spaartegel (Rob, 09-10-2026: sparen min tekort uit buffer in de Sankey is ca 12.000, tegel 11.069): regel Cumulatief onder de posten telt nu de extra\'s mee, zodat hij gelijk is aan de som van de posten en aan de Sankey (sparen min tekort uit buffer); de kop blijft zonder extra\'s omdat die met verwacht vergelijkt. Vorige: 2026-10-09c - Overzicht spaartegel (Rob, 09-10-2026): posten Deurwaarder, Extra\'s, Lindy en Rob klappen open/dicht zoals in de Maand-tab; uitgeklapt per maand gespaard en plus/min t.o.v. verwacht, plus totaal en totaal verwacht. Vorige: 2026-10-09b - ZZP btw (Rob, 09-10-2026, na aangifte Q3 2026): correcties van eerdere tijdvakken staan per betrokken kwartaal in nieuwe tabel zzp_btw_correctie; elk kwartaal vergelijkt advies met effectief aangegeven (na correcties), met regel Gecorrigeerd in Qx en bij het verwerkende kwartaal Correcties eerdere kwartalen plus Ingediend saldo. Kaart volgend kwartaal is een invulblad per rubriek (1a omzet/btw, 1b, 1e, 5b, saldo) met exacte correcties (centen, onder 1 euro telt niet) en de 1.000-euro-grens (daarboven suppletie apart). Supabase: view zzp_btw_tijdvak_controle, zzp_btw_correctie_jaar herbouwd. Vorige: 2026-10-09a - Overzicht: spaartegel in dezelfde opzet als de Maand-tab (Rob, 09-10-2026): kop cumulatief gerealiseerd van verwacht; grafiek per maand met verwacht (stippellijn), volgende maand verwacht en prognose op basis van het patroon (laatste 6 maanden); posten Rob, Lindy, Deurwaarder en extras cumulatief; daaronder de cumulatieve grafiek. Vorige: 2026-10-08e - Spaartegel (Rob, 08-10-2026): kop toont alleen Verwacht en Gerealiseerd (gem. per maand); deurwaarder hoort bij verwacht (900/mnd, +850 juni en november) en een ontvangst telt mee in gerealiseerd; blokjes zonder toelichtingstekst. Vorige: 2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extras en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantie...))))))))';
+const DASHBOARD_VERSION = '2026-10-14d - Hypotheek rekent nu met de einddatums van de renteaftrek per deel (Rob, 14-10-2026, PDF versie 3, middenscenario): aflossingsvrij 50% t/m 2030 en 50% t/m 2036, de 4 lineaire delen t/m sep 2046 (aflossingen eerst op het oude deel), Deel 5 t/m aug 2051, restschuld t/m sep 2031, Casa 3S nooit. Uit Supabase hypotheek_delen.aftrek_stappen. Zakt de aftrekbare rente onder het eigenwoningforfait, dan telt de Hillen-regeling mee. Werkt door in netto hypotheeklast, aflossen-keuzes en Vermogen. Vorige versie: 2026-10-14c - Startscherm: titel Florijn — Financiën met mini-logo. Hypotheekdocumenten: nieuwste bovenaan, pdf wordt meegeladen en opent/deelt direct bij een tik (werkte niet in de beginscherm-app). PDF versie 3 (14-10-2026) staat in documenten. Vorige versie: 2026-10-14b - App heet Florijn (Rob, 14-10-2026): paginatitel en naam op het beginscherm. Vorige versie: 2026-10-14a - App-icoon (Rob, 14-10-2026): ring in groen/goud/licht met F, als beginscherm- en tabbladicoon. Wachtwoord wijzigen gaat via een echt wachtwoordveld (Safari stelt een sterk wachtwoord voor en bewaart het, Face ID vult het later in) i.p.v. een prompt. Bevestigen, Alles bevestigen en Verwijderen in Te bevestigen controleren nu of Supabase de rij echt heeft bijgewerkt; zo niet, dan een melding en de tx blijft staan. Verwijderen raakt alleen nog die ene rij (occurrence). Vorige versie: 2026-10-13c - Reispotje (Rob, 13-10-2026): het potje daalt alleen nog bij een echte overboeking uit het reispotje (bv. Japan naar Rabo/ING om de AMEX-tickets te betalen), niet meer bij de gekoppelde reisuitgave zelf. Tegel Gespaard (potje) toont de stand met peildatum en de stortingen/onttrekkingen; de uitlegtekst is weg. Vorige versie (2026-10-13b - Reisdatum (Rob, 13-10-2026): het datumveld sloot bij elke draai aan dag/maand/jaar meteen af; opslaan gebeurt nu pas bij sluiten van de kalender. Vorige versie (2026-10-13a - Reizen koppelen (Rob, 13-10-2026): in Te bevestigen verschijnt bij categorie Reizen een reiskeuze (alleen reizen in planning of lopend die nog niet zijn afgewikkeld); bevestigen zonder reis kan niet. De gekozen reis gaat als trip_id mee en een nieuwe Supabase-trigger (tx_naar_reispost) maakt er automatisch een reispost van (bij reizen met deelnemers gelijk verdeeld over de eigen deelnemers). Koppelen gaat dus op keuze, niet op reisdatum, want vooruitbetalingen vallen maanden voor de reis. In de reistegel staan Vertrek en Terug als datumvelden die je zelf invult (reizen.start/eind). Vorige versie (2026-10-12a - Energie (Rob, 12-10-2026): de lopende kalendermaand staat direct onder de jaarcijfers (wisselt vanzelf bij een nieuwe maand, meestal nog prognose) en niet nogmaals in de maandlijst. Leveranciersopgave gas (verwacht m3 en tarief uit de Frank-termijnfactuur of Wintervast) staat nu in Supabase (energie_maanden.gas_leverancier_m3/_tarief) i.p.v. in de code; november rekent met 159 m3. Bijvangst: de energie-loader haalde auto_kosten en stroom_auto_bevestigd niet op (tegel Elektrisch rijden rekende daardoor zelf en liet bevestigde laadmaanden na de laatste volledige maand weg); nu wel. Vorige versie (2026-10-11a - Reisreservering in twee stappen (Rob, 11-10-2026): 9 mnd voor de reis 1/3 van het budget (vliegtickets), 3 mnd voor de reis de overige 2/3; was het volledige budget in een keer 9 mnd vooraf. Geldt voor idee-reizen in de potjesprojectie (Vermogen); reizen met een eigen potje (Japan) blijven op hun echte saldo. Vorige versie (2026-10-10a - Saldo-tegel (Rob, 10-10-2026): AMEX en ING Mastercard zonder "— openstaand"; Oranje Spaarrekening live berekend (anker + overboekingen van/naar Oranje op Rabo/ING), dus 0 na de 500 naar ING op 09-10. Vorige versie (2026-10-09h - Tegel Energie heet Energie & water; tegel Water heeft een grafiek van het verbruik per jaar met sleepbalk (Rob, 09-10-2026). Vorige versie (2026-10-09g - Categorie Nutsvoorzieningen heet nu Energie & water (Rob, 09-10-2026: "nutsvoorziening vind ik zo stom als naam"); Supabase (transactions, vendor_rules, vendor_patronen, trigger vendor_rules_zet_bevestigen) en code omgezet. Energie-tab: nieuwe tegel Water met verbruik per jaarafrekening (Evides, periode sep-sep) uit nieuwe Supabase-tabel water_jaren (2022-2026, uit Robs Numbers-overzicht en de jaarafrekening 2026: 97 m3, 279,66). Vorige versie (2026-10-09f - Overzicht spaartegel (Rob, 09-10-2026): blok Cumulatief toont het echte gespaarde (incl. extra\'s) tegen verwacht (bedrag, % en kleur), en de cumulatieve grafiek loopt nu ook incl. extra\'s (prognose volgende maand daarop). Kop bovenaan blijft zonder extra\'s. Vorige: 2026-10-09e - Overzicht spaartegel (Rob, 09-10-2026): onder elke post staat nu verwacht met bedrag (ook Lindy, Extra\'s verwacht 0), zodat de posten optellen tot het totale verwacht in de kop; regel heet Cumulatief incl. extra\'s. renderBarList kreeg optie verwachtAltijd. Vorige: 2026-10-09d - Overzicht spaartegel (Rob, 09-10-2026: sparen min tekort uit buffer in de Sankey is ca 12.000, tegel 11.069): regel Cumulatief onder de posten telt nu de extra\'s mee, zodat hij gelijk is aan de som van de posten en aan de Sankey (sparen min tekort uit buffer); de kop blijft zonder extra\'s omdat die met verwacht vergelijkt. Vorige: 2026-10-09c - Overzicht spaartegel (Rob, 09-10-2026): posten Deurwaarder, Extra\'s, Lindy en Rob klappen open/dicht zoals in de Maand-tab; uitgeklapt per maand gespaard en plus/min t.o.v. verwacht, plus totaal en totaal verwacht. Vorige: 2026-10-09b - ZZP btw (Rob, 09-10-2026, na aangifte Q3 2026): correcties van eerdere tijdvakken staan per betrokken kwartaal in nieuwe tabel zzp_btw_correctie; elk kwartaal vergelijkt advies met effectief aangegeven (na correcties), met regel Gecorrigeerd in Qx en bij het verwerkende kwartaal Correcties eerdere kwartalen plus Ingediend saldo. Kaart volgend kwartaal is een invulblad per rubriek (1a omzet/btw, 1b, 1e, 5b, saldo) met exacte correcties (centen, onder 1 euro telt niet) en de 1.000-euro-grens (daarboven suppletie apart). Supabase: view zzp_btw_tijdvak_controle, zzp_btw_correctie_jaar herbouwd. Vorige: 2026-10-09a - Overzicht: spaartegel in dezelfde opzet als de Maand-tab (Rob, 09-10-2026): kop cumulatief gerealiseerd van verwacht; grafiek per maand met verwacht (stippellijn), volgende maand verwacht en prognose op basis van het patroon (laatste 6 maanden); posten Rob, Lindy, Deurwaarder en extras cumulatief; daaronder de cumulatieve grafiek. Vorige: 2026-10-08e - Spaartegel (Rob, 08-10-2026): kop toont alleen Verwacht en Gerealiseerd (gem. per maand); deurwaarder hoort bij verwacht (900/mnd, +850 juni en november) en een ontvangst telt mee in gerealiseerd; blokjes zonder toelichtingstekst. Vorige: 2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extras en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantie...))))))))';
 const DASHBOARD_VERSION_PREV_2026_10_07d = '2026-10-07d - Uitklappen hoofdtegels (Rob, 07-10-2026): tegels rechts van de open tegel schoven naar onder de grafiek; bij tegels naast elkaar staat het uitklapdeel nu onder de volledige tegelrij (CSS order), op de telefoon ongewijzigd onder de eigen tegel. Bevat 07a-07c.';
 const DASHBOARD_VERSION_PREV_2026_10_07c = '2026-10-07c - Getallen in de vijf hoofdtegels passen weer (Rob, iMac Safari, 07-10-2026): tegel als container, groot bedrag breekt niet af en schaalt mee met de tegelbreedte (16-30px), subregel ook; minteken plakt via word joiner aan het bedrag zodat Safari niet na het minteken afbreekt. Bevat ook 07a/07b.';
 const DASHBOARD_VERSION_PREV_2026_10_07b = '2026-10-07b - ZZP uitgaven per leverancier vast/dagelijks, net als Paardrijden (Rob, 07-10-2026): categorie uit de vaste-lastenlijst; abonnementen Anthropic/Claude, Adobe en HP Instant Ink vast via vendor_rules, eenmalige zakelijke aankopen (bv. Foto De Vakman) standaard dagelijks.';
@@ -7691,20 +7693,25 @@ function bouwHypotheekSchema(delen, rentes, woz, tarieven){
   return rows;
 }
 let HYPOTHEEK_DOCUMENTEN = [];
-// Rob, 28-09-2026: renteaftrek per deel alleen TONEN (einddatum uit hypotheek_delen.aftrek_tot/aftrek_status);
-// de berekening rekent bewust nog niet met deze einddatums (behalve de restschuldregel, zie hypotheekDeelAftrekbaar).
-async function hypotheekOpenDocument(id){
+// Rob, 14-10-2026: de einddatums van de aftrek per deel worden getoond (aftrek_tot/aftrek_status) én doorgerekend
+// (aftrek_stappen, zie hypotheekDeelAftrekFractie).
+// Rob, 14-10-2026: document openen werkte niet in de beginscherm-app (data:-link met download doet daar niets,
+// en ophalen na de tik laat iOS' tik-toestemming verlopen). Nu: de pdf zit al in HYPOTHEEK_DOCUMENTEN (meegeladen),
+// dus de tik deelt meteen via het iOS-deelmenu (bewaren in Bestanden, AirDrop, mail); kan dat niet, dan opent de pdf.
+function hypotheekOpenDocument(id){
+  const rec = HYPOTHEEK_DOCUMENTEN.find(d=>String(d.id)===String(id));
+  if(!rec || !rec.data_base64){ alert('Document is nog niet geladen, probeer het zo opnieuw.'); return; }
   try{
-    const r = await fetch(SUPABASE_URL+'/rest/v1/documenten?id=eq.'+id+'&select=bestand_naam,mime_type,data_base64', {headers: SUPABASE_HEADERS});
-    if(!r.ok) throw new Error('ophalen mislukt');
-    const [rec] = await r.json();
-    if(!rec) return;
-    const a = document.createElement('a');
-    a.href = 'data:'+rec.mime_type+';base64,'+rec.data_base64;
-    a.download = rec.bestand_naam;
-    a.target = '_blank';
-    document.body.appendChild(a); a.click(); a.remove();
-  }catch(e){ alert('Document ophalen is niet gelukt: '+e.message); }
+    const bin = atob(rec.data_base64), bytes = new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+    const type = rec.mime_type || 'application/pdf';
+    const file = new File([bytes], rec.bestand_naam || 'document.pdf', {type});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      navigator.share({files:[file], title: rec.titel}).catch(e=>{ if(!(e && e.name==='AbortError')) window.open(URL.createObjectURL(file), '_blank'); });
+      return;
+    }
+    window.open(URL.createObjectURL(file), '_blank');
+  }catch(e){ alert('Document openen is niet gelukt: '+e.message); }
 }
 function renderHypAftrekLijst(r){
   const rows = DELEN_VOLGORDE.map(i=>{
@@ -7729,12 +7736,12 @@ async function laadHypotheek(){
       get('hypotheek_woz?select=*&order=jaar.asc'), get('hypotheek_jaarcijfers?select=*&order=jaar.asc,deel.asc'),
       get('parameter_historie?select=ingangsdatum,waarde&parameter=eq.hypotheekrente_aftrektarief'),
     ]);
-    get('documenten?select=id,titel,documentdatum,bestand_naam&categorie=eq.Hypotheek&order=documentdatum.asc,id.asc').then(d=>{ if(d){ HYPOTHEEK_DOCUMENTEN = d; render(); } }).catch(()=>{});
+    get('documenten?select=id,titel,documentdatum,bestand_naam,mime_type,data_base64&categorie=eq.Hypotheek&order=documentdatum.desc,id.desc').then(d=>{ if(d){ HYPOTHEEK_DOCUMENTEN = d; render(); } }).catch(()=>{});
     if(!delen || !delen.length || !rentes || !woz) return;
     const rows = bouwHypotheekSchema(delen, rentes, woz, tar||[]);
     if(!rows.length) return;
     HYPOTHEEK_MAANDEN.splice(0, HYPOTHEEK_MAANDEN.length, ...rows);
-    DELEN_META.splice(0, DELEN_META.length, ...delen.map(d=>{ const k = d.start_jaar*12 + d.start_maand; return {naam:d.naam, type:d.type, rentevastTot:d.rentevast_tot, startJaar:Math.floor(k/12), startMaand:(k%12)+1, aftrekTot:d.aftrek_tot||null, aftrekStatus:d.aftrek_status||null}; }));
+    DELEN_META.splice(0, DELEN_META.length, ...delen.map(d=>{ const k = d.start_jaar*12 + d.start_maand; return {naam:d.naam, type:d.type, rentevastTot:d.rentevast_tot, startJaar:Math.floor(k/12), startMaand:(k%12)+1, aftrekTot:d.aftrek_tot||null, aftrekStatus:d.aftrek_status||null, aftrekbaar:d.aftrekbaar!==false, aftrekStappen:Array.isArray(d.aftrek_stappen)?d.aftrek_stappen:null}; }));
     woz.forEach(w=>{ if(w.woz!=null) HYPOTHEEK_WOZ[w.jaar] = Number(w.woz); if(w.marktwaarde!=null) HYPOTHEEK_WOZ.drempel90_675 = Number(w.marktwaarde); });
     HYPOTHEEK_JAARCIJFERS = jc || [];
   }catch(e){ /* offline: schema uit de code */ }
@@ -7787,22 +7794,48 @@ function hypotheekVolgendeDrempel(vanafR, grensPct){
 }
 // Rob, 26-09-2026: restschuldregeling (art. 3.120a Wet IB) — verkoop vorige woning sep 2016, rente 15 jaar aftrekbaar:
 // t/m de termijn van sep 2031, vanaf okt 2031 niet meer (2032 = eerste volle jaar zonder). Vastgelegd in parameter_historie id 43.
-function hypotheekDeelAftrekbaar(r, i){
-  if(i===HYPOTHEEK_CASA_INDEX) return false;
-  if(HYPOTHEEK_RESTSCHULD_INDICES.includes(i) && (r.y*12+r.m) > HYPOTHEEK_RESTSCHULD_AFTREK_TM_MND) return false;
-  return true;
+// Rob, 14-10-2026: de app rekent nu met de einddatums van de aftrek per deel (PDF versie 3, middenscenario):
+// hypotheek_delen.aftrek_stappen = [{tm:'YYYY-MM', f:fractie}], in maand t aftrekbaar = som f waar t <= tm.
+// Aflossingsvrij 50% t/m 2030 en 50% t/m 2036; 4 lineaire delen t/m sep 2046 (aflossingen eerst op het oude
+// deel, dat medio 2026 weg is); Deel 5 t/m aug 2051; restschuld t/m sep 2031; Casa 3S nooit.
+// Zonder aftrek_stappen (offline) geldt de oude regel: alles aftrekbaar behalve Casa 3S en restschuld na sep 2031.
+function hypotheekDeelAftrekFractie(r, i){
+  if(i===HYPOTHEEK_CASA_INDEX) return 0;
+  const meta = DELEN_META[i] || {};
+  if(meta.aftrekbaar===false) return 0;
+  const k = r.y*12+r.m;
+  if(Array.isArray(meta.aftrekStappen)){
+    return meta.aftrekStappen.reduce((t,st)=>{ const [y,m] = String(st.tm).split('-').map(Number); return t + (k <= y*12+m ? Number(st.f)||0 : 0); }, 0);
+  }
+  if(HYPOTHEEK_RESTSCHULD_INDICES.includes(i) && k > HYPOTHEEK_RESTSCHULD_AFTREK_TM_MND) return 0;
+  return 1;
 }
+function hypotheekDeelAftrekbaar(r, i){ return hypotheekDeelAftrekFractie(r, i) > 0; }
+function hypotheekAftrekbareRente(r){
+  if(!r.delen) return null;
+  return r.delen.reduce((t,d,i)=>t + (d ? (d[3]||0)*hypotheekDeelAftrekFractie(r,i) : 0), 0);
+}
+// Hillen-regeling: is het forfait hoger dan de aftrekbare rente, dan mag een aflopend deel van dat verschil
+// alsnog af (2019: 96 2/3%, daarna elk jaar 3 1/3%-punt minder, 0 in 2048).
+function hypotheekHillenPct(y){ return Math.max(0, (96+2/3) - (y-2019)*(10/3)) / 100; }
 function hypotheekRestschuldRenteNietAftrekbaar(r){
-  if((r.y*12+r.m) <= HYPOTHEEK_RESTSCHULD_AFTREK_TM_MND || !r.delen) return 0;
-  return HYPOTHEEK_RESTSCHULD_INDICES.reduce((t,i)=>t+((r.delen[i]&&r.delen[i][3])||0),0);
+  if(!r.delen) return 0;
+  return HYPOTHEEK_RESTSCHULD_INDICES.reduce((t,i)=>t+((r.delen[i] && hypotheekDeelAftrekFractie(r,i)===0) ? (r.delen[i][3]||0) : 0),0);
 }
 function hypotheekSchoon(r){
   const renteAflosvrijExclC3S = r.renteAflosvrij - (r.casa3sRente||0);
-  const aftrekbareBasis = r.renteLineair + renteAflosvrijExclC3S - r.forfait - hypotheekRestschuldRenteNietAftrekbaar(r);
   const tarief = r.aftrekTarief!=null ? r.aftrekTarief : ((r.renteLineair + r.renteAflosvrij - r.forfait) ? r.belastingteruggave / (r.renteLineair + r.renteAflosvrij - r.forfait) : 0.3697);
-  const belastingAftrek = Math.round(aftrekbareBasis * tarief * 100)/100;
+  const aftrekRente = hypotheekAftrekbareRente(r);
+  let basis;
+  if(aftrekRente==null){
+    basis = r.renteLineair + renteAflosvrijExclC3S - r.forfait;
+  } else {
+    const verschil = aftrekRente - r.forfait;
+    basis = verschil >= 0 ? verschil : verschil * (1 - hypotheekHillenPct(r.y));
+  }
+  const belastingAftrek = Math.round(basis * tarief * 100)/100;
   const netto = Math.round((r.bruto - belastingAftrek)*100)/100;
-  return {belastingAftrek, netto, renteAflosvrijExclC3S, tarief};
+  return {belastingAftrek, netto, renteAflosvrijExclC3S, tarief, aftrekbareRente: aftrekRente};
 }
 function hypotheekDeelBrutoNetto(r, i){
   // bruto/netto maandbedrag van precies één deellening, i.h.k.v. de handmatige aflos-selectie
@@ -7811,7 +7844,7 @@ function hypotheekDeelBrutoNetto(r, i){
   const [saldo,,aflos,rente] = d;
   const schoon = hypotheekSchoon(r);
   const bruto = (aflos||0)+(rente||0);
-  const netto = bruto - (hypotheekDeelAftrekbaar(r,i) ? (rente||0)*schoon.tarief : 0); // Casa 3S en restschuld na sep 2031: geen aftrek
+  const netto = bruto - (rente||0)*hypotheekDeelAftrekFractie(r,i)*schoon.tarief; // aftrek naar rato van het aftrekbare deel (Casa 3S nooit)
   return {saldo, bruto: Math.round(bruto*100)/100, netto: Math.round(netto*100)/100};
 }
 // Past een handmatig gekozen set deelleningen toe op een maand r (alleen zinvol vanaf het eerste
@@ -7823,7 +7856,7 @@ function hypotheekMetAflossing(r, gekozenIndices){
     return {bruto:r.bruto, netto:schoon.netto, verwijderdAflos:0, verwijderdRente:0};
   }
   let verwijderdAflos=0, verwijderdRente=0, verwijderdAftrekbaar=0;
-  gekozenIndices.forEach(i=>{ const d=r.delen[i]; if(d){ verwijderdAflos+=(d[2]||0); verwijderdRente+=(d[3]||0); if(hypotheekDeelAftrekbaar(r,i)) verwijderdAftrekbaar+=(d[3]||0); } });
+  gekozenIndices.forEach(i=>{ const d=r.delen[i]; if(d){ verwijderdAflos+=(d[2]||0); verwijderdRente+=(d[3]||0); verwijderdAftrekbaar+=(d[3]||0)*hypotheekDeelAftrekFractie(r,i); } });
   const schoon = hypotheekSchoon(r);
   const nieuweBruto = Math.round((r.bruto - verwijderdAflos - verwijderdRente)*100)/100;
   // Casa 3S-rente telt niet mee in de aftrek (zie hypotheekSchoon), dus ook niet terugdraaien bij aflossen
@@ -8003,7 +8036,7 @@ function hypotheekJaarcijfersKaart(){
   h += rij('', 'aangifte', 'schema', 'verschil', true);
   jaren.forEach(j=>{
     const feit = HYPOTHEEK_JAARCIJFERS.filter(r=>r.jaar===j && r.rente_betaald!=null).reduce((t,r)=>t+Number(r.rente_betaald),0);
-    const schema = HYPOTHEEK_MAANDEN.filter(r=>r.y===j).reduce((t,r)=>t+(r.delen||[]).reduce((a,d,i)=>a+(d && hypotheekDeelAftrekbaar(r,i) ? (d[3]||0) : 0),0),0);
+    const schema = HYPOTHEEK_MAANDEN.filter(r=>r.y===j).reduce((t,r)=>t+(r.delen||[]).reduce((a,d,i)=>a+(d ? (d[3]||0)*hypotheekDeelAftrekFractie(r,i) : 0),0),0);
     h += rij(String(j), fmt(feit), fmt(Math.round(schema)), fmt(Math.round(schema-feit)));
   });
   return h + `</div>`;
@@ -9124,7 +9157,7 @@ function renderHomeScreen(){
   return `
     <header class="header--home">
       <div>
-        <div class="brand-eyebrow brand-eyebrow--home">Financiën</div>
+        <div class="brand-eyebrow brand-eyebrow--home home-titel"><svg class="home-logo" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#12151b"/><g transform="rotate(-90 50 50)" fill="none" stroke-width="7"><circle cx="50" cy="50" r="32" stroke="#6fac9e" stroke-dasharray="100 101"/><circle cx="50" cy="50" r="32" stroke="#c9a66b" stroke-dasharray="57 144" stroke-dashoffset="-104"/><circle cx="50" cy="50" r="32" stroke="#edeae2" stroke-dasharray="32 169" stroke-dashoffset="-165"/></g><rect x="40" y="34" width="7" height="32" rx="1.5" fill="#edeae2"/><rect x="40" y="34" width="21" height="7" rx="1.5" fill="#edeae2"/><rect x="40" y="47" width="15" height="6" rx="1.5" fill="#edeae2"/></svg><span>Florijn — Financiën</span></div>
       </div>
       <button class="refresh-btn" data-hard-refresh="1" aria-label="Ververs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg></button>
     </header>
