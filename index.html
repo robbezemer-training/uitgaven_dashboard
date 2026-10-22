@@ -1395,7 +1395,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-19a - Scrollen (Rob, 19-10-2026): tikken op een categorie of ander uitklapbaar onderdeel liet de pagina omlaag springen; het aangetikte element blijft nu op dezelfde plek staan. Vorige versie (2026-10-15a - Ververs-pijltje draait weer tijdens laden (Rob, 15-10-2026: weer verdwenen): de wijziging uit 2026-10-14e stond niet online (online stond 14d) en is opnieuw toegepast: draait via requestAnimationFrame zolang er iets met Supabase bezig is, daarna stil in de statuskleur. Ook: de titel Florijn — Financiën met logo was te breed, waardoor de knop uit beeld wrapte; kopregel blijft nu op één regel, titel krimpt mee (kleinere lettergrootte op smalle schermen) en de knop blijft altijd rechts staan. Vorige versie: 2026-10-14d - Hypotheek rekent nu met de einddatums van de renteaftrek per deel (Rob, 14-10-2026, PDF versie 3, middenscenario): aflossingsvrij 50% t/m 2030 en 50% t/m 2036, de 4 lineaire delen t/m sep 2046 (aflossingen eerst op het oude deel), Deel 5 t/m aug 2051, restschuld t/m sep 2031, Casa 3S nooit. Uit Supabase hypotheek_delen.aftrek_stappen. Zakt de aftrekbare rente onder het eigenwoningforfait, dan telt de Hillen-regeling mee. Werkt door in netto hypotheeklast, aflossen-keuzes en Vermogen. Vorige versie: 2026-10-14c - Startscherm: titel Florijn — Financiën met mini-logo. Hypotheekdocumenten: nieuwste bovenaan, pdf wordt meegeladen en opent/deelt direct bij een tik (werkte niet in de beginscherm-app). PDF versie 3 (14-10-2026) staat in documenten. Vorige versie: 2026-10-14b - App heet Florijn (Rob, 14-10-2026): paginatitel en naam op het beginscherm. Vorige versie: 2026-10-14a - App-icoon (Rob, 14-10-2026): ring in groen/goud/licht met F, als beginscherm- en tabbladicoon. Wachtwoord wijzigen gaat via een echt wachtwoordveld (Safari stelt een sterk wachtwoord voor en bewaart het, Face ID vult het later in) i.p.v. een prompt. Bevestigen, Alles bevestigen en Verwijderen in Te bevestigen controleren nu of Supabase de rij echt heeft bijgewerkt; zo niet, dan een melding en de tx blijft staan. Verwijderen raakt alleen nog die ene rij (occurrence). Vorige versie: 2026-10-13c - Reispotje (Rob, 13-10-2026): het potje daalt alleen nog bij een echte overboeking uit het reispotje (bv. Japan naar Rabo/ING om de AMEX-tickets te betalen), niet meer bij de gekoppelde reisuitgave zelf. Tegel Gespaard (potje) toont de stand met peildatum en de stortingen/onttrekkingen; de uitlegtekst is weg. Vorige versie (2026-10-13b - Reisdatum (Rob, 13-10-2026): het datumveld sloot bij elke draai aan dag/maand/jaar meteen af; opslaan gebeurt nu pas bij sluiten van de kalender. Vorige versie (2026-10-13a - Reizen koppelen (Rob, 13-10-2026): in Te bevestigen verschijnt bij categorie Reizen een reiskeuze (alleen reizen in planning of lopend die nog niet zijn afgewikkeld); bevestigen zonder reis kan niet. De gekozen reis gaat als trip_id mee en een nieuwe Supabase-trigger (tx_naar_reispost) maakt er automatisch een reispost van (bij reizen met deelnemers gelijk verdeeld over de eigen deelnemers). Koppelen gaat dus op keuze, niet op reisdatum, want vooruitbetalingen vallen maanden voor de reis. In de reistegel staan Vertrek en Terug als datumvelden die je zelf invult (reizen.start/eind). Vorige versie (2026-10-12a - Energie (Rob, 12-10-2026): de lopende kalendermaand staat direct onder de jaarcijfers (wisselt vanzelf bij een nieuwe maand, meestal nog prognose) en niet nogmaals in de maandlijst. Leveranciersopgave gas (verwacht m3 en tarief uit de Frank-termijnfactuur of Wintervast) staat nu in Supabase (energie_maanden.gas_leverancier_m3/_tarief) i.p.v. in de code; november rekent met 159 m3. Bijvangst: de energie-loader haalde auto_kosten en stroom_auto_bevestigd niet op (tegel Elektrisch rijden rekende daardoor zelf en liet bevestigde laadmaanden na de laatste volledige maand weg); nu wel. Vorige versie (2026-10-11a - Reisreservering in twee stappen (Rob, 11-10-2026): 9 mnd voor de reis 1/3 van het budget (vliegtickets), 3 mnd voor de reis de overige 2/3; was het volledige budget in een keer 9 mnd vooraf. Geldt voor idee-reizen in de potjesprojectie (Vermogen); reizen met een eigen potje (Japan) blijven op hun echte saldo. Vorige versie (2026-10-10a - Saldo-tegel (Rob, 10-10-2026): AMEX en ING Mastercard zonder "— openstaand"; Oranje Spaarrekening live berekend (anker + overboekingen van/naar Oranje op Rabo/ING), dus 0 na de 500 naar ING op 09-10. Vorige versie (2026-10-09h - Tegel Energie heet Energie & water; tegel Water heeft een grafiek van het verbruik per jaar met sleepbalk (Rob, 09-10-2026). Vorige versie (2026-10-09g - Categorie Nutsvoorzieningen heet nu Energie & water (Rob, 09-10-2026: "nutsvoorziening vind ik zo stom als naam"); Supabase (transactions, vendor_rules, vendor_patronen, trigger vendor_rules_zet_bevestigen) en code omgezet. Energie-tab: nieuwe tegel Water met verbruik per jaarafrekening (Evides, periode sep-sep) uit nieuwe Supabase-tabel water_jaren (2022-2026, uit Robs Numbers-overzicht en de jaarafrekening 2026: 97 m3, 279,66). Vorige versie (2026-10-09f - Overzicht spaartegel (Rob, 09-10-2026): blok Cumulatief toont het echte gespaarde (incl. extra\'s) tegen verwacht (bedrag, % en kleur), en de cumulatieve grafiek loopt nu ook incl. extra\'s (prognose volgende maand daarop). Kop bovenaan blijft zonder extra\'s. Vorige: 2026-10-09e - Overzicht spaartegel (Rob, 09-10-2026): onder elke post staat nu verwacht met bedrag (ook Lindy, Extra\'s verwacht 0), zodat de posten optellen tot het totale verwacht in de kop; regel heet Cumulatief incl. extra\'s. renderBarList kreeg optie verwachtAltijd. Vorige: 2026-10-09d - Overzicht spaartegel (Rob, 09-10-2026: sparen min tekort uit buffer in de Sankey is ca 12.000, tegel 11.069): regel Cumulatief onder de posten telt nu de extra\'s mee, zodat hij gelijk is aan de som van de posten en aan de Sankey (sparen min tekort uit buffer); de kop blijft zonder extra\'s omdat die met verwacht vergelijkt. Vorige: 2026-10-09c - Overzicht spaartegel (Rob, 09-10-2026): posten Deurwaarder, Extra\'s, Lindy en Rob klappen open/dicht zoals in de Maand-tab; uitgeklapt per maand gespaard en plus/min t.o.v. verwacht, plus totaal en totaal verwacht. Vorige: 2026-10-09b - ZZP btw (Rob, 09-10-2026, na aangifte Q3 2026): correcties van eerdere tijdvakken staan per betrokken kwartaal in nieuwe tabel zzp_btw_correctie; elk kwartaal vergelijkt advies met effectief aangegeven (na correcties), met regel Gecorrigeerd in Qx en bij het verwerkende kwartaal Correcties eerdere kwartalen plus Ingediend saldo. Kaart volgend kwartaal is een invulblad per rubriek (1a omzet/btw, 1b, 1e, 5b, saldo) met exacte correcties (centen, onder 1 euro telt niet) en de 1.000-euro-grens (daarboven suppletie apart). Supabase: view zzp_btw_tijdvak_controle, zzp_btw_correctie_jaar herbouwd. Vorige: 2026-10-09a - Overzicht: spaartegel in dezelfde opzet als de Maand-tab (Rob, 09-10-2026): kop cumulatief gerealiseerd van verwacht; grafiek per maand met verwacht (stippellijn), volgende maand verwacht en prognose op basis van het patroon (laatste 6 maanden); posten Rob, Lindy, Deurwaarder en extras cumulatief; daaronder de cumulatieve grafiek. Vorige: 2026-10-08e - Spaartegel (Rob, 08-10-2026): kop toont alleen Verwacht en Gerealiseerd (gem. per maand); deurwaarder hoort bij verwacht (900/mnd, +850 juni en november) en een ontvangst telt mee in gerealiseerd; blokjes zonder toelichtingstekst. Vorige: 2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extras en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantie...)))))))))';
+const DASHBOARD_VERSION = '2026-10-22a - Loonheffing volgens de echte schalen (Rob, 22-10-2026): Lindy rekende met een vast percentage van de julistrook (10,07%, op 60%), nu per maand met de belastingschijven min algemene heffingskorting en arbeidskorting; geijkt op de oktoberstrook (127,63 tegen 127,00). Schijven en kortingen komen voor Rob en Lindy uit Supabase parameter_historie (2026 vastgesteld, 2027 voorstel). Vakantietoeslag en eindejaarsuitkering van Lindy telden bruto mee, nu netto. Vorige versie: 2026-10-19a - Scrollen (Rob, 19-10-2026): tikken op een categorie of ander uitklapbaar onderdeel liet de pagina omlaag springen; het aangetikte element blijft nu op dezelfde plek staan. Vorige versie (2026-10-15a - Ververs-pijltje draait weer tijdens laden (Rob, 15-10-2026: weer verdwenen): de wijziging uit 2026-10-14e stond niet online (online stond 14d) en is opnieuw toegepast: draait via requestAnimationFrame zolang er iets met Supabase bezig is, daarna stil in de statuskleur. Ook: de titel Florijn — Financiën met logo was te breed, waardoor de knop uit beeld wrapte; kopregel blijft nu op één regel, titel krimpt mee (kleinere lettergrootte op smalle schermen) en de knop blijft altijd rechts staan. Vorige versie: 2026-10-14d - Hypotheek rekent nu met de einddatums van de renteaftrek per deel (Rob, 14-10-2026, PDF versie 3, middenscenario): aflossingsvrij 50% t/m 2030 en 50% t/m 2036, de 4 lineaire delen t/m sep 2046 (aflossingen eerst op het oude deel), Deel 5 t/m aug 2051, restschuld t/m sep 2031, Casa 3S nooit. Uit Supabase hypotheek_delen.aftrek_stappen. Zakt de aftrekbare rente onder het eigenwoningforfait, dan telt de Hillen-regeling mee. Werkt door in netto hypotheeklast, aflossen-keuzes en Vermogen. Vorige versie: 2026-10-14c - Startscherm: titel Florijn — Financiën met mini-logo. Hypotheekdocumenten: nieuwste bovenaan, pdf wordt meegeladen en opent/deelt direct bij een tik (werkte niet in de beginscherm-app). PDF versie 3 (14-10-2026) staat in documenten. Vorige versie: 2026-10-14b - App heet Florijn (Rob, 14-10-2026): paginatitel en naam op het beginscherm. Vorige versie: 2026-10-14a - App-icoon (Rob, 14-10-2026): ring in groen/goud/licht met F, als beginscherm- en tabbladicoon. Wachtwoord wijzigen gaat via een echt wachtwoordveld (Safari stelt een sterk wachtwoord voor en bewaart het, Face ID vult het later in) i.p.v. een prompt. Bevestigen, Alles bevestigen en Verwijderen in Te bevestigen controleren nu of Supabase de rij echt heeft bijgewerkt; zo niet, dan een melding en de tx blijft staan. Verwijderen raakt alleen nog die ene rij (occurrence). Vorige versie: 2026-10-13c - Reispotje (Rob, 13-10-2026): het potje daalt alleen nog bij een echte overboeking uit het reispotje (bv. Japan naar Rabo/ING om de AMEX-tickets te betalen), niet meer bij de gekoppelde reisuitgave zelf. Tegel Gespaard (potje) toont de stand met peildatum en de stortingen/onttrekkingen; de uitlegtekst is weg. Vorige versie (2026-10-13b - Reisdatum (Rob, 13-10-2026): het datumveld sloot bij elke draai aan dag/maand/jaar meteen af; opslaan gebeurt nu pas bij sluiten van de kalender. Vorige versie (2026-10-13a - Reizen koppelen (Rob, 13-10-2026): in Te bevestigen verschijnt bij categorie Reizen een reiskeuze (alleen reizen in planning of lopend die nog niet zijn afgewikkeld); bevestigen zonder reis kan niet. De gekozen reis gaat als trip_id mee en een nieuwe Supabase-trigger (tx_naar_reispost) maakt er automatisch een reispost van (bij reizen met deelnemers gelijk verdeeld over de eigen deelnemers). Koppelen gaat dus op keuze, niet op reisdatum, want vooruitbetalingen vallen maanden voor de reis. In de reistegel staan Vertrek en Terug als datumvelden die je zelf invult (reizen.start/eind). Vorige versie (2026-10-12a - Energie (Rob, 12-10-2026): de lopende kalendermaand staat direct onder de jaarcijfers (wisselt vanzelf bij een nieuwe maand, meestal nog prognose) en niet nogmaals in de maandlijst. Leveranciersopgave gas (verwacht m3 en tarief uit de Frank-termijnfactuur of Wintervast) staat nu in Supabase (energie_maanden.gas_leverancier_m3/_tarief) i.p.v. in de code; november rekent met 159 m3. Bijvangst: de energie-loader haalde auto_kosten en stroom_auto_bevestigd niet op (tegel Elektrisch rijden rekende daardoor zelf en liet bevestigde laadmaanden na de laatste volledige maand weg); nu wel. Vorige versie (2026-10-11a - Reisreservering in twee stappen (Rob, 11-10-2026): 9 mnd voor de reis 1/3 van het budget (vliegtickets), 3 mnd voor de reis de overige 2/3; was het volledige budget in een keer 9 mnd vooraf. Geldt voor idee-reizen in de potjesprojectie (Vermogen); reizen met een eigen potje (Japan) blijven op hun echte saldo. Vorige versie (2026-10-10a - Saldo-tegel (Rob, 10-10-2026): AMEX en ING Mastercard zonder "— openstaand"; Oranje Spaarrekening live berekend (anker + overboekingen van/naar Oranje op Rabo/ING), dus 0 na de 500 naar ING op 09-10. Vorige versie (2026-10-09h - Tegel Energie heet Energie & water; tegel Water heeft een grafiek van het verbruik per jaar met sleepbalk (Rob, 09-10-2026). Vorige versie (2026-10-09g - Categorie Nutsvoorzieningen heet nu Energie & water (Rob, 09-10-2026: "nutsvoorziening vind ik zo stom als naam"); Supabase (transactions, vendor_rules, vendor_patronen, trigger vendor_rules_zet_bevestigen) en code omgezet. Energie-tab: nieuwe tegel Water met verbruik per jaarafrekening (Evides, periode sep-sep) uit nieuwe Supabase-tabel water_jaren (2022-2026, uit Robs Numbers-overzicht en de jaarafrekening 2026: 97 m3, 279,66). Vorige versie (2026-10-09f - Overzicht spaartegel (Rob, 09-10-2026): blok Cumulatief toont het echte gespaarde (incl. extra\'s) tegen verwacht (bedrag, % en kleur), en de cumulatieve grafiek loopt nu ook incl. extra\'s (prognose volgende maand daarop). Kop bovenaan blijft zonder extra\'s. Vorige: 2026-10-09e - Overzicht spaartegel (Rob, 09-10-2026): onder elke post staat nu verwacht met bedrag (ook Lindy, Extra\'s verwacht 0), zodat de posten optellen tot het totale verwacht in de kop; regel heet Cumulatief incl. extra\'s. renderBarList kreeg optie verwachtAltijd. Vorige: 2026-10-09d - Overzicht spaartegel (Rob, 09-10-2026: sparen min tekort uit buffer in de Sankey is ca 12.000, tegel 11.069): regel Cumulatief onder de posten telt nu de extra\'s mee, zodat hij gelijk is aan de som van de posten en aan de Sankey (sparen min tekort uit buffer); de kop blijft zonder extra\'s omdat die met verwacht vergelijkt. Vorige: 2026-10-09c - Overzicht spaartegel (Rob, 09-10-2026): posten Deurwaarder, Extra\'s, Lindy en Rob klappen open/dicht zoals in de Maand-tab; uitgeklapt per maand gespaard en plus/min t.o.v. verwacht, plus totaal en totaal verwacht. Vorige: 2026-10-09b - ZZP btw (Rob, 09-10-2026, na aangifte Q3 2026): correcties van eerdere tijdvakken staan per betrokken kwartaal in nieuwe tabel zzp_btw_correctie; elk kwartaal vergelijkt advies met effectief aangegeven (na correcties), met regel Gecorrigeerd in Qx en bij het verwerkende kwartaal Correcties eerdere kwartalen plus Ingediend saldo. Kaart volgend kwartaal is een invulblad per rubriek (1a omzet/btw, 1b, 1e, 5b, saldo) met exacte correcties (centen, onder 1 euro telt niet) en de 1.000-euro-grens (daarboven suppletie apart). Supabase: view zzp_btw_tijdvak_controle, zzp_btw_correctie_jaar herbouwd. Vorige: 2026-10-09a - Overzicht: spaartegel in dezelfde opzet als de Maand-tab (Rob, 09-10-2026): kop cumulatief gerealiseerd van verwacht; grafiek per maand met verwacht (stippellijn), volgende maand verwacht en prognose op basis van het patroon (laatste 6 maanden); posten Rob, Lindy, Deurwaarder en extras cumulatief; daaronder de cumulatieve grafiek. Vorige: 2026-10-08e - Spaartegel (Rob, 08-10-2026): kop toont alleen Verwacht en Gerealiseerd (gem. per maand); deurwaarder hoort bij verwacht (900/mnd, +850 juni en november) en een ontvangst telt mee in gerealiseerd; blokjes zonder toelichtingstekst. Vorige: 2026-10-08d - Overzicht: nieuwe grafiek Nominaal gespaard per maand (Rob, 08-10-2026) i.p.v. onder-de-streep-grafiek: staaf = werkelijk bijgekomen zonder extras en deurwaarder, stippellijn = doel (Rob vast + Lindy verwachte netto), gele lijn = lopend gemiddelde; blokken Deurwaarder (achterstand sinds geldmaand juni 2026, 900/mnd + 850 vakantie...)))))))))';
 const DASHBOARD_VERSION_PREV_2026_10_07d = '2026-10-07d - Uitklappen hoofdtegels (Rob, 07-10-2026): tegels rechts van de open tegel schoven naar onder de grafiek; bij tegels naast elkaar staat het uitklapdeel nu onder de volledige tegelrij (CSS order), op de telefoon ongewijzigd onder de eigen tegel. Bevat 07a-07c.';
 const DASHBOARD_VERSION_PREV_2026_10_07c = '2026-10-07c - Getallen in de vijf hoofdtegels passen weer (Rob, iMac Safari, 07-10-2026): tegel als container, groot bedrag breekt niet af en schaalt mee met de tegelbreedte (16-30px), subregel ook; minteken plakt via word joiner aan het bedrag zodat Safari niet na het minteken afbreekt. Bevat ook 07a/07b.';
 const DASHBOARD_VERSION_PREV_2026_10_07b = '2026-10-07b - ZZP uitgaven per leverancier vast/dagelijks, net als Paardrijden (Rob, 07-10-2026): categorie uit de vaste-lastenlijst; abonnementen Anthropic/Claude, Adobe en HP Instant Ink vast via vendor_rules, eenmalige zakelijke aankopen (bv. Foto De Vakman) standaard dagelijks.';
@@ -8756,16 +8756,50 @@ let SALARIS_ANCHOR_BEDRAG = 18648.40; // Salaris-regel (na cumulatieve cao-groei
 let SALARIS_TOD_PCT = 12.87;   // vast contractueel percentage over Salaris — exact geverifieerd (2400,05 = 18648,40×12,87%)
 let SALARIS_AP_PREMIE_PCT = 0.33; // vast contractueel percentage — benadering van de grondslag (Salaris+TOD+WG+ZK)
 // Belastingschijven box 1 (jonger dan AOW-leeftijd), per kalenderjaar. 2026: vastgesteld. 2027: Belastingplan 2027 (Prinsjesdag 15-9-2026) — VOORSTEL, pas definitief na de Eerste Kamer (ca. half dec 2026). Jaren na 2027: aanname = 2027 (vlak).
-const SALARIS_SCHIJVEN = [
-  {vanaf:'2026-01-01', s1:0.3575, g1:38883, s2:0.3756, g2:78426, s3:0.495},
-  {vanaf:'2027-01-01', s1:0.3623, g1:39247, s2:0.3816, g2:78426, s3:0.495, voorstel:true},
+// Belastingschijven box 1 + heffingskortingen (jonger dan AOW-leeftijd), per kalenderjaar. Live uit Supabase parameter_historie (categorie belasting); dit is de offline-terugval. 2027 = voorstel Belastingplan 2027.
+let SALARIS_SCHIJVEN = [
+  {vanaf:'2026-01-01', s1:0.3575, g1:38883, s2:0.3756, g2:78426, s3:0.495, ahk:3115, ahkVanaf:29736, ahkPct:0.06398, ak1g:11965, ak1:996, ak2g:25845, ak2:5300, ak3g:45592, ak3:5685, akPct:0.0651},
+  {vanaf:'2027-01-01', s1:0.3623, g1:39247, s2:0.3816, g2:78426, s3:0.495, ahk:3154, ahkVanaf:30910, ahkPct:0.06638, ak1g:12438, ak1:1182, ak2g:26866, ak2:5540, ak3g:47834, ak3:5929, akPct:0.0651, voorstel:true},
 ];
+const BELASTING_PARAM_VELD = {box1_schijf1_tarief:['s1',0.01], box1_schijf1_grens:['g1',1], box1_schijf2_tarief:['s2',0.01], box1_schijf2_grens:['g2',1], box1_schijf3_tarief:['s3',0.01],
+  algemene_heffingskorting_max:['ahk',1], algemene_heffingskorting_afbouw_vanaf:['ahkVanaf',1], algemene_heffingskorting_afbouw_pct:['ahkPct',0.01],
+  arbeidskorting_knik1_grens:['ak1g',1], arbeidskorting_knik1_bedrag:['ak1',1], arbeidskorting_knik2_grens:['ak2g',1], arbeidskorting_knik2_bedrag:['ak2',1],
+  arbeidskorting_afbouw_vanaf:['ak3g',1], arbeidskorting_max:['ak3',1], arbeidskorting_afbouw_pct:['akPct',0.01]};
+async function laadBelastingParameters(){
+  try{
+    const res = await fetch(SUPABASE_URL+'/rest/v1/parameter_historie?select=parameter,ingangsdatum,waarde,status&categorie=eq.belasting&order=ingangsdatum.asc', {headers: SUPABASE_HEADERS});
+    if(!res.ok) return;
+    const rows = (await res.json()||[]).filter(r=>BELASTING_PARAM_VELD[r.parameter] && r.ingangsdatum>='2026-01-01');
+    if(!rows.length) return;
+    const data = [...new Set(rows.map(r=>r.ingangsdatum))].sort();
+    let vorige = {...SALARIS_SCHIJVEN[0]};
+    const nieuw = data.map(d=>{
+      const o = {...vorige, vanaf:d, voorstel:false};
+      rows.filter(r=>r.ingangsdatum===d).forEach(r=>{ const [veld,f] = BELASTING_PARAM_VELD[r.parameter]; o[veld] = Number(r.waarde)*f; if(r.status!=='vastgesteld') o.voorstel = true; });
+      vorige = o; return o;
+    });
+    SALARIS_SCHIJVEN.splice(0, SALARIS_SCHIJVEN.length, ...nieuw);
+  }catch(e){ /* offline: terugval blijft staan */ }
+}
 function salarisSchijvenVoorDatum(datum){ let r=SALARIS_SCHIJVEN[0]; for(const x of SALARIS_SCHIJVEN){ if(x.vanaf<=datum) r=x; } return r; }
-// Loonheffing per maand: fiscaal bruto x12 door de schijven. Heffingskortingen (algemene heffingskorting, arbeidskorting) zijn bij dit inkomensniveau (>€139k/jr) nihil, dus hier niet meegenomen.
+function algemeneHeffingskorting(loonJaar, sc){ return Math.max(0, sc.ahk - Math.max(0, loonJaar-sc.ahkVanaf)*sc.ahkPct); }
+function arbeidskorting(loonJaar, sc){
+  const y = Math.max(0, loonJaar);
+  if(y<=sc.ak1g) return y*sc.ak1/sc.ak1g;
+  if(y<=sc.ak2g) return sc.ak1 + (y-sc.ak1g)*(sc.ak2-sc.ak1)/(sc.ak2g-sc.ak1g);
+  if(y<=sc.ak3g) return sc.ak2 + (y-sc.ak2g)*(sc.ak3-sc.ak2)/(sc.ak3g-sc.ak2g);
+  return Math.max(0, sc.ak3 - (y-sc.ak3g)*sc.akPct);
+}
+// Loonheffing per jaar volgens de witte tabel: schijven min algemene heffingskorting en arbeidskorting (niet onder 0)
+function loonheffingJaarDetail(loonJaar, datum){
+  const sc = salarisSchijvenVoorDatum(datum), y = Math.max(0, loonJaar);
+  const schijven = Math.min(y,sc.g1)*sc.s1 + Math.max(0,Math.min(y,sc.g2)-sc.g1)*sc.s2 + Math.max(0,y-sc.g2)*sc.s3;
+  const ahk = algemeneHeffingskorting(y, sc), ak = arbeidskorting(y, sc);
+  const kortingen = Math.min(schijven, ahk+ak);
+  return {schijven, ahk: Math.min(ahk, schijven), ak: kortingen-Math.min(ahk, schijven), totaal: schijven-kortingen, voorstel: !!sc.voorstel};
+}
 function salarisLoonheffingMaand(fiscaalBrutoMaand, datum){
-  const sc = salarisSchijvenVoorDatum(datum), y = fiscaalBrutoMaand*12;
-  const t = Math.min(y,sc.g1)*sc.s1 + Math.max(0,Math.min(y,sc.g2)-sc.g1)*sc.s2 + Math.max(0,y-sc.g2)*sc.s3;
-  return t/12;
+  return loonheffingJaarDetail(fiscaalBrutoMaand*12, datum).totaal/12;
 }
 // IJk: sheet-kolom 1-7-2026 (fiscaal bruto 20.870,15 -> netto 11.378) — schijvenmodel wijkt daar slechts ca. 0,41/mnd van af (afronding/tabel).
 let SALARIS_IJK_NETTO = 11378, SALARIS_IJK_BRUTO = 20870.15;
@@ -8774,6 +8808,7 @@ let SALARIS_VAKANTIEGELD_ANKER = 8163.43, SALARIS_DERTIENDE_ANKER = 8500.17, SAL
 
 async function laadSalarisParameters(){
   // Supabase salaris_parameters is de bron; de code-reeksen hieronder zijn alleen offline-terugval.
+  await laadBelastingParameters();
   try{
     const res = await fetch(SUPABASE_URL+'/rest/v1/salaris_parameters?select=persoon,ingangsdatum,parameter,waarde,notities&order=ingangsdatum.asc', {headers: SUPABASE_HEADERS});
     if(!res.ok) return;
@@ -8800,7 +8835,6 @@ async function laadSalarisParameters(){
     if(laatste('eindejaarsuitkering_pct', lrows)!=null) LINDY_EINDEJAARSUITKERING_PCT = laatste('eindejaarsuitkering_pct', lrows);
     if(laatste('aop_pct', lrows)!=null) LINDY_AOP_PCT = laatste('aop_pct', lrows);
     if(laatste('pensioen_pct', lrows)!=null) LINDY_PENSIOEN_PCT = laatste('pensioen_pct', lrows);
-    if(laatste('loonheffing_pct', lrows)!=null) LINDY_LOONHEFFING_PCT = laatste('loonheffing_pct', lrows);
     if(laatste('anker_salaris')!=null) SALARIS_ANCHOR_BEDRAG = laatste('anker_salaris');
     if(laatste('anker_vakantiegeld')!=null) SALARIS_VAKANTIEGELD_ANKER = laatste('anker_vakantiegeld');
     if(laatste('anker_dertiende')!=null) SALARIS_DERTIENDE_ANKER = laatste('anker_dertiende');
@@ -8880,7 +8914,7 @@ function salarisStapWaarde(stappen, datum){
 }
 function salarisOmslagData(totJaar){
   const alle = new Set([SALARIS_ANCHOR_DATUM]);
-  [SALARIS_CAO_STAPPEN, SALARIS_DEELTIJD_STAPPEN, SALARIS_PENSIOEN_WG, SALARIS_PENSIOEN_WN, SALARIS_IKV_KORTING, SALARIS_COMPENSATIE_ZK]
+  [SALARIS_CAO_STAPPEN, SALARIS_DEELTIJD_STAPPEN, SALARIS_PENSIOEN_WG, SALARIS_PENSIOEN_WN, SALARIS_IKV_KORTING, SALARIS_COMPENSATIE_ZK, SALARIS_SCHIJVEN]
     .forEach(lijst=>lijst.forEach(s=>{ if(s.vanaf>=SALARIS_ANCHOR_DATUM && parseInt(s.vanaf.slice(0,4),10)<=totJaar) alle.add(s.vanaf); }));
   return [...alle].sort();
 }
@@ -8976,7 +9010,6 @@ const LINDY_PARTTIME_STAPPEN = [
 // Effectieve percentages t.o.v. Brutoloon, afgeleid uit de juli-strook (geen exacte franchise-formule, want die ken ik niet)
 let LINDY_AOP_PCT = 7.58/3015.00*100;
 let LINDY_PENSIOEN_PCT = 213.77/3015.00*100;
-let LINDY_LOONHEFFING_PCT = 303.67/3015.00*100; // benadering — geen volledige belastingschijven-doorrekening
 let LINDY_TOESLAGEN_ANCHOR = 15.85; // Rob, 25-08-2026: alleen de VASTE reiskostenvergoeding — parkeerkosten/km-vergoeding/voorschot
 // eruit gehaald, want die zijn variabel en komen toch al maandelijks als eigen losse transactie binnen
 // ("Lindy vergoeding (SARO)", categorie Overig inkomen) — hier ook meenemen zou dat dubbel tellen. Bron:
@@ -9011,6 +9044,7 @@ function berekenLindyPeriodes(totJaar){
   const data = new Set([LINDY_ANCHOR_DATUM]);
   LINDY_PARTTIME_STAPPEN.forEach(s=>{ if(s.vanaf>=LINDY_ANCHOR_DATUM && parseInt(s.vanaf.slice(0,4),10)<=totJaar) data.add(s.vanaf); });
   LINDY_CAO_STAPPEN.forEach(s=>{ if(s.vanaf>LINDY_ANCHOR_DATUM && parseInt(s.vanaf.slice(0,4),10)<=totJaar) data.add(s.vanaf); });
+  SALARIS_SCHIJVEN.forEach(s=>{ if(s.vanaf>LINDY_ANCHOR_DATUM && parseInt(s.vanaf.slice(0,4),10)<=totJaar) data.add(s.vanaf); });
   return [...data].sort().map(datum=>{
     const pct = lindyParttimePct(datum);
     const basisVoltijd = lindyBasisVoltijd(datum);
@@ -9018,10 +9052,12 @@ function berekenLindyPeriodes(totJaar){
     const bruto = basisVoltijd + parttimeKorting; // = basisVoltijd * pct/100
     const aop = bruto*LINDY_AOP_PCT/100;
     const pensioen = bruto*LINDY_PENSIOEN_PCT/100;
-    const loonheffing = bruto*LINDY_LOONHEFFING_PCT/100;
+    const loonLH = bruto - aop - pensioen;
+    const lh = loonheffingJaarDetail(loonLH*12, datum);
+    const loonheffing = lh.totaal/12;
     const netto = bruto - aop - pensioen - loonheffing;
     const toeslagen = LINDY_TOESLAGEN_ANCHOR; // vast bedrag, gedeclareerd — schaalt niet mee met parttime%
-    return {vanaf:datum, parttimePct:pct, basisVoltijd, parttimeKorting, bruto, aop, pensioen, loonheffing, netto, toeslagen, uitTeBetalen: netto+toeslagen};
+    return {vanaf:datum, parttimePct:pct, basisVoltijd, parttimeKorting, bruto, aop, pensioen, loonLH, lhSchijven: lh.schijven/12, lhAhk: lh.ahk/12, lhAk: lh.ak/12, lhVoorstel: lh.voorstel, loonheffing, netto, toeslagen, uitTeBetalen: netto+toeslagen};
   });
 }
 function lindySalarisJaarOverzicht(totJaar){
@@ -9044,10 +9080,14 @@ function lindySalarisJaarOverzicht(totJaar){
       const dagenIn2026 = (Date.UTC(2026,11,31)-Date.UTC(2026,0,1))/86400000 + 1;
       dertiende = decBruto*12*LINDY_EINDEJAARSUITKERING_PCT/100 * (dagenInDienst2026/dagenIn2026);
     }
+    const nettoBijzonder = (x, d)=>{ if(!x) return 0; const p = actief(d), L = p.loonLH*12; return x - (loonheffingJaarDetail(L+x, d).totaal - loonheffingJaarDetail(L, d).totaal); };
+    const vakantietoeslagBruto = vakantietoeslag, dertiendeBruto = dertiende;
+    vakantietoeslag = nettoBijzonder(vakantietoeslagBruto, meiDatum);
+    dertiende = nettoBijzonder(dertiendeBruto, decDatum);
     if(j===2026){
-      jaren.push({jaar:j, periode:actief(LINDY_ANCHOR_DATUM), tweede:actief(sepDatum), huidig:actief(vandaag), vakantietoeslag, dertiende, caoStapDitJaar});
+      jaren.push({jaar:j, periode:actief(LINDY_ANCHOR_DATUM), tweede:actief(sepDatum), huidig:actief(vandaag), vakantietoeslag, dertiende, vakantietoeslagBruto, dertiendeBruto, caoStapDitJaar});
     } else {
-      jaren.push({jaar:j, periode:actief(janDatum), tweede:actief(janDatum), huidig:actief(vandaag), vakantietoeslag, dertiende, caoStapDitJaar});
+      jaren.push({jaar:j, periode:actief(janDatum), tweede:actief(janDatum), huidig:actief(vandaag), vakantietoeslag, dertiende, vakantietoeslagBruto, dertiendeBruto, caoStapDitJaar});
     }
   }
   return jaren;
@@ -9083,12 +9123,16 @@ function renderSalarisLindyView(){
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;font-weight:600;"><span>Fiscaal Bruto</span><span>${fmt(p.bruto)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Premie AOP</span><span>${fmt(-p.aop)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Pensioen/NP</span><span>${fmt(-p.pensioen)}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Loonheffing</span><span>${fmt(-p.loonheffing)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Loon voor loonheffing</span><span>${fmt(p.loonLH)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0 2px 10px;font-size:12px;color:var(--paper-dim);"><span>Belasting schijven</span><span>${fmt(-p.lhSchijven)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0 2px 10px;font-size:12px;color:var(--paper-dim);"><span>Algemene heffingskorting</span><span>${fmt(p.lhAhk)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0 2px 10px;font-size:12px;color:var(--paper-dim);"><span>Arbeidskorting</span><span>${fmt(p.lhAk)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Loonheffing${p.lhVoorstel?' (voorstel)':''}</span><span>${fmt(-p.loonheffing)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;font-weight:600;"><span>Netto (effectief ${(p.netto/p.bruto*100).toFixed(1)}%)</span><span>${fmt(p.netto)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Reiskosten (vast) *</span><span>${fmt(p.toeslagen)}</span></div>
         <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;font-weight:600;"><span>Uit te betalen</span><span>${fmt(p.uitTeBetalen)}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);margin-top:6px;"><span>Vakantietoeslag (mei, 8%)</span><span>${fmt(y.vakantietoeslag)}</span></div>
-        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Eindejaarsuitkering (december, 8,33%${y.jaar===2026?', pro rata':''})</span><span>${fmt(y.dertiende)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);margin-top:6px;"><span>Vakantietoeslag netto (mei, 8% = ${fmt(y.vakantietoeslagBruto)} bruto)</span><span>${fmt(y.vakantietoeslag)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>Eindejaarsuitkering netto (december, 8,33%${y.jaar===2026?', pro rata':''} = ${fmt(y.dertiendeBruto)} bruto)</span><span>${fmt(y.dertiende)}</span></div>
       </div>` : ''}
     </div>`;
   }).join('');
