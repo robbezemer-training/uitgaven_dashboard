@@ -1,0 +1,76 @@
+name: Florijn deploy
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: florijn-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Nieuwe versie ophalen uit Supabase
+        id: fetch
+        env:
+          SB_URL: https://apleozatyqmqtzofxbky.supabase.co
+          SB_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwbGVvemF0eXFtcXR6b2Z4Ymt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0NTQwNzIsImV4cCI6MjEwMDAzMDA3Mn0.5l87xFF6vi3jANYEaREBnSf5ahQ32PDRbEe0PpM7eDI
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request
+          req = urllib.request.Request(
+              os.environ['SB_URL'] + '/rest/v1/rpc/deploy_fetch',
+              data=json.dumps({'p_token': os.environ['DEPLOY_TOKEN']}).encode(),
+              headers={'apikey': os.environ['SB_KEY'],
+                       'Authorization': 'Bearer ' + os.environ['SB_KEY'],
+                       'Content-Type': 'application/json'})
+          rows = json.load(urllib.request.urlopen(req))
+          out = open(os.environ['GITHUB_OUTPUT'], 'a')
+          if not rows:
+              print('Niets nieuws.'); out.write('nieuw=false\n'); raise SystemExit
+          r = rows[0]
+          assert 'DASHBOARD_VERSION' in r['html'] and len(r['html']) > 100000, 'ongeldig bestand'
+          open('index.html', 'w', encoding='utf-8').write(r['html'])
+          out.write('nieuw=true\nid=%s\n' % r['id'])
+          open('/tmp/versie.txt', 'w').write(r['versie'][:72])
+          print('Versie:', r['versie'][:72])
+          PY
+
+      - name: Committen en pushen
+        if: steps.fetch.outputs.nieuw == 'true'
+        id: push
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "Florijn deploy"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "Bestand is gelijk aan de online versie."
+          else
+            git commit -m "Florijn $(cat /tmp/versie.txt)"
+            git push
+            gh api -X POST "repos/$GITHUB_REPOSITORY/pages/builds" >/dev/null || true
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Afvinken in Supabase
+        if: steps.fetch.outputs.nieuw == 'true'
+        env:
+          SB_URL: https://apleozatyqmqtzofxbky.supabase.co
+          SB_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwbGVvemF0eXFtcXR6b2Z4Ymt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0NTQwNzIsImV4cCI6MjEwMDAzMDA3Mn0.5l87xFF6vi3jANYEaREBnSf5ahQ32PDRbEe0PpM7eDI
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+        run: |
+          curl -sSf -X POST "$SB_URL/rest/v1/rpc/deploy_mark" \
+            -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" -H "Content-Type: application/json" \
+            -d "{\"p_token\":\"$DEPLOY_TOKEN\",\"p_id\":${{ steps.fetch.outputs.id }},\"p_sha\":\"${{ steps.push.outputs.sha }}\"}"
