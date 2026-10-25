@@ -170,8 +170,10 @@
   .app-tile-label{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:16px; line-height:1.25; }
 
   .detail-header{ display:flex; align-items:center; gap:10px; margin-bottom:22px; position:sticky; top:0; z-index:25; background: var(--ink); padding: 14px 0 12px; }
-  .vermogen-opties-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; position:sticky; top:66px; z-index:24; background:var(--ink); padding:10px 0; margin-bottom:2px; }
+  .vermogen-opties-grid{ display:grid; grid-template-columns: repeat(6, 1fr); gap:8px; position:sticky; top:66px; z-index:24; background:var(--ink); padding:10px 0; margin-bottom:2px; }
   .vermogen-optie-tegel{ background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 10px; min-height:60px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:13px; text-align:center; cursor:pointer; transition:border-color .15s,color .15s; }
+  .vermogen-opties-grid > .vermogen-optie-tegel{ grid-column: span 3; }
+  .vermogen-opties-grid > .vermogen-optie-tegel.rij3{ grid-column: span 2; }
   .vermogen-optie-tegel.active{ border-color:var(--brass); color:var(--paper); font-weight:600; }
   .c3s-sectie-tegel{ display:block; width:100%; text-align:left; background:var(--panel); border:1px solid var(--rule); border-radius:8px; padding:14px 16px; margin-top:8px; color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:14px; cursor:pointer; }
   @media (min-width: 700px){
@@ -1357,6 +1359,7 @@ function deurwVordering(opDatum){
   return {stand, totaal, pct, renteMaand: Math.round(totaal*pct/100/12*100)/100, inhoudingMaand: inhM,
     inKas: Math.round(Math.max(0, inKas-afgedragen)*100)/100};
 }
+let vermogenDeurwOpen = false; // Rob, 25-10-2026: tegel Deurwaarder naast Nominaal/Inflatie; aan = aflossingsgrafiek op de plek van de vermogensgrafiek
 let deurwRenteKeuze = null; // null = wettelijke rente uit parameter_historie; anders 2/4/6 (Rob, 25-10-2026)
 // Rob, 25-10-2026: aflossing van de vordering in de toekomst. Aanname: het loonbeslag blijft gelijk (inhouding_per_maand
 // uit parameter_historie, plus DEURWAARDER_EXTRA in juni en december); wettelijke rente onbekend, dus kiesbaar.
@@ -1493,7 +1496,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-25f - Vermogen: tegel Deurwaarder — aflossing vordering (Rob, 25-10-2026). Projectie van de vordering vanaf nu met de aanname dat het loonbeslag gelijk blijft (inhouding_per_maand + 850 in juni en december) en kiesbare wettelijke rente (2/4/6%, standaard de huidige uit parameter_historie). Toont wanneer de schuld weg is, stand over 5 en 10 jaar, totaal nog te ontvangen en het rentedeel; sleepbalk over de lijn.';
+const DASHBOARD_VERSION = '2026-10-25g - Vermogen: tegel Deurwaarder naast Nominaal en Inflatie (Rob, 25-10-2026). Aangetikt = de aflossingsgrafiek van de vordering op de plek van de vermogensgrafiek; nogmaals tikken = weer de vermogensgrafiek. De losse tegel onder de grafiek is weg.';
+const DASHBOARD_VERSION_PREV_2026_10_25f = '2026-10-25f - Vermogen: tegel Deurwaarder — aflossing vordering (Rob, 25-10-2026). Projectie van de vordering vanaf nu met de aanname dat het loonbeslag gelijk blijft (inhouding_per_maand + 850 in juni en december) en kiesbare wettelijke rente (2/4/6%, standaard de huidige uit parameter_historie). Toont wanneer de schuld weg is, stand over 5 en 10 jaar, totaal nog te ontvangen en het rentedeel; sleepbalk over de lijn.';
 const DASHBOARD_VERSION_PREV_2026_10_25e = '2026-10-25e - Realistische lijn in de Inflatie-weergave telt Robs tekort niet meer dubbel (Rob, 25-10-2026): het verschil wordt gemeten tegen wat Inflatie zelf voor Rob rekent over dezelfde maanden (salarisberekening min geïndexeerde uitgaven), niet tegen 2.000, en loopt mee met de inkomensindex. Nominaal ongewijzigd (verschil tegen 2.000).';
 const DASHBOARD_VERSION_PREV_2026_10_25d = '2026-10-25d - Deurwaarder (Rob, 25-10-2026): realistisch rekent de deurwaarder volgens schema (900 + 2x 850); Balanskaart Vermogen: tik op Deurwaarder (tegoed) voor de vordering incl. wettelijke rente (standen uit de brieven 23-01, 25-03 en 24-04-2026 in parameter_historie, 4% sinds 1-1-2026, rente per 1 januari bij de hoofdsom; de vordering daalt met de inhouding ~1.090/mnd afgeleid uit de brieven, niet met de afdracht), rente per maand, ontvangen dit jaar en laatste afdracht; tegoed = in kas bij de deurwaarder (loonbeslag loopt, afdracht geblokkeerd door klacht), vordering na kas. Ontvangsten jan-apr 2026 (ING) toegevoegd. Schema deurwaarder 1.090 per maand + 850 in juni en december (was 900), ook in vermogen_maanden.heks vanaf november 2026 en in de Inflatie-tab. Einde rentevast alleen als okt 2031 in beeld is.';
 const DASHBOARD_VERSION_PREV_2026_10_25c = '2026-10-25c - Overzicht: spaartegel zonder grafieken, alleen waar het vandaan komt (posten Rob, Lindy, Deurwaarder, Extra\'s met verwacht). De grafieken verwacht/gerealiseerd/realistisch staan in Vermogen. Vermogen-grafiek: einde rentevaste periode hypotheek (okt 2031) altijd zichtbaar als verticale lijn of als pijltje aan de rand (Rob, 25-10-2026).';
@@ -8156,11 +8160,10 @@ function renderPotjesView(maandelijksBedragFn, theorieFn){
           ${rij('Vermogen incl. tegoed', c3sV+reisTot+tegV, vermA+tegA, {vet:true, lijn:true})}
         </div>`; })()}
     </div>
-    ${vermogenAflosDetailOpen ? '' : `<div class="card trend-card vermogen-trend-sticky">
+    ${vermogenAflosDetailOpen ? '' : vermogenDeurwOpen ? renderDeurwAflosTegel() : `<div class="card trend-card vermogen-trend-sticky">
       <div class="card-label" data-scrub-readout="potjes" data-default-label="Potjes — som over tijd">Potjes — som over tijd</div>
       ${renderPotjesChart(potjesMaanden)}
     </div>`}
-    ${vermogenAflosDetailOpen ? '' : renderDeurwAflosTegel()}
     <div class="card-label" style="margin:18px 0 8px;">Per maand (tik voor de transacties)</div>
     ${(()=>{ const totaalVan = potjesTotaal; // Rob, 25-10-2026: tegoed deurwaarder niet meer in het vermogen
       const jaren = []; potjesMaanden.slice(1).forEach(r=>{ const j=(r.label.match(/\d{4}/)||[''])[0]; let g=jaren.find(x=>x.jaar===j); if(!g){ g={jaar:j, maanden:[]}; jaren.push(g); } g.maanden.push(r); });
@@ -8235,8 +8238,9 @@ function renderVermogenView(){
   const body = vermogenInflatie==='ikv' ? renderVermogenIkv() : renderVermogenNominaal();
   return `
     <div class="vermogen-opties-grid">
-      <button class="vermogen-optie-tegel ${vermogenInflatie==='nominaal'?'active':''}" data-vermogen-inflatie="nominaal">Nominaal</button>
-      <button class="vermogen-optie-tegel ${vermogenInflatie==='ikv'?'active':''}" data-vermogen-inflatie="ikv">Inflatie</button>
+      <button class="vermogen-optie-tegel rij3 ${vermogenInflatie==='nominaal'?'active':''}" data-vermogen-inflatie="nominaal">Nominaal</button>
+      <button class="vermogen-optie-tegel rij3 ${vermogenInflatie==='ikv'?'active':''}" data-vermogen-inflatie="ikv">Inflatie</button>
+      <button class="vermogen-optie-tegel rij3 ${vermogenDeurwOpen?'active':''}" data-vermogen-deurw="1">Deurwaarder</button>
       <button class="vermogen-optie-tegel ${vermogenAflos==='nee'?'active':''}" data-vermogen-aflos="nee">Geen aflossing</button>
       <button class="vermogen-optie-tegel ${vermogenAflos==='ja'?'active':''}" data-vermogen-aflos-tegel="1">Aflossen hypotheek${hypotheekGekozenDelen.length?` (${hypotheekGekozenDelen.length} ${hypotheekGekozenDelen.length===1?'deel':'delen'})`:''}${(vermogenAflos==='ja' && vermogenAflosDetailOpen)?' ▾':' ▸'}</button>
     </div>
@@ -11839,6 +11843,7 @@ function render(){
   document.querySelectorAll('[data-hyp-aftrek-toggle]').forEach(el=>el.addEventListener('click',()=>{ hypotheekTegelExpand = (hypotheekTegelExpand==='aftrek') ? null : 'aftrek'; render(); scrollC3sNaarKop('[data-hyp-aftrek-toggle]'); }));
   document.querySelectorAll('[data-hyp-doc]').forEach(el=>el.addEventListener('click',()=>hypotheekOpenDocument(el.dataset.hypDoc)));
   document.querySelectorAll('[data-archief-toggle]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.archiefToggle; const huidig = archiefMaandExpand===undefined ? (archiefPeriodes().slice(-1)[0]||{}).key : archiefMaandExpand; archiefMaandExpand = (huidig===key) ? null : key; render(); if(archiefMaandExpand) scrollC3sNaarKop('[data-archief-toggle="'+key+'"]'); }));
+  document.querySelectorAll('[data-vermogen-deurw]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); vermogenDeurwOpen = !vermogenDeurwOpen; render(); }));
   document.querySelectorAll('[data-deurw-rente]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); deurwRenteKeuze = Number(el.dataset.deurwRente); render(); }));
   document.querySelectorAll('[data-deurw-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); deurwDetailOpen = !deurwDetailOpen; render(); }));
   document.querySelectorAll('[data-vermogen-zoom]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); vermogenZoom = el.dataset.vermogenZoom; render(); }));
