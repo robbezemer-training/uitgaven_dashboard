@@ -1511,7 +1511,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-25l - Vermogensgrafiek: bij slepen wisselen maand en bedragen in de legenda mee, de lange tekstregel boven de grafiek is weg (Rob, 25-10-2026). Bevat ook 25k: legenda onder elkaar met lijnvoorbeeld, stand aan het eind van het beeld.';
+const DASHBOARD_VERSION = '2026-10-25m - Vermogensgrafiek: de schuiflijn met de bedragen in de legenda blijft staan na loslaten; tik buiten de grafiek om terug te gaan naar de eindstand (Rob, 25-10-2026).';
+const DASHBOARD_VERSION_PREV_2026_10_25l = '2026-10-25l - Vermogensgrafiek: bij slepen wisselen maand en bedragen in de legenda mee, de lange tekstregel boven de grafiek is weg (Rob, 25-10-2026). Bevat ook 25k: legenda onder elkaar met lijnvoorbeeld, stand aan het eind van het beeld.';
 const DASHBOARD_VERSION_PREV_2026_10_25k = '2026-10-25k - Vermogensgrafiek: legenda onder elkaar met lijnvoorbeeld (Rob, 25-10-2026): gerealiseerd (stand nu), verwacht, realistisch en na interieur met de stand aan het eind van het beeld (wisselt mee met 12 mnd / 3 jaar / alles).';
 const DASHBOARD_VERSION_PREV_2026_10_25j = '2026-10-25j - Deurwaarder-tegel: verfijnde renteschuif (Rob, 25-10-2026): dunne lijn, klein bolletje, streepjes per hele procent (de vastgestelde rente iets langer en goud).';
 const DASHBOARD_VERSION_PREV_2026_10_25i = '2026-10-25i - Deurwaarder-tegel: wettelijke rente met een schuif van 1% tot 8% in stappen van 0,25% (Rob, 25-10-2026), met de vastgestelde rente als standaard en een terug-link; zelfde achtergrond als de vermogensgrafiek.';
@@ -12134,8 +12135,10 @@ function render(){
     };
     wrap.addEventListener('pointerdown', e=>{ update(e.clientX); });
     wrap.addEventListener('pointermove', e=>{ if(e.buttons>0 || e.pointerType==='touch') update(e.clientX); });
-    wrap.addEventListener('pointerup', hide);
-    wrap.addEventListener('pointerleave', hide);
+    // Rob, 25-10-2026: bij de vermogensgrafiek (legenda) blijft de lijn staan na loslaten; tik buiten de grafiek om te wissen.
+    const blijft = !!wrap.dataset.legenda;
+    if(!blijft){ wrap.addEventListener('pointerup', hide); wrap.addEventListener('pointerleave', hide); }
+    else document.addEventListener('pointerdown', e=>{ if(!wrap.contains(e.target) && document.body.contains(wrap)) hide(); });
     // Rob, 31-08-2026: "bij scroll heel gevoelig, alsof je tekst selecteert" — touchstart liet de sleepbalk
     // meteen verschijnen bij ELKE aanraking, ook als iemand gewoon voorbij de grafiek naar beneden scrollt.
     // touch-action:pan-y laat de browser al wél gewoon scrollen, maar de blauwe lijn/stip poppen dan toch al
@@ -12157,7 +12160,7 @@ function render(){
       }
       if(gestureMode==='scrub') update(t.clientX);
     }, {passive:true});
-    wrap.addEventListener('touchend', ()=>{ if(gestureMode==='scrub') hide(); gestureMode=null; });
+    wrap.addEventListener('touchend', ()=>{ if(gestureMode==='scrub' && !blijft) hide(); gestureMode=null; });
   });
 }
 function scrollToLedger(){
