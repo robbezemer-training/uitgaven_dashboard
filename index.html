@@ -1511,7 +1511,9 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-25j - Deurwaarder-tegel: verfijnde renteschuif (Rob, 25-10-2026): dunne lijn, klein bolletje, streepjes per hele procent (de vastgestelde rente iets langer en goud).';
+const DASHBOARD_VERSION = '2026-10-25l - Vermogensgrafiek: bij slepen wisselen maand en bedragen in de legenda mee, de lange tekstregel boven de grafiek is weg (Rob, 25-10-2026). Bevat ook 25k: legenda onder elkaar met lijnvoorbeeld, stand aan het eind van het beeld.';
+const DASHBOARD_VERSION_PREV_2026_10_25k = '2026-10-25k - Vermogensgrafiek: legenda onder elkaar met lijnvoorbeeld (Rob, 25-10-2026): gerealiseerd (stand nu), verwacht, realistisch en na interieur met de stand aan het eind van het beeld (wisselt mee met 12 mnd / 3 jaar / alles).';
+const DASHBOARD_VERSION_PREV_2026_10_25j = '2026-10-25j - Deurwaarder-tegel: verfijnde renteschuif (Rob, 25-10-2026): dunne lijn, klein bolletje, streepjes per hele procent (de vastgestelde rente iets langer en goud).';
 const DASHBOARD_VERSION_PREV_2026_10_25i = '2026-10-25i - Deurwaarder-tegel: wettelijke rente met een schuif van 1% tot 8% in stappen van 0,25% (Rob, 25-10-2026), met de vastgestelde rente als standaard en een terug-link; zelfde achtergrond als de vermogensgrafiek.';
 const DASHBOARD_VERSION_PREV_2026_10_25h = '2026-10-25h - Vermogen: Nominaal, Inflatie en Deurwaarder werken als harmonica (Rob, 25-10-2026): één tegel tegelijk actief; Nominaal of Inflatie kiezen sluit Deurwaarder, Deurwaarder aantikken toont alleen Deurwaarder als actief.';
 const DASHBOARD_VERSION_PREV_2026_10_25g = '2026-10-25g - Vermogen: tegel Deurwaarder naast Nominaal en Inflatie (Rob, 25-10-2026). Aangetikt = de aflossingsgrafiek van de vordering op de plek van de vermogensgrafiek; nogmaals tikken = weer de vermogensgrafiek. De losse tegel onder de grafiek is weg.';
@@ -7144,7 +7146,8 @@ function renderPotjesChart(maanden){
   const labels = P.map((p,i)=>`${mndKort(p)} ${p.jaar}${i<nuI?' (gerealiseerd)':(i===nuI?' (nu)':' · verwacht')}`);
   const values = P.map(p=>p.real!=null ? p.real : p.verw);
   const esc = v=>JSON.stringify(v).replace(/"/g,'&quot;');
-  const chart = `<div class="potjes-chart-wrap" data-scrub-chart="potjes" data-labels="${esc(labels)}" data-values="${esc(values)}" data-values2="${esc(P.map((p,i)=>i>nuI?p.rea:null))}" data-values2-label="realistisch" ${heeftInt?`data-values3="${esc(P.map(p=>p.intr))}" data-values3-label="na interieur"`:''} data-ymin="${min}" data-ymax="${max}" style="position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none;">
+  const legData = P.map(p=>({k:`${mndKort(p)} '${String(p.jaar).slice(2)}`, real:p.real, verw:p.verw, rea:p.rea, intr:p.intr}));
+  const chart = `<div class="potjes-chart-wrap" data-scrub-chart="potjes" data-legenda="potjes" data-leg-json="${esc(legData)}" data-labels="${esc(labels)}" data-values="${esc(values)}" data-values2="${esc(P.map((p,i)=>i>nuI?p.rea:null))}" data-values2-label="realistisch" ${heeftInt?`data-values3="${esc(P.map(p=>p.intr))}" data-values3-label="na interieur"`:''} data-ymin="${min}" data-ymax="${max}" style="position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none;">
     ${svg}${rvLabel}
     <div class="potjes-scrub-line" style="position:absolute;top:0;bottom:0;width:1px;background:var(--paper);opacity:0;pointer-events:none;"></div>
     <div class="potjes-scrub-dot" style="position:absolute;width:8px;height:8px;margin-left:-4px;margin-top:-4px;border-radius:50%;background:#c9a227;border:2px solid var(--bg);opacity:0;pointer-events:none;"></div>
@@ -7155,12 +7158,22 @@ function renderPotjesChart(maanden){
   const knop = (waarde,label)=>{ const aan = vermogenZoom===waarde;
     return `<button data-vermogen-zoom="${waarde}" style="border:1px solid var(--${aan?'brass':'rule'});background:${aan?'var(--brass)':'transparent'};color:var(--${aan?'ink':'muted'});border-radius:14px;padding:4px 11px;font-size:12px;cursor:pointer;font-family:inherit;">${label}</button>`; };
   const eindP = P[L];
-  const voet = L>nuI ? `<div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin:4px 0 0;">
-      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #c9a227;vertical-align:middle;"></span> ${mndKort(eindP)} '${String(eindP.jaar).slice(2)} verwacht ${fmt(eindP.verw)}</span>
-      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--teal);vertical-align:middle;"></span> realistisch ${fmt(eindP.rea)}</span></div>` : '';
+  // Rob, 25-10-2026: legenda netjes onder elkaar — lijnvoorbeeld, wat de lijn is, en de stand aan het eind van het beeld
+  const lijnSvg = (stroke, dash, w2)=>`<svg width="22" height="8" viewBox="0 0 22 8" style="width:22px;height:8px;min-width:22px;vertical-align:middle;flex:0 0 22px;"><line x1="0" y1="4" x2="22" y2="4" stroke="${stroke}" stroke-width="${w2||1.4}" ${dash?`stroke-dasharray="${dash}"`:''}/></svg>`;
+  const nuP = P[Math.min(nuI, L)];
+  const legRij = (svgL, naam, waarde, sleutel)=>`<div style="display:flex;align-items:center;gap:8px;padding:2px 0;font-size:12px;color:var(--paper-dim);">${svgL}<span style="flex:1;">${naam}</span><span data-leg-v="${sleutel}" data-default="${waarde}" style="font-family:'IBM Plex Mono',monospace;">${waarde}</span></div>`;
+  // Rob, 25-10-2026: bij slepen over de grafiek wisselen de bedragen in deze legenda mee (en de maand erboven),
+  // in plaats van een lange tekstregel boven de grafiek.
+  const kopDef = L>nuI ? `stand ${mndKort(eindP)} '${String(eindP.jaar).slice(2)}` : '';
+  const voet = `<div style="margin-top:8px;" data-legenda-box="potjes">
+      <div style="display:flex;justify-content:flex-end;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);margin-bottom:2px;min-height:13px;"><span data-leg-kop="1" data-default="${kopDef}">${kopDef}</span></div>
+      ${legRij(lijnSvg('#c9a227','',2), `gerealiseerd <span style="color:var(--muted);">(${mndKort(nuP)} '${String(nuP.jaar).slice(2)})</span>`, fmt(nuP.real!=null?nuP.real:nuP.verw), 'real')}
+      ${L>nuI ? legRij(lijnSvg('#c9a227','5,4',1), 'verwacht', fmt(eindP.verw), 'verw') : ''}
+      ${L>nuI ? legRij(lijnSvg('var(--teal)','2,3',1.4), 'realistisch', fmt(eindP.rea), 'rea') : ''}
+      ${heeftInt && L>nuI ? legRij(lijnSvg('var(--muted)','3,3',1), 'na interieur <span style="color:var(--muted);">(betaald juni 2027)</span>', fmt(eindP.intr), 'intr') : ''}
+    </div>`;
   return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px;">${knop('12','12 mnd')}${knop('36','3 jaar')}${knop('alles','alles')}</div>
-  <div class="potjes-chart-wrap-outer">${chart}</div>${as}${voet}
-  ${heeftInt ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">- - - na interieur (aanname: betaald juni 2027)</div>` : ''}`;
+  <div class="potjes-chart-wrap-outer">${chart}</div>${as}${voet}`;
 }
 function renderJaarAccordion(periodes){
   return periodes.map(p=>{
@@ -12106,10 +12119,17 @@ function render(){
       const yPct = (yVal/h)*100;
       lijn.style.left = xPct+'%'; lijn.style.opacity = '0.5';
       dot.style.left = xPct+'%'; dot.style.top = yPct+'%'; dot.style.opacity = '1';
+      if(wrap.dataset.legenda){
+        const box = document.querySelector('[data-legenda-box="'+wrap.dataset.legenda+'"]'); const d = JSON.parse(wrap.dataset.legJson)[i];
+        if(box && d){ const kop = box.querySelector('[data-leg-kop]'); if(kop) kop.textContent = 'stand '+d.k;
+          box.querySelectorAll('[data-leg-v]').forEach(el=>{ const v = d[el.dataset.legV]; el.textContent = v==null ? '—' : fmt(v); }); }
+        return;
+      }
       if(readout) readout.textContent = `${labels[i]} · ${waardeTekst(values[i])}` + (values2 && values2[i]!=null && Math.abs(values2[i]-values[i])>0.5 ? ` · ${values2Label} ${waardeTekst(values2[i])}` : '') + (values3 && values3[i]!=null && Math.abs(values3[i]-values[i])>0.5 ? ` · ${values3Label} ${waardeTekst(values3[i])}` : '');
     };
     const hide = ()=>{
       lijn.style.opacity='0'; dot.style.opacity='0';
+      if(wrap.dataset.legenda){ const box = document.querySelector('[data-legenda-box="'+wrap.dataset.legenda+'"]'); if(box) box.querySelectorAll('[data-default]').forEach(el=>{ el.textContent = el.dataset.default; }); }
       if(readout && defaultLabel) readout.textContent = defaultLabel;
     };
     wrap.addEventListener('pointerdown', e=>{ update(e.clientX); });
