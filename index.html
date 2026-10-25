@@ -1412,11 +1412,16 @@ function renderDeurwAflosTegel(){
     return `<button data-deurw-rente="${waarde}" style="border:1px solid var(--${aan?'brass':'rule'});background:${aan?'var(--brass)':'transparent'};color:var(--${aan?'ink':'muted'});border-radius:14px;padding:4px 11px;font-size:12px;cursor:pointer;font-family:inherit;">${label}</button>`; };
   const keuzes = [...new Set([2, basisPct, 6, 4])].sort((a,b)=>a-b);
   const rr = (l,v)=>`<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:var(--paper-dim);"><span>${l}</span><span style="font-family:'IBM Plex Mono',monospace;">${v}</span></div>`;
-  return `<div class="card trend-card">
+  return `<div class="card trend-card" style="background:var(--ink);padding-top:10px;">
     <div class="card-label" data-scrub-readout="deurw-aflos" data-default-label="Deurwaarder — aflossing vordering">Deurwaarder — aflossing vordering</div>
     <div class="stat-figure" style="color:var(--${pr.eind?'teal':'rose'});">${pr.eind ? mnd(pr.eind) : 'niet vóór 2081'}</div>
     <div class="stat-sub">vordering nu ${fmt(Math.round(pr.start))} · inhouding ${fmt(pr.inh)}/mnd + ${fmt(DEURWAARDER_EXTRA)} jun/dec</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;align-items:center;"><span style="font-size:12px;color:var(--muted);margin-right:2px;">rente</span>${keuzes.map(k=>knop(k, String(k).replace('.',',')+'%')).join('')}</div>
+    <div style="display:flex;gap:10px;align-items:center;margin:10px 0 8px;">
+      <span style="font-size:12px;color:var(--muted);">rente</span>
+      <input type="range" data-deurw-rente-schuif="1" min="1" max="8" step="0.25" value="${pct}" style="flex:1;accent-color:#c9a227;touch-action:pan-x;">
+      <span data-deurw-rente-label="1" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper);min-width:52px;text-align:right;">${String(pct).replace('.',',')}%</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin:-4px 0 8px;">nu vastgesteld ${String(basisPct).replace('.',',')}%${pct!==basisPct?` · <span data-deurw-rente="${basisPct}" style="text-decoration:underline;cursor:pointer;">terug</span>`:''}</div>
     ${chart}${as}
     <div style="margin-top:8px;">
       ${[5,10].map(j=>{ const p = P.find(q=>q.jaar===P[0].jaar+j && q.maand===P[0].maand); return p ? rr(`Over ${j} jaar (${mnd(p)})`, fmt(p.waarde)) : ''; }).join('')}
@@ -1496,7 +1501,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-25h - Vermogen: Nominaal, Inflatie en Deurwaarder werken als harmonica (Rob, 25-10-2026): één tegel tegelijk actief; Nominaal of Inflatie kiezen sluit Deurwaarder, Deurwaarder aantikken toont alleen Deurwaarder als actief.';
+const DASHBOARD_VERSION = '2026-10-25i - Deurwaarder-tegel: wettelijke rente met een schuif van 1% tot 8% in stappen van 0,25% (Rob, 25-10-2026), met de vastgestelde rente als standaard en een terug-link; zelfde achtergrond als de vermogensgrafiek.';
+const DASHBOARD_VERSION_PREV_2026_10_25h = '2026-10-25h - Vermogen: Nominaal, Inflatie en Deurwaarder werken als harmonica (Rob, 25-10-2026): één tegel tegelijk actief; Nominaal of Inflatie kiezen sluit Deurwaarder, Deurwaarder aantikken toont alleen Deurwaarder als actief.';
 const DASHBOARD_VERSION_PREV_2026_10_25g = '2026-10-25g - Vermogen: tegel Deurwaarder naast Nominaal en Inflatie (Rob, 25-10-2026). Aangetikt = de aflossingsgrafiek van de vordering op de plek van de vermogensgrafiek; nogmaals tikken = weer de vermogensgrafiek. De losse tegel onder de grafiek is weg.';
 const DASHBOARD_VERSION_PREV_2026_10_25f = '2026-10-25f - Vermogen: tegel Deurwaarder — aflossing vordering (Rob, 25-10-2026). Projectie van de vordering vanaf nu met de aanname dat het loonbeslag gelijk blijft (inhouding_per_maand + 850 in juni en december) en kiesbare wettelijke rente (2/4/6%, standaard de huidige uit parameter_historie). Toont wanneer de schuld weg is, stand over 5 en 10 jaar, totaal nog te ontvangen en het rentedeel; sleepbalk over de lijn.';
 const DASHBOARD_VERSION_PREV_2026_10_25e = '2026-10-25e - Realistische lijn in de Inflatie-weergave telt Robs tekort niet meer dubbel (Rob, 25-10-2026): het verschil wordt gemeten tegen wat Inflatie zelf voor Rob rekent over dezelfde maanden (salarisberekening min geïndexeerde uitgaven), niet tegen 2.000, en loopt mee met de inkomensindex. Nominaal ongewijzigd (verschil tegen 2.000).';
@@ -11845,6 +11851,10 @@ function render(){
   document.querySelectorAll('[data-hyp-doc]').forEach(el=>el.addEventListener('click',()=>hypotheekOpenDocument(el.dataset.hypDoc)));
   document.querySelectorAll('[data-archief-toggle]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.archiefToggle; const huidig = archiefMaandExpand===undefined ? (archiefPeriodes().slice(-1)[0]||{}).key : archiefMaandExpand; archiefMaandExpand = (huidig===key) ? null : key; render(); if(archiefMaandExpand) scrollC3sNaarKop('[data-archief-toggle="'+key+'"]'); }));
   document.querySelectorAll('[data-vermogen-deurw]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); vermogenDeurwOpen = !vermogenDeurwOpen; render(); }));
+  document.querySelectorAll('[data-deurw-rente-schuif]').forEach(el=>{
+    el.addEventListener('input',()=>{ const l=document.querySelector('[data-deurw-rente-label]'); if(l) l.textContent=String(Number(el.value)).replace('.',',')+'%'; });
+    el.addEventListener('change',()=>{ deurwRenteKeuze = Number(el.value); render(); });
+  });
   document.querySelectorAll('[data-deurw-rente]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); deurwRenteKeuze = Number(el.dataset.deurwRente); render(); }));
   document.querySelectorAll('[data-deurw-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); deurwDetailOpen = !deurwDetailOpen; render(); }));
   document.querySelectorAll('[data-vermogen-zoom]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); vermogenZoom = el.dataset.vermogenZoom; render(); }));
