@@ -1428,7 +1428,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-25d - Deurwaarder (Rob, 25-10-2026): realistisch rekent de deurwaarder volgens schema (900 + 2x 850); Balanskaart Vermogen: tik op Deurwaarder (tegoed) voor de vordering incl. wettelijke rente (standen uit de brieven 23-01, 25-03 en 24-04-2026 in parameter_historie, 4% sinds 1-1-2026, rente per 1 januari bij de hoofdsom; de vordering daalt met de inhouding ~1.090/mnd afgeleid uit de brieven, niet met de afdracht), rente per maand, ontvangen dit jaar en laatste afdracht; tegoed = in kas bij de deurwaarder (loonbeslag loopt, afdracht geblokkeerd door klacht), vordering na kas. Ontvangsten jan-apr 2026 (ING) toegevoegd. Schema deurwaarder 1.090 per maand + 850 in juni en december (was 900), ook in vermogen_maanden.heks vanaf november 2026 en in de Inflatie-tab. Einde rentevast alleen als okt 2031 in beeld is.';
+const DASHBOARD_VERSION = '2026-10-25e - Realistische lijn in de Inflatie-weergave telt Robs tekort niet meer dubbel (Rob, 25-10-2026): het verschil wordt gemeten tegen wat Inflatie zelf voor Rob rekent over dezelfde maanden (salarisberekening min geïndexeerde uitgaven), niet tegen 2.000, en loopt mee met de inkomensindex. Nominaal ongewijzigd (verschil tegen 2.000).';
+const DASHBOARD_VERSION_PREV_2026_10_25d = '2026-10-25d - Deurwaarder (Rob, 25-10-2026): realistisch rekent de deurwaarder volgens schema (900 + 2x 850); Balanskaart Vermogen: tik op Deurwaarder (tegoed) voor de vordering incl. wettelijke rente (standen uit de brieven 23-01, 25-03 en 24-04-2026 in parameter_historie, 4% sinds 1-1-2026, rente per 1 januari bij de hoofdsom; de vordering daalt met de inhouding ~1.090/mnd afgeleid uit de brieven, niet met de afdracht), rente per maand, ontvangen dit jaar en laatste afdracht; tegoed = in kas bij de deurwaarder (loonbeslag loopt, afdracht geblokkeerd door klacht), vordering na kas. Ontvangsten jan-apr 2026 (ING) toegevoegd. Schema deurwaarder 1.090 per maand + 850 in juni en december (was 900), ook in vermogen_maanden.heks vanaf november 2026 en in de Inflatie-tab. Einde rentevast alleen als okt 2031 in beeld is.';
 const DASHBOARD_VERSION_PREV_2026_10_25c = '2026-10-25c - Overzicht: spaartegel zonder grafieken, alleen waar het vandaan komt (posten Rob, Lindy, Deurwaarder, Extra\'s met verwacht). De grafieken verwacht/gerealiseerd/realistisch staan in Vermogen. Vermogen-grafiek: einde rentevaste periode hypotheek (okt 2031) altijd zichtbaar als verticale lijn of als pijltje aan de rand (Rob, 25-10-2026).';
 const DASHBOARD_VERSION_PREV_2026_10_25b = '2026-10-25b - Vermogen en Overzicht: verwacht, gerealiseerd en realistisch (Rob, 25-10-2026). Realistisch is adaptief: gemiddelde van de laatste 6 maanden per post zonder de hoogste en laagste maand (Rob zonder bewuste extra\'s zoals reisafwikkeling en C3S-interieur; deurwaarder zoals hij echt betaalt), zodat een losse uitschieter de lijn niet verplaatst. Overzicht: cumulatieve spaargrafiek loopt door tot december met verwacht (goud gestippeld) en realistisch (teal gestippeld). Vermogen: potjesgrafiek met 12 mnd / 3 jaar / alles, gerealiseerd (nieuwe tabel vermogen_historie, stand per maand), verwacht en realistisch; tegoed deurwaarder niet meer in de lijn (vanaf volgende maand telt hij weer mee in het verwachte sparen). Nieuwe categorie Casa 3S interieur (dagelijks, uit maandgeld, gekoppeld aan de interieurbegroting via c3s_facturen betaald_uit=maandgeld).';
 const DASHBOARD_VERSION_PREV_2026_10_25a = '2026-10-25a - Lindy 13e maand en vakantiegeld (Rob, 25-10-2026, besluit inflatie-model): netto uit haar salarisberekening, grondslag werkelijk verdiend (mei–aug 2026 60%, vanaf sep 50%, mei naar rato vanaf 11-5). Nominaal vervangt de vaste bruto bedragen uit vermogen_maanden (zonder cao-groei, verschil schuift door in de vermogenslijn); Inflatie en Salaris-tab met cao-groei.';
@@ -6994,11 +6995,18 @@ function vermogenHistorieBewaar(nuRij){
 function renderPotjesChart(maanden){
   const isIkv = vermogenInflatie==='ikv';
   const verw = maanden.map(potjesTotaal);
-  let t = null; try{ t = spaarTempo(archiefPeriodes()); }catch(e){ t = null; }
+  let t = null, robModelRecent = SPAREN_ROB_MAAND;
+  try{
+    const per = archiefPeriodes(); t = spaarTempo(per);
+    // Rob, 25-10-2026: realistisch = verschil tussen wat Rob echt spaarde en wat het model voor díe maanden rekende.
+    // Nominaal rekent €2.000; Inflatie rekent Robs eigen bijdrage uit de salarisberekening. Zo telt het tekort niet dubbel.
+    if(isIkv){ const rec = per.slice(-SPAAR_PROGNOSE_MAANDEN); if(rec.length) robModelRecent = rec.reduce((a,p)=>a+potjesMaandelijksBedragIkv(p.jaar, p.maand, true),0)/rec.length; }
+  }catch(e){ t = null; }
+  const robGat = t ? t.rob - robModelRecent : 0; // in prijspeil van de gemeten maanden
   let delta = 0;
   const rea = maanden.map((r,i)=>{
     if(i>0 && t){ const p = parseVermogenMaandLabel(r.label);
-      if(p) delta += (t.rob - SPAREN_ROB_MAAND) + (lindyNettoVoorMaand(p.jaar, p.maand)||0)*(t.lindyRatio-1); }
+      if(p) delta += robGat*(isIkv ? inkomenIndex(p.jaar, p.maand) : 1) + (lindyNettoVoorMaand(p.jaar, p.maand)||0)*(t.lindyRatio-1); }
     return Math.round((verw[i]+delta)*100)/100;
   });
   const intr = maanden.map((r,i)=>Math.round((verw[i]-interieurAftrekVoorLabel(r.label))*100)/100);
@@ -7433,7 +7441,7 @@ function potjesMaandelijksBedrag(jaar, maand){
 // dus cao-stappen/inflatie-aannames werken automatisch door, zonder een aparte, losstaande maandtabel te moeten
 // bijhouden zoals bij Nominaal. 13e maand (januari) en vakantiegeld (juli) krijgen dezelfde bonusbedragen als de
 // Nominaal-basis (2028-patroon: 8.500/2.500/850 resp. 8.327/2.400/850), ook meegeschaald met dezelfde ratio.
-function potjesMaandelijksBedragIkv(jaar, maand){
+function potjesMaandelijksBedragIkv(jaar, maand, alleenRobRegulier){
   // Ritme (Rob, 14-08-2026): salaris verdiend in maand M wordt uitbetaald/beschikbaar in maand M+1
   // ("decembersalaris is voor januari", "mei is voor juni") — geldt voor zowel Rob als Lindy. Voor maand
   // (jaar,maand) gebruiken we dus het tarief dat gold op de eerste dag van de VORIGE maand.
@@ -7455,6 +7463,7 @@ function potjesMaandelijksBedragIkv(jaar, maand){
   const uitgavenGeindexeerd = liveUitgavenMaandAnchor(jaar, maand);
   const priveGeindexeerd = IKV_PRIVE_BUFFER_MAAND_ANCHOR * ikvPriveIndex(jaar, maand);
   let rob = robNetto - uitgavenGeindexeerd - priveGeindexeerd, lindy = lindyP ? lindyP.netto : 0, heks = DEURWAARDER_MAAND*inkomenIndex(jaar, maand);
+  if(alleenRobRegulier) return Math.round(rob*100)/100; // Rob, 25-10-2026: Robs gewone maandbijdrage volgens Inflatie (voor de realistische lijn)
   // Op Robs verzoek (17-08-2026): "neem aan dat 13e en vak in salaris wel kloppen en dus koppelen met inflatie"
   // — bonussen komen nu uit dezelfde salarisJaarOverzicht als de Salaris-tab (al deeltijd-gecorrigeerd), i.p.v.
   // het oude "8.500/8.327 × robRatio" (bruto-cao-only, dus zonder deeltijd — zelfde fout als bij de reguliere
