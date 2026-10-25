@@ -379,7 +379,7 @@
 
   .trend-card{ margin-bottom: 20px; }
   .trend-card svg{ display:block; width:100%; height:auto; overflow: visible; }
-  .vermogen-trend-sticky{ position:sticky; top:214px; z-index:23; background:var(--ink); padding-top:10px; margin-bottom:0; }
+  .vermogen-trend-sticky{ position:static; background:var(--ink); padding-top:10px; margin-bottom:0; } /* Rob, 25-10-2026: grafiek scrolt mee (was sticky op 214px) */
   .trend-labels{ display:flex; justify-content: space-between; font-family:'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 6px; padding: 0 4px; }
 
   .ledger-card .card-label{ display:flex; justify-content: space-between; align-items: baseline;}
@@ -1511,7 +1511,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-25m - Vermogensgrafiek: de schuiflijn met de bedragen in de legenda blijft staan na loslaten; tik buiten de grafiek om terug te gaan naar de eindstand (Rob, 25-10-2026).';
+const DASHBOARD_VERSION = '2026-10-25n - Vermogen: de grafiekkaart blijft niet meer vastgeplakt bovenaan maar scrolt mee, zodat er onder de knoppen meer ruimte is voor de maanden (Rob, 25-10-2026). Alleen de knoppenrij blijft vast.';
+const DASHBOARD_VERSION_PREV_2026_10_25m = '2026-10-25m - Vermogensgrafiek: de schuiflijn met de bedragen in de legenda blijft staan na loslaten; tik buiten de grafiek om terug te gaan naar de eindstand (Rob, 25-10-2026).';
 const DASHBOARD_VERSION_PREV_2026_10_25l = '2026-10-25l - Vermogensgrafiek: bij slepen wisselen maand en bedragen in de legenda mee, de lange tekstregel boven de grafiek is weg (Rob, 25-10-2026). Bevat ook 25k: legenda onder elkaar met lijnvoorbeeld, stand aan het eind van het beeld.';
 const DASHBOARD_VERSION_PREV_2026_10_25k = '2026-10-25k - Vermogensgrafiek: legenda onder elkaar met lijnvoorbeeld (Rob, 25-10-2026): gerealiseerd (stand nu), verwacht, realistisch en na interieur met de stand aan het eind van het beeld (wisselt mee met 12 mnd / 3 jaar / alles).';
 const DASHBOARD_VERSION_PREV_2026_10_25j = '2026-10-25j - Deurwaarder-tegel: verfijnde renteschuif (Rob, 25-10-2026): dunne lijn, klein bolletje, streepjes per hele procent (de vastgestelde rente iets langer en goud).';
@@ -11852,7 +11853,7 @@ function render(){
       scrollMetStickyOffset('#vermogen-aflos-keuze-blok', ['.detail-header', '.vermogen-opties-grid']);
     } else if(hypotheekGekozenDelen.length){
       if(!document.querySelector('#potjes-maand-oktober-2031')){ vermogenPotjesJaarExpand='2031'; vermogenPotjesMaandExpand='oktober 2031'; render(); }
-      scrollMetStickyOffset('#potjes-maand-oktober-2031', ['.detail-header', '.vermogen-opties-grid', '.vermogen-trend-sticky']);
+      scrollMetStickyOffset('#potjes-maand-oktober-2031', ['.detail-header', '.vermogen-opties-grid']);
     }
   }));
   document.querySelectorAll('[data-hyp-deel-toggle]').forEach(el=>el.addEventListener('click',()=>{
@@ -11890,9 +11891,9 @@ function render(){
   document.querySelectorAll('[data-archief-bar]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.archiefBar; archiefMaandExpand = key; render(); scrollC3sNaarKop('[data-archief-toggle="'+key+'"]'); }));
   document.querySelectorAll('[data-hyp-jaar-toggle]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.hypJaarToggle; hypotheekJaarExpand = (hypotheekJaarExpand===key) ? null : key; render(); scrollC3sNaarKop('[data-hyp-jaar-toggle="'+key+'"]'); }));
   document.querySelectorAll('[data-hyp-maand-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const key=el.dataset.hypMaandToggle; hypotheekMaandExpand = (hypotheekMaandExpand===key) ? null : key; render(); }));
-  document.querySelectorAll('[data-jaar-toggle]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.jaarToggle; vermogenJaarExpand = (vermogenJaarExpand===key) ? null : key; render(); scrollMetStickyOffset('[data-jaar-toggle="'+key+'"]', ['.detail-header', '.vermogen-opties-grid', '.vermogen-trend-sticky']); }));
+  document.querySelectorAll('[data-jaar-toggle]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.jaarToggle; vermogenJaarExpand = (vermogenJaarExpand===key) ? null : key; render(); scrollMetStickyOffset('[data-jaar-toggle="'+key+'"]', ['.detail-header', '.vermogen-opties-grid']); }));
   document.querySelectorAll('[data-potjes-jaar]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const j=el.dataset.potjesJaar; const huidig = vermogenPotjesJaarExpand===undefined ? null : vermogenPotjesJaarExpand; const openNu = (vermogenPotjesJaarExpand===undefined) ? (document.querySelector('[data-potjes-jaar]')||{}).dataset?.potjesJaar : huidig; vermogenPotjesJaarExpand = (openNu===j) ? null : j; render(); }));
-  document.querySelectorAll('[data-potjes-maand]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.potjesMaand; vermogenPotjesMaandExpand = (vermogenPotjesMaandExpand===key) ? null : key; render(); scrollMetStickyOffset('#'+el.id, ['.detail-header', '.vermogen-opties-grid', '.vermogen-trend-sticky']); }));
+  document.querySelectorAll('[data-potjes-maand]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.potjesMaand; vermogenPotjesMaandExpand = (vermogenPotjesMaandExpand===key) ? null : key; render(); scrollMetStickyOffset('#'+el.id, ['.detail-header', '.vermogen-opties-grid']); }));
   document.querySelectorAll('[data-sal-jaar-toggle]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.salJaarToggle; salarisJaarExpand = (salarisJaarExpand===key) ? null : key; render(); scrollC3sNaarKop('[data-sal-jaar-toggle="'+key+'"]'); }));
   document.querySelectorAll('[data-maand-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); vermogenMaandExpand = (vermogenMaandExpand===el.dataset.maandToggle) ? null : el.dataset.maandToggle; render(); }));
   const exportBtn = document.querySelector('[data-export-overrides]');
