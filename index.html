@@ -174,6 +174,13 @@
   .vermogen-optie-tegel{ background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 10px; min-height:60px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:13px; text-align:center; cursor:pointer; transition:border-color .15s,color .15s; }
   .vermogen-opties-grid > .vermogen-optie-tegel{ grid-column: span 3; }
   .vermogen-opties-grid > .vermogen-optie-tegel.rij3{ grid-column: span 2; }
+  /* Rob, 25-10-2026: verfijnde schuif — dunne lijn, klein bolletje, streepjes per hele procent */
+  input.fl-schuif{ -webkit-appearance:none; appearance:none; width:100%; height:18px; background:transparent; margin:0; }
+  input.fl-schuif::-webkit-slider-runnable-track{ height:1px; background:linear-gradient(to right, #c9a227 0 var(--vul,50%), var(--rule) var(--vul,50%) 100%); }
+  input.fl-schuif::-moz-range-track{ height:1px; background:var(--rule); }
+  input.fl-schuif::-moz-range-progress{ height:1px; background:#c9a227; }
+  input.fl-schuif::-webkit-slider-thumb{ -webkit-appearance:none; width:11px; height:11px; border-radius:50%; background:#c9a227; border:2px solid var(--ink); margin-top:-5px; }
+  input.fl-schuif::-moz-range-thumb{ width:9px; height:9px; border-radius:50%; background:#c9a227; border:2px solid var(--ink); }
   .vermogen-optie-tegel.active{ border-color:var(--brass); color:var(--paper); font-weight:600; }
   .c3s-sectie-tegel{ display:block; width:100%; text-align:left; background:var(--panel); border:1px solid var(--rule); border-radius:8px; padding:14px 16px; margin-top:8px; color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:14px; cursor:pointer; }
   @media (min-width: 700px){
@@ -1418,7 +1425,10 @@ function renderDeurwAflosTegel(){
     <div class="stat-sub">vordering nu ${fmt(Math.round(pr.start))} · inhouding ${fmt(pr.inh)}/mnd + ${fmt(DEURWAARDER_EXTRA)} jun/dec</div>
     <div style="display:flex;gap:10px;align-items:center;margin:10px 0 8px;">
       <span style="font-size:12px;color:var(--muted);">rente</span>
-      <input type="range" data-deurw-rente-schuif="1" min="1" max="8" step="0.25" value="${pct}" style="flex:1;accent-color:#c9a227;touch-action:pan-x;">
+      <div style="flex:1;position:relative;">
+        <input type="range" class="fl-schuif" data-deurw-rente-schuif="1" min="1" max="8" step="0.25" value="${pct}" style="--vul:${((pct-1)/7*100).toFixed(1)}%;touch-action:pan-x;display:block;">
+        <div style="position:relative;height:5px;margin:0 5px;pointer-events:none;">${[1,2,3,4,5,6,7,8].map(k=>`<span style="position:absolute;left:${((k-1)/7*100).toFixed(2)}%;top:0;width:1px;height:${k===basisPct?5:3}px;background:${k===basisPct?'#c9a227':'var(--muted)'};opacity:${k===basisPct?1:0.6};"></span>`).join('')}</div>
+      </div>
       <span data-deurw-rente-label="1" style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--paper);min-width:52px;text-align:right;">${String(pct).replace('.',',')}%</span>
     </div>
     <div style="font-size:11px;color:var(--muted);margin:-4px 0 8px;">nu vastgesteld ${String(basisPct).replace('.',',')}%${pct!==basisPct?` · <span data-deurw-rente="${basisPct}" style="text-decoration:underline;cursor:pointer;">terug</span>`:''}</div>
@@ -1501,7 +1511,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-25i - Deurwaarder-tegel: wettelijke rente met een schuif van 1% tot 8% in stappen van 0,25% (Rob, 25-10-2026), met de vastgestelde rente als standaard en een terug-link; zelfde achtergrond als de vermogensgrafiek.';
+const DASHBOARD_VERSION = '2026-10-25j - Deurwaarder-tegel: verfijnde renteschuif (Rob, 25-10-2026): dunne lijn, klein bolletje, streepjes per hele procent (de vastgestelde rente iets langer en goud).';
+const DASHBOARD_VERSION_PREV_2026_10_25i = '2026-10-25i - Deurwaarder-tegel: wettelijke rente met een schuif van 1% tot 8% in stappen van 0,25% (Rob, 25-10-2026), met de vastgestelde rente als standaard en een terug-link; zelfde achtergrond als de vermogensgrafiek.';
 const DASHBOARD_VERSION_PREV_2026_10_25h = '2026-10-25h - Vermogen: Nominaal, Inflatie en Deurwaarder werken als harmonica (Rob, 25-10-2026): één tegel tegelijk actief; Nominaal of Inflatie kiezen sluit Deurwaarder, Deurwaarder aantikken toont alleen Deurwaarder als actief.';
 const DASHBOARD_VERSION_PREV_2026_10_25g = '2026-10-25g - Vermogen: tegel Deurwaarder naast Nominaal en Inflatie (Rob, 25-10-2026). Aangetikt = de aflossingsgrafiek van de vordering op de plek van de vermogensgrafiek; nogmaals tikken = weer de vermogensgrafiek. De losse tegel onder de grafiek is weg.';
 const DASHBOARD_VERSION_PREV_2026_10_25f = '2026-10-25f - Vermogen: tegel Deurwaarder — aflossing vordering (Rob, 25-10-2026). Projectie van de vordering vanaf nu met de aanname dat het loonbeslag gelijk blijft (inhouding_per_maand + 850 in juni en december) en kiesbare wettelijke rente (2/4/6%, standaard de huidige uit parameter_historie). Toont wanneer de schuld weg is, stand over 5 en 10 jaar, totaal nog te ontvangen en het rentedeel; sleepbalk over de lijn.';
@@ -11852,7 +11863,7 @@ function render(){
   document.querySelectorAll('[data-archief-toggle]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.archiefToggle; const huidig = archiefMaandExpand===undefined ? (archiefPeriodes().slice(-1)[0]||{}).key : archiefMaandExpand; archiefMaandExpand = (huidig===key) ? null : key; render(); if(archiefMaandExpand) scrollC3sNaarKop('[data-archief-toggle="'+key+'"]'); }));
   document.querySelectorAll('[data-vermogen-deurw]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); vermogenDeurwOpen = !vermogenDeurwOpen; render(); }));
   document.querySelectorAll('[data-deurw-rente-schuif]').forEach(el=>{
-    el.addEventListener('input',()=>{ const l=document.querySelector('[data-deurw-rente-label]'); if(l) l.textContent=String(Number(el.value)).replace('.',',')+'%'; });
+    el.addEventListener('input',()=>{ const l=document.querySelector('[data-deurw-rente-label]'); if(l) l.textContent=String(Number(el.value)).replace('.',',')+'%'; el.style.setProperty('--vul', ((Number(el.value)-1)/7*100).toFixed(1)+'%'); });
     el.addEventListener('change',()=>{ deurwRenteKeuze = Number(el.value); render(); });
   });
   document.querySelectorAll('[data-deurw-rente]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); deurwRenteKeuze = Number(el.dataset.deurwRente); render(); }));
