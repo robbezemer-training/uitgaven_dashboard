@@ -1496,7 +1496,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-25g - Vermogen: tegel Deurwaarder naast Nominaal en Inflatie (Rob, 25-10-2026). Aangetikt = de aflossingsgrafiek van de vordering op de plek van de vermogensgrafiek; nogmaals tikken = weer de vermogensgrafiek. De losse tegel onder de grafiek is weg.';
+const DASHBOARD_VERSION = '2026-10-25h - Vermogen: Nominaal, Inflatie en Deurwaarder werken als harmonica (Rob, 25-10-2026): één tegel tegelijk actief; Nominaal of Inflatie kiezen sluit Deurwaarder, Deurwaarder aantikken toont alleen Deurwaarder als actief.';
+const DASHBOARD_VERSION_PREV_2026_10_25g = '2026-10-25g - Vermogen: tegel Deurwaarder naast Nominaal en Inflatie (Rob, 25-10-2026). Aangetikt = de aflossingsgrafiek van de vordering op de plek van de vermogensgrafiek; nogmaals tikken = weer de vermogensgrafiek. De losse tegel onder de grafiek is weg.';
 const DASHBOARD_VERSION_PREV_2026_10_25f = '2026-10-25f - Vermogen: tegel Deurwaarder — aflossing vordering (Rob, 25-10-2026). Projectie van de vordering vanaf nu met de aanname dat het loonbeslag gelijk blijft (inhouding_per_maand + 850 in juni en december) en kiesbare wettelijke rente (2/4/6%, standaard de huidige uit parameter_historie). Toont wanneer de schuld weg is, stand over 5 en 10 jaar, totaal nog te ontvangen en het rentedeel; sleepbalk over de lijn.';
 const DASHBOARD_VERSION_PREV_2026_10_25e = '2026-10-25e - Realistische lijn in de Inflatie-weergave telt Robs tekort niet meer dubbel (Rob, 25-10-2026): het verschil wordt gemeten tegen wat Inflatie zelf voor Rob rekent over dezelfde maanden (salarisberekening min geïndexeerde uitgaven), niet tegen 2.000, en loopt mee met de inkomensindex. Nominaal ongewijzigd (verschil tegen 2.000).';
 const DASHBOARD_VERSION_PREV_2026_10_25d = '2026-10-25d - Deurwaarder (Rob, 25-10-2026): realistisch rekent de deurwaarder volgens schema (900 + 2x 850); Balanskaart Vermogen: tik op Deurwaarder (tegoed) voor de vordering incl. wettelijke rente (standen uit de brieven 23-01, 25-03 en 24-04-2026 in parameter_historie, 4% sinds 1-1-2026, rente per 1 januari bij de hoofdsom; de vordering daalt met de inhouding ~1.090/mnd afgeleid uit de brieven, niet met de afdracht), rente per maand, ontvangen dit jaar en laatste afdracht; tegoed = in kas bij de deurwaarder (loonbeslag loopt, afdracht geblokkeerd door klacht), vordering na kas. Ontvangsten jan-apr 2026 (ING) toegevoegd. Schema deurwaarder 1.090 per maand + 850 in juni en december (was 900), ook in vermogen_maanden.heks vanaf november 2026 en in de Inflatie-tab. Einde rentevast alleen als okt 2031 in beeld is.';
@@ -8238,8 +8239,8 @@ function renderVermogenView(){
   const body = vermogenInflatie==='ikv' ? renderVermogenIkv() : renderVermogenNominaal();
   return `
     <div class="vermogen-opties-grid">
-      <button class="vermogen-optie-tegel rij3 ${vermogenInflatie==='nominaal'?'active':''}" data-vermogen-inflatie="nominaal">Nominaal</button>
-      <button class="vermogen-optie-tegel rij3 ${vermogenInflatie==='ikv'?'active':''}" data-vermogen-inflatie="ikv">Inflatie</button>
+      <button class="vermogen-optie-tegel rij3 ${(!vermogenDeurwOpen && vermogenInflatie==='nominaal')?'active':''}" data-vermogen-inflatie="nominaal">Nominaal</button>
+      <button class="vermogen-optie-tegel rij3 ${(!vermogenDeurwOpen && vermogenInflatie==='ikv')?'active':''}" data-vermogen-inflatie="ikv">Inflatie</button>
       <button class="vermogen-optie-tegel rij3 ${vermogenDeurwOpen?'active':''}" data-vermogen-deurw="1">Deurwaarder</button>
       <button class="vermogen-optie-tegel ${vermogenAflos==='nee'?'active':''}" data-vermogen-aflos="nee">Geen aflossing</button>
       <button class="vermogen-optie-tegel ${vermogenAflos==='ja'?'active':''}" data-vermogen-aflos-tegel="1">Aflossen hypotheek${hypotheekGekozenDelen.length?` (${hypotheekGekozenDelen.length} ${hypotheekGekozenDelen.length===1?'deel':'delen'})`:''}${(vermogenAflos==='ja' && vermogenAflosDetailOpen)?' ▾':' ▸'}</button>
@@ -11798,7 +11799,7 @@ function render(){
     scrollC3sNaarKop('[data-expand="'+key+'"]'); // zelfde consistente scroll-onder-sticky-header als bij C3S, nu ook hier — voorheen sprong de pagina onvoorspelbaar
   }));
   document.querySelectorAll('[data-cat-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); categoryExpand = (categoryExpand===el.dataset.catToggle) ? null : el.dataset.catToggle; bucketSelection.clear(); render(); }));
-  document.querySelectorAll('[data-vermogen-inflatie]').forEach(el=>el.addEventListener('click',()=>{ vermogenInflatie = el.dataset.vermogenInflatie; render(); }));
+  document.querySelectorAll('[data-vermogen-inflatie]').forEach(el=>el.addEventListener('click',()=>{ vermogenInflatie = el.dataset.vermogenInflatie; vermogenDeurwOpen = false; render(); })); // Rob, 25-10-2026: Nominaal/Inflatie/Deurwaarder als harmonica, één tegel tegelijk
   document.querySelectorAll('[data-vermogen-aflos]').forEach(el=>el.addEventListener('click',()=>{ vermogenAflos = el.dataset.vermogenAflos; render(); }));
   document.querySelectorAll('[data-vermogen-aflos-tegel]').forEach(el=>el.addEventListener('click',()=>{
     if(vermogenAflos!=='ja'){
