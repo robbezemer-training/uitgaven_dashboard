@@ -1511,7 +1511,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-26b - Overzicht (Rob, 26-10-2026): heatmap altijd open zonder uitklapkader; daaronder een losse jaartegel met Waar ging het heen (Sankey), dan de maanden. Jaar en maanden werken als harmonica: één tegel tegelijk open. Oude spaartegel-code opgeruimd.';
+const DASHBOARD_VERSION = '2026-10-26c - Overzicht: tik ergens op een open jaar- of maandtegel en hij sluit (niet alleen op de kop); tikbare onderdelen zoals de Sankey-posten blijven werken (Rob, 26-10-2026).';
+const DASHBOARD_VERSION_PREV_2026_10_26b = '2026-10-26b - Overzicht (Rob, 26-10-2026): heatmap altijd open zonder uitklapkader; daaronder een losse jaartegel met Waar ging het heen (Sankey), dan de maanden. Jaar en maanden werken als harmonica: één tegel tegelijk open. Oude spaartegel-code opgeruimd.';
 const DASHBOARD_VERSION_PREV_2026_10_26a = '2026-10-26a - Overzicht (Rob, 26-10-2026): spaartegel weg (sparen staat in Vermogen); maandtegels standaard dicht; het jaar (12 mnd of kalenderjaar, met heatmap en Waar ging het heen) is nu een uitklaptegel zoals de maanden, met het totaal onder de streep in de kop.';
 const DASHBOARD_VERSION_PREV_2026_10_25n = '2026-10-25n - Vermogen: de grafiekkaart blijft niet meer vastgeplakt bovenaan maar scrolt mee, zodat er onder de knoppen meer ruimte is voor de maanden (Rob, 25-10-2026). Alleen de knoppenrij blijft vast.';
 const DASHBOARD_VERSION_PREV_2026_10_25m = '2026-10-25m - Vermogensgrafiek: de schuiflijn met de bedragen in de legenda blijft staan na loslaten; tik buiten de grafiek om terug te gaan naar de eindstand (Rob, 25-10-2026).';
@@ -9219,7 +9220,7 @@ function renderArchiefView(){
     const r = (label,teken,val,stijl,kleur)=>`<div style="display:flex;justify-content:space-between;padding:4px 0;${stijl||''}"><span>${label}</span><span style="${mono}${kleur?`color:var(--${kleur});`:''}">${teken} ${fmt(Math.abs(val))}</span></div>`;
     const pct = p.sparen>0 ? Math.max(0, Math.min(100, Math.round(Math.max(0,p.over)/p.sparen*100))) : 100;
     const os = p.onderStreep;
-    return `<div class="card" style="margin-bottom:10px;${open?'border-color:var(--brass);border-width:2px;':''}">
+    return `<div class="card" data-archief-kaart="${p.key}" style="margin-bottom:10px;${open?'border-color:var(--brass);border-width:2px;':''}">
       <div data-archief-toggle="${p.key}" style="display:flex;justify-content:space-between;align-items:baseline;cursor:pointer;gap:10px;">
         <span style="font-weight:600;font-size:15px;">${archiefMaandLabel(p,false)}</span>
         <span class="stat-figure" style="font-size:19px;color:var(--${os>=0?'teal':'rose'});">${os>=0?'+':'−'}${fmt(Math.abs(os))}</span>
@@ -9242,7 +9243,7 @@ function renderArchiefView(){
       const bereik = sel.length ? `${archiefMaandLabel(sel[0],true)}–${archiefMaandLabel(sel[sel.length-1],true)} ${sel[sel.length-1].jaar}` : '';
       const som = archiefSomPeriodes(sel), osJ = som.onderStreep, jOpen = archiefMaandExpand==='jaar';
       return `<div class="card">${renderArchiefJaarKeuze(periodes)}${renderArchiefHeatmap(sel, openKey)}</div>
-      <div class="card" style="margin-bottom:10px;${jOpen?'border-color:var(--brass);border-width:2px;':''}">
+      <div class="card" data-archief-kaart="jaar" style="margin-bottom:10px;${jOpen?'border-color:var(--brass);border-width:2px;':''}">
         <div data-archief-jaar-toggle="1" style="display:flex;justify-content:space-between;align-items:baseline;cursor:pointer;gap:10px;">
           <span style="font-weight:600;font-size:15px;">${archiefJaarBasis==='rollend' ? '12 maanden' : archiefJaarBasis} <span style="color:var(--muted);font-weight:400;font-size:12px;">· ${bereik}</span></span>
           <span class="stat-figure" style="font-size:19px;color:var(--${osJ>=0?'teal':'rose'});">${osJ>=0?'+':'−'}${fmt(Math.abs(osJ))}</span>
@@ -11746,6 +11747,11 @@ function render(){
   document.querySelectorAll('[data-deurw-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); deurwDetailOpen = !deurwDetailOpen; render(); }));
   document.querySelectorAll('[data-vermogen-zoom]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); vermogenZoom = el.dataset.vermogenZoom; render(); }));
   document.querySelectorAll('[data-archief-basis]').forEach(el=>el.addEventListener('click',()=>{ const v=el.dataset.archiefBasis; archiefJaarBasis = v==='rollend' ? 'rollend' : Number(v); archiefSankeyCat = null; render(); }));
+  // Rob, 26-10-2026: tik ergens op een open jaar- of maandtegel = dicht (behalve op iets tikbaars erin, zoals de Sankey-posten)
+  document.querySelectorAll('[data-archief-kaart]').forEach(el=>el.addEventListener('click',(e)=>{
+    if(e.target.closest('[data-archief-toggle],[data-archief-jaar-toggle],[data-archief-sankey-cat],button,a,input,select')) return;
+    if(archiefMaandExpand!==el.dataset.archiefKaart) return;
+    archiefMaandExpand = null; archiefSankeyCat = null; render(); }));
   document.querySelectorAll('[data-archief-jaar-toggle]').forEach(el=>el.addEventListener('click',()=>{ archiefMaandExpand = archiefMaandExpand==='jaar' ? null : 'jaar'; archiefSankeyCat = null; render(); }));
   document.querySelectorAll('[data-archief-sankey-toggle]').forEach(el=>el.addEventListener('click',()=>{ archiefSankeyOpen = !archiefSankeyOpen; if(!archiefSankeyOpen){ archiefSankeyCat=null; } render(); }));
   document.querySelectorAll('[data-archief-sankey-cat]').forEach(el=>el.addEventListener('click',()=>{ const c=el.dataset.archiefSankeyCat; archiefSankeyCat = archiefSankeyCat===c ? null : c; render(); }));
