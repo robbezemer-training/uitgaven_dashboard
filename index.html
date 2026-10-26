@@ -1511,7 +1511,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-26c - Overzicht: tik ergens op een open jaar- of maandtegel en hij sluit (niet alleen op de kop); tikbare onderdelen zoals de Sankey-posten blijven werken (Rob, 26-10-2026).';
+const DASHBOARD_VERSION = '2026-10-26d - Overal in Florijn (Rob, 26-10-2026): tik ergens op een open tegel en hij gaat dicht (niet alleen op de kop); tikbare onderdelen erin blijven werken. Harmonica aangevuld waar nog meerdere tegels tegelijk open konden: C3S-posten, Reizen (uitleg/afgesloten/reis), beginscherm-balken Controle en Factuur ontbreekt.';
+const DASHBOARD_VERSION_PREV_2026_10_26c = '2026-10-26c - Overzicht: tik ergens op een open jaar- of maandtegel en hij sluit (niet alleen op de kop); tikbare onderdelen zoals de Sankey-posten blijven werken (Rob, 26-10-2026).';
 const DASHBOARD_VERSION_PREV_2026_10_26b = '2026-10-26b - Overzicht (Rob, 26-10-2026): heatmap altijd open zonder uitklapkader; daaronder een losse jaartegel met Waar ging het heen (Sankey), dan de maanden. Jaar en maanden werken als harmonica: één tegel tegelijk open. Oude spaartegel-code opgeruimd.';
 const DASHBOARD_VERSION_PREV_2026_10_26a = '2026-10-26a - Overzicht (Rob, 26-10-2026): spaartegel weg (sparen staat in Vermogen); maandtegels standaard dicht; het jaar (12 mnd of kalenderjaar, met heatmap en Waar ging het heen) is nu een uitklaptegel zoals de maanden, met het totaal onder de streep in de kop.';
 const DASHBOARD_VERSION_PREV_2026_10_25n = '2026-10-25n - Vermogen: de grafiekkaart blijft niet meer vastgeplakt bovenaan maar scrolt mee, zodat er onder de knoppen meer ruimte is voor de maanden (Rob, 25-10-2026). Alleen de knoppenrij blijft vast.';
@@ -4481,7 +4482,9 @@ function c3sGenereerPdf(taal){
   </body></html>`);
 }
 function toggleC3sPost(id){
-  c3sPostenOpen[id] = !c3sPostenOpen[id];
+  const wasOpen = !!c3sPostenOpen[id];
+  Object.keys(c3sPostenOpen).forEach(k=>{ c3sPostenOpen[k] = false; }); // Rob, 26-10-2026: harmonica, één post tegelijk open
+  c3sPostenOpen[id] = !wasOpen;
   render();
 }
 function toggleC3sGroep(key){
@@ -11500,8 +11503,8 @@ function render(){
     reisTripExpand=el.dataset.gotoReisTrip; reisTileExpand=null;
     render();
   }));
-  document.querySelectorAll('[data-factuur-toggle]').forEach(el=>el.addEventListener('click',()=>{ factuurOntbreektOpen=!factuurOntbreektOpen; render(); }));
-  document.querySelectorAll('[data-controle-toggle]').forEach(el=>el.addEventListener('click',()=>{ controleOpen=!controleOpen; render(); }));
+  document.querySelectorAll('[data-factuur-toggle]').forEach(el=>el.addEventListener('click',()=>{ factuurOntbreektOpen=!factuurOntbreektOpen; if(factuurOntbreektOpen) controleOpen=false; render(); }));
+  document.querySelectorAll('[data-controle-toggle]').forEach(el=>el.addEventListener('click',()=>{ controleOpen=!controleOpen; if(controleOpen) factuurOntbreektOpen=false; render(); }));
   document.querySelectorAll('[data-logout-btn]').forEach(el=>el.addEventListener('click', lockOut));
   document.querySelectorAll('[data-change-password-btn]').forEach(el=>el.addEventListener('click', changeOwnPassword));
   document.querySelectorAll('[data-goto-section]').forEach(el=>el.addEventListener('click',()=>{ view=el.dataset.gotoSection; screen='detail'; quickSwitchOpen=false; selectedFilter=null; render(); }));
@@ -11629,7 +11632,7 @@ function render(){
   document.querySelectorAll('[data-filter-src]').forEach(el=>el.addEventListener('click',()=>{ selectedFilter={type:'source', value:el.dataset.filterSrc}; render(); scrollToLedger(); }));
   document.querySelectorAll('[data-filter-reis]').forEach(el=>el.addEventListener('click',()=>{ selectedFilter={type:'reis', value:el.dataset.filterReis}; render(); scrollToReisLedger(); }));
   document.querySelectorAll('[data-clear-filter]').forEach(el=>el.addEventListener('click',()=>{ selectedFilter=null; render(); }));
-  document.querySelectorAll('[data-reis-tile-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const key=el.dataset.reisTileToggle; reisTileExpand = (reisTileExpand===key) ? null : key; render(); scrollC3sNaarKop('[data-reis-tile-toggle="'+key+'"]'); }));
+  document.querySelectorAll('[data-reis-tile-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const key=el.dataset.reisTileToggle; reisTileExpand = (reisTileExpand===key) ? null : key; if(reisTileExpand){ reisUitlegOpen=false; reisAfgeslotenOpen=false; } render(); scrollC3sNaarKop('[data-reis-tile-toggle="'+key+'"]'); }));
   document.querySelectorAll('[data-reis-cat]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const k=el.dataset.reisCat; reisCatOpen = (reisCatOpen===k) ? null : k; render(); }));
   document.querySelectorAll('[data-reis-pdf]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const [id,deel]=el.dataset.reisPdf.split('|'); reisPdf(id,deel); }));
   document.querySelectorAll('[data-edit-budget]').forEach(el=>el.addEventListener('click',(e)=>{
@@ -11645,9 +11648,9 @@ function render(){
     const waarde = input ? parseFloat(input.value) : NaN;
     if(!isNaN(waarde)) setReisBudgetOverride(id, waarde);
   }));
-  document.querySelectorAll('[data-reis-trip-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const key=el.dataset.reisTripToggle; reisTripExpand = (reisTripExpand===key) ? null : key; reisTileExpand=null; render(); scrollC3sNaarKop('[data-reis-trip-toggle="'+key+'"]'); }));
-  document.querySelectorAll('[data-reis-uitleg-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); reisUitlegOpen = !reisUitlegOpen; render(); }));
-  document.querySelectorAll('[data-reis-afgesloten-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); reisAfgeslotenOpen = !reisAfgeslotenOpen; render(); scrollC3sNaarKop('[data-reis-afgesloten-toggle]'); }));
+  document.querySelectorAll('[data-reis-trip-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); const key=el.dataset.reisTripToggle; reisTripExpand = (reisTripExpand===key) ? null : key; reisTileExpand=null; if(reisTripExpand){ reisUitlegOpen=false; reisAfgeslotenOpen=false; } render(); scrollC3sNaarKop('[data-reis-trip-toggle="'+key+'"]'); }));
+  document.querySelectorAll('[data-reis-uitleg-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); reisUitlegOpen = !reisUitlegOpen; if(reisUitlegOpen){ reisAfgeslotenOpen=false; reisTileExpand=null; reisTripExpand=null; } render(); }));
+  document.querySelectorAll('[data-reis-afgesloten-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); reisAfgeslotenOpen = !reisAfgeslotenOpen; if(reisAfgeslotenOpen){ reisUitlegOpen=false; reisTileExpand=null; reisTripExpand=null; } render(); scrollC3sNaarKop('[data-reis-afgesloten-toggle]'); }));
   document.querySelectorAll('[data-select-bucket]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); }));
   document.querySelectorAll('[data-select-bucket]').forEach(el=>el.addEventListener('change',(e)=>{
     e.stopPropagation();
@@ -12031,6 +12034,57 @@ function render(){
     wrap.addEventListener('touchend', ()=>{ if(gestureMode==='scrub' && !blijft) hide(); gestureMode=null; });
   });
 }
+
+// Rob, 26-10-2026: overal in het systeem — tik ergens op een open tegel en hij gaat dicht (de harmonica zelf zit in
+// de afzonderlijke toggles: openen van een tegel sluit de andere in dezelfde groep). Werkt via de bestaande kop-toggle:
+// een tik op de inhoud van een open tegel (niet op iets tikbaars) klikt de kop van die tegel.
+const TIK_OPEN_TEGEL = {
+  'data-archief-toggle': el=>archiefMaandExpand===el.dataset.archiefToggle,
+  'data-archief-jaar-toggle': ()=>archiefMaandExpand==='jaar',
+  'data-energie-maand-toggle': el=>energieOpenTegel==='maand-'+el.dataset.energieMaandToggle,
+  'data-energie-tarief-toggle': el=>energieOpenTegel==='tarief-'+el.dataset.energieTariefToggle,
+  'data-energie-chart-toggle': ()=>energieOpenTegel==='chart',
+  'data-energie-auto-toggle': ()=>energieOpenTegel==='auto',
+  'data-energie-water-toggle': ()=>energieOpenTegel==='water',
+  'data-energie-wintervast-toggle': ()=>energieOpenTegel==='wintervast',
+  'data-reis-tile-toggle': el=>reisTileExpand===el.dataset.reisTileToggle,
+  'data-reis-trip-toggle': el=>reisTripExpand===el.dataset.reisTripToggle,
+  'data-reis-uitleg-toggle': ()=>reisUitlegOpen,
+  'data-reis-afgesloten-toggle': ()=>reisAfgeslotenOpen,
+  'data-expand': el=>volgendeExpand===el.dataset.expand,
+  'data-cat-toggle': el=>categoryExpand===el.dataset.catToggle,
+  'data-hyp-hoofdsom-toggle': ()=>hypotheekTegelExpand==='hoofdsom',
+  'data-hyp-bruto-toggle': ()=>hypotheekTegelExpand==='bruto',
+  'data-hyp-woz-toggle': ()=>hypotheekTegelExpand==='woz',
+  'data-hyp-aflos-toggle': ()=>hypotheekTegelExpand==='aflossen',
+  'data-hyp-aftrek-toggle': ()=>hypotheekTegelExpand==='aftrek',
+  'data-hyp-jaar-toggle': el=>hypotheekJaarExpand===el.dataset.hypJaarToggle,
+  'data-hyp-maand-toggle': el=>hypotheekMaandExpand===el.dataset.hypMaandToggle,
+  'data-jaar-toggle': el=>vermogenJaarExpand===el.dataset.jaarToggle,
+  'data-maand-toggle': el=>vermogenMaandExpand===el.dataset.maandToggle,
+  'data-sal-jaar-toggle': el=>salarisJaarExpand===el.dataset.salJaarToggle,
+  'data-c3s-groep-toggle': el=>c3sGroepenOpen[el.dataset.c3sGroepToggle]===true,
+  'data-c3s-post-toggle': el=>!!c3sPostenOpen[el.dataset.c3sPostToggle],
+  'data-factuur-toggle': ()=>factuurOntbreektOpen,
+  'data-controle-toggle': ()=>controleOpen,
+  'data-deurw-toggle': ()=>deurwDetailOpen,
+  'data-potjes-jaar': el=>{ const huidig = vermogenPotjesJaarExpand===undefined ? ((document.querySelector('[data-potjes-jaar]')||{}).dataset||{}).potjesJaar : vermogenPotjesJaarExpand; return huidig===el.dataset.potjesJaar; },
+};
+const TIK_TOGGLE_SEL = Object.keys(TIK_OPEN_TEGEL).map(a=>'['+a+']').join(',');
+const TIK_TIKBAAR_SEL = 'button,a,input,select,textarea,label,summary,.potjes-chart-wrap,[onclick],[data-archief-bar],[data-archief-basis],[data-archief-jaar-toggle],[data-archief-kaart],[data-archief-sankey-cat],[data-archief-sankey-toggle],[data-archief-toggle],[data-belasting-jaar],[data-belasting-tab],[data-bevestig-afwikkeling],[data-budget-row-input],[data-c3s-cat],[data-c3s-export],[data-c3s-fact-alle-toggle],[data-c3s-fact-koppel-toggle],[data-c3s-fact-save],[data-c3s-groep-toggle],[data-c3s-notitie],[data-c3s-post-toggle],[data-c3s-sectie],[data-c3s-voortgang],[data-cat-toggle],[data-change-password-btn],[data-clear-filter],[data-confirm-pending],[data-controle-toggle],[data-demote-idee],[data-deurw-rente],[data-deurw-toggle],[data-edit-budget],[data-edit-budget-row],[data-edit-cat],[data-edit-reis],[data-eenmalig-toggle],[data-energie-auto-toggle],[data-energie-chart-toggle],[data-energie-maand-toggle],[data-energie-tarief-toggle],[data-energie-water-toggle],[data-energie-wintervast-toggle],[data-expand],[data-factuur-toggle],[data-filter-cat],[data-filter-reis],[data-filter-src],[data-go-home],[data-goto-reis-trip],[data-goto-section],[data-goto-view],[data-hard-refresh],[data-hyp-aflos-toggle],[data-hyp-aftrek-toggle],[data-hyp-bruto-toggle],[data-hyp-deel-toggle],[data-hyp-doc],[data-hyp-hoofdsom-toggle],[data-hyp-jaar-toggle],[data-hyp-maand-toggle],[data-hyp-naar-vermogen],[data-hyp-woz-toggle],[data-jaar-select],[data-jaar-toggle],[data-logout-btn],[data-maand-toggle],[data-move-bucket],[data-pending-cat],[data-pending-reis],[data-potjes-jaar],[data-potjes-maand],[data-promote-status],[data-reis-afgesloten-toggle],[data-reis-cat],[data-reis-datum],[data-reis-pdf],[data-reis-tile-toggle],[data-reis-trip-toggle],[data-reis-uitleg-toggle],[data-reject-pending],[data-sal-jaar-toggle],[data-save-budget],[data-scroll-page-bottom],[data-scroll-page-top],[data-scroll-to],[data-select-bucket],[data-timing-custom-input],[data-timing-select],[data-toggle-switch],[data-vermogen-aflos],[data-vermogen-aflos-tegel],[data-vermogen-deurw],[data-vermogen-inflatie],[data-vermogen-zoom],[data-zzp-betaald-toggle],[data-zzp-export],[data-zzp-facjaar],[data-zzp-ibjaar],[data-zzp-inkoop-bestand],[data-zzp-jaar],[data-zzp-jrjaar],[data-zzp-nf-annuleer],[data-zzp-nf-incl],[data-zzp-nf-open],[data-zzp-nf-opslaan],[data-zzp-nf-regel-toevoegen],[data-zzp-nf-regel-verwijder],[data-zzp-nf-titel],[data-zzp-omzet-pdf],[data-zzp-tab]';
+document.addEventListener('click', e=>{
+  const t = e.target; if(!t || !t.closest) return;
+  if(t.closest(TIK_TIKBAAR_SEL)) return; // tikbaar element (of een kop zelf): zijn eigen handler doet het werk
+  for(let a = t, stap = 0; a && a!==document.body && stap<12; a = a.parentElement, stap++){
+    const kop = [...a.children].find(c=>c.matches && (c.matches(TIK_TOGGLE_SEL) || (c.firstElementChild && c.firstElementChild.matches && c.firstElementChild.matches(TIK_TOGGLE_SEL))));
+    if(!kop) continue;
+    const toggle = kop.matches(TIK_TOGGLE_SEL) ? kop : kop.firstElementChild;
+    const attr = Object.keys(TIK_OPEN_TEGEL).find(k=>toggle.hasAttribute(k));
+    let open = false; try{ open = attr && TIK_OPEN_TEGEL[attr](toggle); }catch(err){}
+    if(open) toggle.click();
+    return; // dichtstbijzijnde tegel bepaalt; open = dicht, dicht = niets
+  }
+});
 function scrollToLedger(){
   scrollToSelector('.ledger-card');
 }
