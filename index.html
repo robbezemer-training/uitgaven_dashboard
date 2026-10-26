@@ -1511,7 +1511,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-25n - Vermogen: de grafiekkaart blijft niet meer vastgeplakt bovenaan maar scrolt mee, zodat er onder de knoppen meer ruimte is voor de maanden (Rob, 25-10-2026). Alleen de knoppenrij blijft vast.';
+const DASHBOARD_VERSION = '2026-10-26a - Overzicht (Rob, 26-10-2026): spaartegel weg (sparen staat in Vermogen); maandtegels standaard dicht; het jaar (12 mnd of kalenderjaar, met heatmap en Waar ging het heen) is nu een uitklaptegel zoals de maanden, met het totaal onder de streep in de kop.';
+const DASHBOARD_VERSION_PREV_2026_10_25n = '2026-10-25n - Vermogen: de grafiekkaart blijft niet meer vastgeplakt bovenaan maar scrolt mee, zodat er onder de knoppen meer ruimte is voor de maanden (Rob, 25-10-2026). Alleen de knoppenrij blijft vast.';
 const DASHBOARD_VERSION_PREV_2026_10_25m = '2026-10-25m - Vermogensgrafiek: de schuiflijn met de bedragen in de legenda blijft staan na loslaten; tik buiten de grafiek om terug te gaan naar de eindstand (Rob, 25-10-2026).';
 const DASHBOARD_VERSION_PREV_2026_10_25l = '2026-10-25l - Vermogensgrafiek: bij slepen wisselen maand en bedragen in de legenda mee, de lange tekstregel boven de grafiek is weg (Rob, 25-10-2026). Bevat ook 25k: legenda onder elkaar met lijnvoorbeeld, stand aan het eind van het beeld.';
 const DASHBOARD_VERSION_PREV_2026_10_25k = '2026-10-25k - Vermogensgrafiek: legenda onder elkaar met lijnvoorbeeld (Rob, 25-10-2026): gerealiseerd (stand nu), verwacht, realistisch en na interieur met de stand aan het eind van het beeld (wisselt mee met 12 mnd / 3 jaar / alles).';
@@ -8908,7 +8909,8 @@ function renderArchiefJaarKeuze(periodes){
     return `<button data-archief-basis="${waarde}" style="border:1px solid var(--${aan?'brass':'rule'});background:${aan?'var(--brass)':'transparent'};color:var(--${aan?'ink':'muted'});border-radius:14px;padding:4px 11px;font-size:12px;cursor:pointer;font-family:inherit;">${label}</button>`; };
   return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${knop('rollend','12 mnd')}${jaren.map(j=>knop(j,String(j))).join('')}</div>`;
 }
-let archiefMaandExpand = undefined; // undefined = laatste maand open (standaard), null = alles dicht
+let archiefMaandExpand = null; // Rob, 26-10-2026: maandtegels standaard dicht (was: laatste maand open)
+let archiefJaarOpen = false; // Rob, 26-10-2026: jaartegel (heatmap + waar ging het heen) uitklapbaar, standaard dicht
 const ARCHIEF_TOP_N = 5;
 // Rob, 08-10-2026 ("voor het overzicht moet duidelijk zijn wat trips kostten, dat kunstmatig rechttrekken"):
 // in Overzicht/Sankey telt een tx met overzicht_datum (bv. een terugbetaling) in de periode van die datum,
@@ -9382,12 +9384,18 @@ function renderArchiefView(){
     </div>`;
   }).join('');
   return `
-    <div class="card">${renderArchiefJaarKeuze(periodes)}${renderSpaarTegel(periodes)}</div>
-    <div class="card">${(()=>{ const sel = archiefJaarSelectie(periodes);
+    ${(()=>{ // Rob, 26-10-2026: spaartegel weg uit Overzicht (staat in Vermogen); jaar als uitklaptegel zoals de maanden
+      const sel = archiefJaarSelectie(periodes);
       const bereik = sel.length ? `${archiefMaandLabel(sel[0],true)}–${archiefMaandLabel(sel[sel.length-1],true)} ${sel[sel.length-1].jaar}` : '';
-      const som = archiefSomPeriodes(sel);
+      const som = archiefSomPeriodes(sel), osJ = som.onderStreep;
       const kop = `<div data-archief-sankey-toggle="1" style="display:flex;justify-content:space-between;align-items:baseline;cursor:pointer;margin-top:16px;"><span class="card-label">Waar ging het heen · ${bereik}</span><span style="color:var(--muted);">${archiefSankeyOpen?'▾':'▸'}</span></div>`;
-      return renderArchiefHeatmap(sel, openKey) + kop + (archiefSankeyOpen ? renderArchiefSankey(som, '', true) + renderArchiefSankeyDrill(som) : ''); })()}</div>
+      return `<div class="card" style="margin-bottom:10px;${archiefJaarOpen?'border-color:var(--brass);border-width:2px;':''}">
+        <div data-archief-jaar-toggle="1" style="display:flex;justify-content:space-between;align-items:baseline;cursor:pointer;gap:10px;">
+          <span style="font-weight:600;font-size:15px;">${archiefJaarBasis==='rollend' ? '12 maanden' : archiefJaarBasis} <span style="color:var(--muted);font-weight:400;font-size:12px;">· ${bereik}</span></span>
+          <span class="stat-figure" style="font-size:19px;color:var(--${osJ>=0?'teal':'rose'});">${osJ>=0?'+':'−'}${fmt(Math.abs(osJ))}</span>
+        </div>
+        ${archiefJaarOpen ? `<div style="margin-top:12px;">${renderArchiefJaarKeuze(periodes)}${renderArchiefHeatmap(sel, openKey)}${kop}${archiefSankeyOpen ? renderArchiefSankey(som, '', true) + renderArchiefSankeyDrill(som) : ''}</div>` : ''}
+      </div>`; })()}
     ${kaarten}
   `;
 }
@@ -11886,6 +11894,7 @@ function render(){
   document.querySelectorAll('[data-vermogen-zoom]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); vermogenZoom = el.dataset.vermogenZoom; render(); }));
   document.querySelectorAll('[data-archief-basis]').forEach(el=>el.addEventListener('click',()=>{ const v=el.dataset.archiefBasis; archiefJaarBasis = v==='rollend' ? 'rollend' : Number(v); archiefSankeyCat = null; render(); }));
   document.querySelectorAll('[data-spaar-post]').forEach(el=>el.addEventListener('click',(e)=>{ if(e.target.closest('.cat-detail-tile')) return; const n=el.dataset.spaarPost; spaarPostOpen = spaarPostOpen===n ? null : n; render(); }));
+  document.querySelectorAll('[data-archief-jaar-toggle]').forEach(el=>el.addEventListener('click',()=>{ archiefJaarOpen = !archiefJaarOpen; render(); }));
   document.querySelectorAll('[data-archief-sankey-toggle]').forEach(el=>el.addEventListener('click',()=>{ archiefSankeyOpen = !archiefSankeyOpen; if(!archiefSankeyOpen){ archiefSankeyCat=null; } render(); }));
   document.querySelectorAll('[data-archief-sankey-cat]').forEach(el=>el.addEventListener('click',()=>{ const c=el.dataset.archiefSankeyCat; archiefSankeyCat = archiefSankeyCat===c ? null : c; render(); }));
   document.querySelectorAll('[data-archief-bar]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.archiefBar; archiefMaandExpand = key; render(); scrollC3sNaarKop('[data-archief-toggle="'+key+'"]'); }));
