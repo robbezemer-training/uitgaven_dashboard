@@ -1511,7 +1511,8 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-26a - Overzicht (Rob, 26-10-2026): spaartegel weg (sparen staat in Vermogen); maandtegels standaard dicht; het jaar (12 mnd of kalenderjaar, met heatmap en Waar ging het heen) is nu een uitklaptegel zoals de maanden, met het totaal onder de streep in de kop.';
+const DASHBOARD_VERSION = '2026-10-26b - Overzicht (Rob, 26-10-2026): heatmap altijd open zonder uitklapkader; daaronder een losse jaartegel met Waar ging het heen (Sankey), dan de maanden. Jaar en maanden werken als harmonica: één tegel tegelijk open. Oude spaartegel-code opgeruimd.';
+const DASHBOARD_VERSION_PREV_2026_10_26a = '2026-10-26a - Overzicht (Rob, 26-10-2026): spaartegel weg (sparen staat in Vermogen); maandtegels standaard dicht; het jaar (12 mnd of kalenderjaar, met heatmap en Waar ging het heen) is nu een uitklaptegel zoals de maanden, met het totaal onder de streep in de kop.';
 const DASHBOARD_VERSION_PREV_2026_10_25n = '2026-10-25n - Vermogen: de grafiekkaart blijft niet meer vastgeplakt bovenaan maar scrolt mee, zodat er onder de knoppen meer ruimte is voor de maanden (Rob, 25-10-2026). Alleen de knoppenrij blijft vast.';
 const DASHBOARD_VERSION_PREV_2026_10_25m = '2026-10-25m - Vermogensgrafiek: de schuiflijn met de bedragen in de legenda blijft staan na loslaten; tik buiten de grafiek om terug te gaan naar de eindstand (Rob, 25-10-2026).';
 const DASHBOARD_VERSION_PREV_2026_10_25l = '2026-10-25l - Vermogensgrafiek: bij slepen wisselen maand en bedragen in de legenda mee, de lange tekstregel boven de grafiek is weg (Rob, 25-10-2026). Bevat ook 25k: legenda onder elkaar met lijnvoorbeeld, stand aan het eind van het beeld.';
@@ -8910,7 +8911,6 @@ function renderArchiefJaarKeuze(periodes){
   return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${knop('rollend','12 mnd')}${jaren.map(j=>knop(j,String(j))).join('')}</div>`;
 }
 let archiefMaandExpand = null; // Rob, 26-10-2026: maandtegels standaard dicht (was: laatste maand open)
-let archiefJaarOpen = false; // Rob, 26-10-2026: jaartegel (heatmap + waar ging het heen) uitklapbaar, standaard dicht
 const ARCHIEF_TOP_N = 5;
 // Rob, 08-10-2026 ("voor het overzicht moet duidelijk zijn wat trips kostten, dat kunstmatig rechttrekken"):
 // in Overzicht/Sankey telt een tx met overzicht_datum (bv. een terugbetaling) in de periode van die datum,
@@ -9182,7 +9182,6 @@ function renderArchiefSankey(p, titel, klikbaar){
 // Gerealiseerd per post: Lindy = haar salaris tot haar verwachte netto (meer = extra), deurwaarder = ontvangen,
 // Rob = de rest van wat er nominaal bijkwam. Verwacht: Rob vast, Lindy verwachte netto, deurwaarder volgens schema.
 const SPAAR_PROGNOSE_MAANDEN = 6;
-let spaarPostOpen = null; // Rob, 09-10-2026: post in de spaartegel uitklappen = per maand plus/min en totaal verwacht
 function spaarPosten(p){
   const lindy = Math.round(Math.min(p.lindySal||0, p.lindyBasis||0)*100)/100;
   const deurw = p.deurw||0;
@@ -9207,159 +9206,12 @@ function spaarTempo(periodes){
     // rente; hij draagt af in porties zodra er ruimte is. Wat achterloopt staat als tegoed/vordering in de Balanskaart.
   };
 }
-function spaarVerwachtVoor(j, m){ return Math.round((SPAREN_ROB_MAAND + (lindyNettoVoorMaand(j, m)||0) + deurwaarderVerwachtPeriode(j, m))*100)/100; }
-function spaarRealistischVoor(t, j, m){
-  if(!t) return spaarVerwachtVoor(j, m);
-  return Math.round((t.rob + (lindyNettoVoorMaand(j, m)||0)*t.lindyRatio + deurwaarderVerwachtPeriode(j, m))*100)/100;
-}
-function spaarPrognoseVolgende(periodes){
-  const j = HUIDIGE_PERIODE_JAAR, m = HUIDIGE_PERIODE_MAAND;
-  const t = spaarTempo(periodes);
-  return {jaar:j, maand:m, verwacht: spaarVerwachtVoor(j, m), prognose: spaarRealistischVoor(t, j, m)};
-}
-// Cumulatieve spaargrafiek met doorloop tot en met december: verleden = gerealiseerd (goud, vlak), verwacht = goud
-// gestippeld over de hele breedte, realistisch = teal gestippeld vanaf de laatste afgesloten maand. Zelfde stijl en
-// coördinaten (w/h/pad) als renderCategorieTrendSvg; data-ymin/ymax houdt de sleepbalk op dezelfde schaal.
-function renderSpaarCumDoorloop(reeksCum, toekomst, scrubKey){
-  const w=900,h=200,pad=10;
-  const n = reeksCum.length + toekomst.length;
-  const verw = [...reeksCum.map(r=>r.verwacht), ...toekomst.map(t=>t.verwacht)];
-  const real = reeksCum.map(r=>r.bedrag);
-  const reaL = toekomst.map(t=>t.realistisch);
-  const alle = [...verw, ...real, ...reaL];
-  const max = Math.max(...alle)*1.05 || 1;
-  const minRuw = Math.min(...alle);
-  const marge = Math.max((max-minRuw)*0.08, max*0.05, 1);
-  const min = Math.min(0, minRuw) - marge;
-  const stepX = (w-pad*2)/((n-1)||1);
-  const x = i=>pad+i*stepX, y = v=>h-pad-((v-min)/(max-min||1))*(h-pad*2);
-  const pad2 = (arr, off)=>arr.map((v,i)=>(i===0?'M':'L')+x(i+off).toFixed(1)+','+y(v).toFixed(1)).join(' ');
-  const k = real.length-1;
-  const lijnReal = pad2(real, 0);
-  const area = lijnReal + ` L${x(k).toFixed(1)},${h-pad} L${x(0).toFixed(1)},${h-pad} Z`;
-  const zeroLine = min<0 ? `<line x1="${pad}" y1="${y(0).toFixed(1)}" x2="${w-pad}" y2="${y(0).toFixed(1)}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4,3"/>` : '';
-  const reaPad = toekomst.length ? pad2([real[k], ...reaL], k) : '';
-  const eind = n-1;
-  const svg = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-    <defs><linearGradient id="grad-${scrubKey}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c9a227" stop-opacity="0.3"/><stop offset="100%" stop-color="#c9a227" stop-opacity="0"/></linearGradient></defs>
-    <path d="${area}" fill="url(#grad-${scrubKey})"/>${zeroLine}
-    <path d="${pad2(verw,0)}" fill="none" stroke="#c9a227" stroke-width="1" stroke-dasharray="5,4" opacity="0.7"/>
-    ${reaPad ? `<path d="${reaPad}" fill="none" stroke="var(--teal)" stroke-width="1.4" stroke-dasharray="2,4"/>` : ''}
-    <path d="${lijnReal}" fill="none" stroke="#c9a227" stroke-width="2"/>
-    ${real.map((v,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="3" fill="#c9a227"/>`).join('')}
-    ${toekomst.length ? `<circle cx="${x(eind).toFixed(1)}" cy="${y(verw[eind]).toFixed(1)}" r="5" fill="none" stroke="#c9a227" stroke-width="2"/><circle cx="${x(eind).toFixed(1)}" cy="${y(reaL[reaL.length-1]).toFixed(1)}" r="5" fill="none" stroke="var(--teal)" stroke-width="2"/>` : ''}
-  </svg>`;
-  const mnd = r=>MAAND_NAMEN_NL[(r.maandIdx!=null?r.maandIdx:r.maand-1)].slice(0,3);
-  const labels = [...reeksCum.map(r=>`${mnd(r)} ${String(r.jaar).slice(2)} · verwacht ${fmt(r.verwacht)}`), ...toekomst.map(t=>`${mnd(t)} ${String(t.jaar).slice(2)} (realistisch) · verwacht ${fmt(t.verwacht)}`)];
-  const values = [...real, ...reaL];
-  const esc = v=>JSON.stringify(v).replace(/"/g,'&quot;');
-  const as = `<div style="display:flex;justify-content:space-between;margin-top:2px;">${[...reeksCum, ...toekomst].map((r,i)=>`<span style="font-size:9.5px;color:${i>k?'var(--brass, #c9a227)':'var(--muted)'};">${mnd(r)}</span>`).join('')}</div>`;
-  return `<div style="margin:8px 0 4px;">
-    <div class="card-label" data-scrub-readout="${scrubKey}" data-default-label="" style="font-size:11px;margin-bottom:2px;text-align:right;min-height:14px;">&nbsp;</div>
-    <div class="potjes-chart-wrap" data-scrub-chart="${scrubKey}" data-labels="${esc(labels)}" data-values="${esc(values)}" data-ymin="${min}" data-ymax="${max}" style="position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none;">
-      ${svg}
-      <div class="potjes-scrub-line" style="position:absolute;top:0;bottom:0;width:1px;background:var(--paper);opacity:0;pointer-events:none;"></div>
-      <div class="potjes-scrub-dot" style="position:absolute;width:8px;height:8px;margin-left:-4px;margin-top:-4px;border-radius:50%;background:#c9a227;border:2px solid var(--ink);opacity:0;pointer-events:none;"></div>
-    </div>${as}</div>`;
-}
-function renderSpaarTegel(periodes){
-  const sel = archiefJaarSelectie(periodes);
-  if(!sel.length) return '';
-  const metVolgende = sel[sel.length-1].key === periodes[periodes.length-1].key;
-  const volg = metVolgende ? spaarPrognoseVolgende(periodes) : null; // Rob, 25-10-2026: prognose = realistisch (adaptief)
-  const pad = (j,m)=>({jaar:j, maandIdx:m-1, key:j+'-'+m});
-  const posten = sel.map(spaarPosten);
-  const cum = {real:{Rob:0,Lindy:0,Deurwaarder:0,"Extra's":0}, verw:{Rob:0,Lindy:0,Deurwaarder:0}};
-  let cR=0, cV=0, cT=0; // cT = werkelijk incl. extra's (cumulatief blok)
-  const reeksMaand = [], reeksCum = [];
-  // Rob, 23-10-2026: de deurwaarder loopt vanaf geldmaand juni (900 + 850 vakantiegeld), Overzicht begint pas bij
-  // de eerste maand met salarissen in het systeem (juli). Maanden daarvoor tellen alleen bij de post Deurwaarder mee.
-  const deurwAanloop = [];
-  if(sel[0].key === periodes[0].key){
-    let j = DEURWAARDER_START.jaar, m = DEURWAARDER_START.maand;
-    while(j*100+m < sel[0].jaar*100+sel[0].maand){
-      const real = Math.round(archiefTransactiesInPeriode(j, m).filter(isDeurwaarderTx).reduce((t,r)=>t+r.amount,0)*100)/100;
-      const verw = deurwaarderVerwachtPeriode(j, m);
-      deurwAanloop.push({jaar:j, maand:m, real, verw});
-      cum.real.Deurwaarder += real; cum.verw.Deurwaarder += verw;
-      m++; if(m>12){ m=1; j++; }
-    }
-  }
-  sel.forEach((p,i)=>{
-    Object.keys(posten[i].real).forEach(k=>{ cum.real[k]+=posten[i].real[k]; cum.verw[k]+=posten[i].verw[k]; });
-    cum.real["Extra's"] += p.extras||0;
-    cR += p.nominaal; cV += p.doelNom;
-    reeksMaand.push({...pad(p.jaar,p.maand), bedrag:p.nominaal, verwacht:p.doelNom, isHuidig:false, isToekomst:false, open:false});
-    cT += p.nominaal + (p.extras||0);
-    reeksCum.push({...pad(p.jaar,p.maand), bedrag:Math.round(cT*100)/100, verwacht:Math.round(cV*100)/100, isHuidig:false, isToekomst:false, open:false});
-  });
-  if(volg){
-    reeksMaand.push({...pad(volg.jaar,volg.maand), bedrag:0, verwacht:null, isHuidig:false, isToekomst:true, open:true});
-    reeksCum.push({...pad(volg.jaar,volg.maand), bedrag:0, verwacht:null, isHuidig:false, isToekomst:true, open:true});
-  }
-  cR = Math.round(cR*100)/100; cV = Math.round(cV*100)/100;
-  const pct = cV>0 ? Math.round(cR/cV*100) : 100;
-  const goed = cR >= cV - Math.max(25, cV*0.01);
-  const bereik = `${archiefMaandLabel(sel[0],true)}–${archiefMaandLabel(sel[sel.length-1],true)} ${sel[sel.length-1].jaar}`;
-  const mnd = volg ? MAAND_NAMEN_NL[volg.maand-1].slice(0,3) : '';
-  const volgRegel = volg ? `<div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin:2px 0 10px;">
-      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #c9a227;vertical-align:middle;"></span> ${mnd} verwacht ${fmt(volg.verwacht)}</span>
-      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--teal);vertical-align:middle;"></span> prognose ${fmt(volg.prognose)}</span></div>` : '';
-  const namen = ['Deurwaarder', "Extra's", 'Lindy', 'Rob'];
-  const sorted = namen.map(n=>[n, Math.round(cum.real[n]*100)/100]);
-  const barHtml = renderBarList(sorted, cR, {
-    showDot: true, matchMode: true, verwachtAltijd: true,
-    budgetFor: n => n==="Extra's" ? 0 : Math.round(cum.verw[n]*100)/100,
-    rowAttrs: n => ` data-spaar-post="${n}" style="cursor:pointer;${spaarPostOpen===n?'font-weight:600;':''}"`,
-    indicator: n => spaarPostOpen===n ? ' ▾' : ' ▸',
-    detailFor: n => {
-      if(spaarPostOpen!==n) return '';
-      const extra = n==="Extra's";
-      const mono = "font-family:'IBM Plex Mono',monospace;";
-      const aanloopRijen = n==='Deurwaarder' ? deurwAanloop.map(a=>{
-        const d = Math.round((a.real-a.verw)*100)/100;
-        const kl = Math.abs(d) < 0.005 ? 'var(--muted)' : (d>0 ? 'var(--teal)' : 'var(--rose)');
-        return `<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.2fr);gap:8px;padding:3px 0;font-size:12.5px;">
-          <span style="color:var(--paper-dim);">${archiefMaandLabel(a,true)}</span>
-          <span style="text-align:right;${mono}">${fmt(a.real)}</span>
-          <span style="text-align:right;${mono}color:${kl};">${d>0.004?'+':''}${fmt(d)}</span></div>`;
-      }).join('') : '';
-      const rijen = aanloopRijen + sel.map((p,i)=>{
-        const real = extra ? (p.extras||0) : posten[i].real[n];
-        const verw = extra ? 0 : posten[i].verw[n];
-        const d = Math.round((real-verw)*100)/100;
-        const kl = Math.abs(d) < 0.005 ? 'var(--muted)' : (d>0 ? 'var(--teal)' : 'var(--rose)');
-        return `<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.2fr);gap:8px;padding:3px 0;font-size:12.5px;">
-          <span style="color:var(--paper-dim);">${archiefMaandLabel(p,true)}</span>
-          <span style="text-align:right;${mono}">${fmt(real)}</span>
-          <span style="text-align:right;${mono}color:${kl};">${d>0.004?'+':''}${fmt(d)}</span></div>`;
-      }).join('');
-      const totR = Math.round(cum.real[n]*100)/100;
-      const totV = extra ? 0 : Math.round(cum.verw[n]*100)/100;
-      const totD = Math.round((totR-totV)*100)/100;
-      const klT = Math.abs(totD) < 0.005 ? 'var(--muted)' : (totD>0 ? 'var(--teal)' : 'var(--rose)');
-      return `<div class="cat-detail-tile">
-        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.2fr);gap:8px;padding:0 0 4px;${mono}font-size:10.5px;color:var(--muted);"><span></span><span style="text-align:right;">gespaard</span><span style="text-align:right;">+/−</span></div>
-        ${rijen}
-        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.2fr);gap:8px;padding:8px 0 3px;margin-top:6px;border-top:1px solid var(--rule);font-size:12.5px;font-weight:600;">
-          <span>Totaal</span><span style="text-align:right;${mono}">${fmt(totR)}</span><span style="text-align:right;${mono}color:${klT};">${totD>0.004?'+':''}${fmt(totD)}</span></div>
-        ${extra ? '' : `<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0;color:var(--paper-dim);"><span>Totaal verwacht</span><span style="${mono}">${fmt(totV)}</span></div>`}
-      </div>`;
-    },
-  });
-  return `<div class="card-label" style="margin-top:6px;">Sparen · ${bereik}</div>
-    <div class="stat-figure" style="color:var(--${goed?'teal':'rose'});">${fmt(cR)}</div>
-    <div class="stat-sub" style="margin-bottom:10px;">van verwacht ${fmt(cV)} (${pct}%)</div>
-    ${barHtml}
-    <div class="bar-total" style="margin-top:14px;"><span>Cumulatief incl. extra's</span><b style="color:var(--${Math.round(cT*100)/100 >= cV - Math.max(25, cV*0.01) ? 'teal' : 'rose'});">${fmt(Math.round(cT*100)/100).replace('€','€ ')}</b></div>
-    <div class="stat-sub">van verwacht ${fmt(cV)} (${cV>0 ? Math.round(cT/cV*100) : 100}%)</div>
-    `;
-}
+// Rob, 26-10-2026: spaartegel (Overzicht) en zijn grafieken verwijderd; spaarTempo hierboven voedt de realistische lijn in Vermogen.
 function renderArchiefView(){
   const periodes = archiefPeriodes();
   if(!periodes.length) return `<div class="card">Nog geen afgesloten maanden.</div>`;
   const laatste = periodes[periodes.length-1].key;
-  const openKey = archiefMaandExpand===undefined ? laatste : archiefMaandExpand;
+  const openKey = archiefMaandExpand===undefined ? laatste : (archiefMaandExpand==='jaar' ? null : archiefMaandExpand);
   const kaarten = periodes.slice().reverse().map(p=>{
     const open = openKey===p.key;
     const cats = Object.entries(p.perCat).filter(([,v])=>Math.abs(v)>0.004).sort((a,b)=>b[1]-a[1]);
@@ -9384,17 +9236,18 @@ function renderArchiefView(){
     </div>`;
   }).join('');
   return `
-    ${(()=>{ // Rob, 26-10-2026: spaartegel weg uit Overzicht (staat in Vermogen); jaar als uitklaptegel zoals de maanden
+    ${(()=>{ // Rob, 26-10-2026: heatmap altijd open (zonder uitklapkader); daaronder de jaar-Sankey als losse uitklaptegel,
+      // dan de maanden. Jaar en maanden werken als harmonica: één tegel tegelijk open (archiefMaandExpand = 'jaar' of maandkey).
       const sel = archiefJaarSelectie(periodes);
       const bereik = sel.length ? `${archiefMaandLabel(sel[0],true)}–${archiefMaandLabel(sel[sel.length-1],true)} ${sel[sel.length-1].jaar}` : '';
-      const som = archiefSomPeriodes(sel), osJ = som.onderStreep;
-      const kop = `<div data-archief-sankey-toggle="1" style="display:flex;justify-content:space-between;align-items:baseline;cursor:pointer;margin-top:16px;"><span class="card-label">Waar ging het heen · ${bereik}</span><span style="color:var(--muted);">${archiefSankeyOpen?'▾':'▸'}</span></div>`;
-      return `<div class="card" style="margin-bottom:10px;${archiefJaarOpen?'border-color:var(--brass);border-width:2px;':''}">
+      const som = archiefSomPeriodes(sel), osJ = som.onderStreep, jOpen = archiefMaandExpand==='jaar';
+      return `<div class="card">${renderArchiefJaarKeuze(periodes)}${renderArchiefHeatmap(sel, openKey)}</div>
+      <div class="card" style="margin-bottom:10px;${jOpen?'border-color:var(--brass);border-width:2px;':''}">
         <div data-archief-jaar-toggle="1" style="display:flex;justify-content:space-between;align-items:baseline;cursor:pointer;gap:10px;">
           <span style="font-weight:600;font-size:15px;">${archiefJaarBasis==='rollend' ? '12 maanden' : archiefJaarBasis} <span style="color:var(--muted);font-weight:400;font-size:12px;">· ${bereik}</span></span>
           <span class="stat-figure" style="font-size:19px;color:var(--${osJ>=0?'teal':'rose'});">${osJ>=0?'+':'−'}${fmt(Math.abs(osJ))}</span>
         </div>
-        ${archiefJaarOpen ? `<div style="margin-top:12px;">${renderArchiefJaarKeuze(periodes)}${renderArchiefHeatmap(sel, openKey)}${kop}${archiefSankeyOpen ? renderArchiefSankey(som, '', true) + renderArchiefSankeyDrill(som) : ''}</div>` : ''}
+        ${jOpen ? `<div style="margin-top:12px;">${renderArchiefSankey(som, '', true)}${renderArchiefSankeyDrill(som)}</div>` : ''}
       </div>`; })()}
     ${kaarten}
   `;
@@ -11893,8 +11746,7 @@ function render(){
   document.querySelectorAll('[data-deurw-toggle]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); deurwDetailOpen = !deurwDetailOpen; render(); }));
   document.querySelectorAll('[data-vermogen-zoom]').forEach(el=>el.addEventListener('click',(e)=>{ e.stopPropagation(); vermogenZoom = el.dataset.vermogenZoom; render(); }));
   document.querySelectorAll('[data-archief-basis]').forEach(el=>el.addEventListener('click',()=>{ const v=el.dataset.archiefBasis; archiefJaarBasis = v==='rollend' ? 'rollend' : Number(v); archiefSankeyCat = null; render(); }));
-  document.querySelectorAll('[data-spaar-post]').forEach(el=>el.addEventListener('click',(e)=>{ if(e.target.closest('.cat-detail-tile')) return; const n=el.dataset.spaarPost; spaarPostOpen = spaarPostOpen===n ? null : n; render(); }));
-  document.querySelectorAll('[data-archief-jaar-toggle]').forEach(el=>el.addEventListener('click',()=>{ archiefJaarOpen = !archiefJaarOpen; render(); }));
+  document.querySelectorAll('[data-archief-jaar-toggle]').forEach(el=>el.addEventListener('click',()=>{ archiefMaandExpand = archiefMaandExpand==='jaar' ? null : 'jaar'; archiefSankeyCat = null; render(); }));
   document.querySelectorAll('[data-archief-sankey-toggle]').forEach(el=>el.addEventListener('click',()=>{ archiefSankeyOpen = !archiefSankeyOpen; if(!archiefSankeyOpen){ archiefSankeyCat=null; } render(); }));
   document.querySelectorAll('[data-archief-sankey-cat]').forEach(el=>el.addEventListener('click',()=>{ const c=el.dataset.archiefSankeyCat; archiefSankeyCat = archiefSankeyCat===c ? null : c; render(); }));
   document.querySelectorAll('[data-archief-bar]').forEach(el=>el.addEventListener('click',()=>{ const key=el.dataset.archiefBar; archiefMaandExpand = key; render(); scrollC3sNaarKop('[data-archief-toggle="'+key+'"]'); }));
