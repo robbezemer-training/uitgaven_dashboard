@@ -1512,7 +1512,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-26e - Tik op een open tegel sluit nu ook op de iPhone (Rob, 26-10-2026: werkte niet in o.a. Energie & water en Salaris): iOS geeft tikken op gewone tekst/vlakken alleen door aan tikbare elementen, dus op touch-apparaten zijn tegels nu tikbaar gemarkeerd en luistert de app op #app i.p.v. document.';
+const DASHBOARD_VERSION = '2026-10-27a - Reis-pdf verrekening (Rob, 27-10-2026): portret blijft; per post kolommen Totaal (wat het kostte), Ons aandeel en Aandeel van de medereiziger, met subtotalen en totaalregel in alle drie; voetnoot met betaalrekening R. Bezemer ING op elke verrekeningspagina. Varana Krabi betaald (AMEX 25-10, 2.848,36). Vorige versie: 2026-10-26e - Tik op een open tegel sluit nu ook op de iPhone (Rob, 26-10-2026: werkte niet in o.a. Energie & water en Salaris): iOS geeft tikken op gewone tekst/vlakken alleen door aan tikbare elementen, dus op touch-apparaten zijn tegels nu tikbaar gemarkeerd en luistert de app op #app i.p.v. document.';
 const DASHBOARD_VERSION_PREV_2026_10_26d = '2026-10-26d - Overal in Florijn (Rob, 26-10-2026): tik ergens op een open tegel en hij gaat dicht (niet alleen op de kop); tikbare onderdelen erin blijven werken. Harmonica aangevuld waar nog meerdere tegels tegelijk open konden: C3S-posten, Reizen (uitleg/afgesloten/reis), beginscherm-balken Controle en Factuur ontbreekt.';
 const DASHBOARD_VERSION_PREV_2026_10_26c = '2026-10-26c - Overzicht: tik ergens op een open jaar- of maandtegel en hij sluit (niet alleen op de kop); tikbare onderdelen zoals de Sankey-posten blijven werken (Rob, 26-10-2026).';
 const DASHBOARD_VERSION_PREV_2026_10_26b = '2026-10-26b - Overzicht (Rob, 26-10-2026): heatmap altijd open zonder uitklapkader; daaronder een losse jaartegel met Waar ging het heen (Sankey), dan de maanden. Jaar en maanden werken als harmonica: één tegel tegelijk open. Oude spaartegel-code opgeruimd.';
@@ -5021,6 +5021,7 @@ async function reisPdfLibs(){
   if(!(window.jspdf.jsPDF.API.autoTable)) await reisLaadScript(['https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js','https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js']);
   return window.jspdf.jsPDF;
 }
+const REIS_PDF_BETAALREKENING = 'R. Bezemer ING: NL97 INGB 0677411936';
 function reisPdfDoc(jsPDF, m, p, deel){
   const IND=[43,47,102], GOLD=[184,137,59], LT=[243,241,234], OPEN=[164,70,47], GR=[110,110,115];
   // Rob, 23-10-2026: verrekening per deelnemer in portret; het reisoverzicht blijft liggend.
@@ -5106,24 +5107,29 @@ function reisPdfDoc(jsPDF, m, p, deel){
     [['Voor de reis', q=>q.r.fase==='vooraf' || !q.r.fase], ['Tijdens de reis', q=>q.r.fase && q.r.fase!=='vooraf']].forEach(([label, f])=>{
       const groep = postenPdf.filter(f);
       if(!groep.length) return;
-      koppen.add(body.length); body.push([label,'','','','','']);
-      groep.forEach(({r,g})=>{ if(g) doorgehaald.add(body.length); body.push([r.omschrijving+(g?' (geannuleerd)':''), reisDdMm(r.reisdatum), r.thb?reisNl(r.thb,0):'', r.koers?reisNl(r.koers):'', e(g?r.eurOrig:r.eur), e(g?r.perOrig[x.naam]:r.per[x.naam])]); });
-      subtot.add(body.length); body.push(['Subtotaal '+label.toLowerCase(),'','','','', e(reisR2(groep.filter(q=>!q.g).reduce((s,q)=>s+q.r.per[x.naam],0)))]);
+      koppen.add(body.length); body.push([label,'','','','','','']);
+      groep.forEach(({r,g})=>{ if(g) doorgehaald.add(body.length); body.push([r.omschrijving+(g?' (geannuleerd)':''), reisDdMm(r.reisdatum), r.thb?reisNl(r.thb,0):'', r.koers?reisNl(r.koers):'', e(g?r.eurOrig:r.eur), e(g?r.onsOrig:r.ons), e(g?r.perOrig[x.naam]:r.per[x.naam])]); });
+      const actief = groep.filter(q=>!q.g), som = f=>e(reisR2(actief.reduce((s,q)=>s+f(q.r),0)));
+      subtot.add(body.length); body.push(['Subtotaal '+label.toLowerCase(),'','','', som(r=>r.eur), som(r=>r.ons), som(r=>r.per[x.naam])]);
     });
+    // Rob, 27-10-2026: per post wat het kostte, ons aandeel en hun aandeel naast elkaar.
+    const alleActief = postenPdf.filter(q=>!q.g), somAlles = f=>e(reisR2(alleActief.reduce((s,q)=>s+f(q.r),0)));
     const n1 = body.length;
-    body.push(['Totaal aandeel','','','','', e(x.aandeel)]);
-    x.ontvangen.forEach(o=>body.push(['Ontvangen '+o.datum.split('-').reverse().join('-'),'','','','', e(-o.bedrag)]));
-    body.push(['Nog te betalen','','','','', e(x.nog)]);
-    doc.autoTable(Object.assign({}, basis, {startY:27,
-      head:[['Post','Reisdatum','THB','Koers','Totaal','Aandeel '+x.naam]], body,
-      columnStyles:{0:{cellWidth:'auto'},1:{halign:'right',cellWidth:19},2:{halign:'right',cellWidth:19},3:{halign:'right',cellWidth:15},4:{halign:'right',cellWidth:24},5:{halign:'right',cellWidth:30}},
+    body.push(['Totaal','','','', somAlles(r=>r.eur), somAlles(r=>r.ons), e(x.aandeel)]);
+    x.ontvangen.forEach(o=>body.push(['Ontvangen '+o.datum.split('-').reverse().join('-'),'','','','','', e(-o.bedrag)]));
+    body.push(['Nog te betalen','','','','','', e(x.nog)]);
+    doc.autoTable(Object.assign({}, basis, {startY:27, margin:{left:M, right:M, bottom:18},
+      head:[['Post','Datum','THB','Koers','Totaal','Ons aandeel','Aandeel '+x.naam]], body,
+      columnStyles:{0:{cellWidth:'auto'},1:{halign:'right',cellWidth:19},2:{halign:'right',cellWidth:17},3:{halign:'right',cellWidth:13},4:{halign:'right',cellWidth:22},5:{halign:'right',cellWidth:22},6:{halign:'right',cellWidth:25}},
+      // Rob, 27-10-2026: betaalrekening als voetnoot op elke verrekeningspagina.
+      didDrawPage:()=>{ const H = doc.internal.pageSize.getHeight(); doc.setDrawColor(...GOLD); doc.setLineWidth(0.3); doc.line(M, H-13, W-M, H-13); doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...GR); doc.text(REIS_PDF_BETAALREKENING, M, H-8.5); },
       didParseCell:c=>{
         if(c.section==='head'){ if(c.column.index>0) c.cell.styles.halign='right'; return; }
         if(c.row.index>=n1 || koppen.has(c.row.index) || subtot.has(c.row.index)) c.cell.styles.fillColor = 255;
         if(koppen.has(c.row.index)){ c.cell.styles.textColor=GOLD; c.cell.styles.fontStyle='bold'; c.cell.styles.lineWidth={bottom:0.3}; c.cell.styles.lineColor=GOLD; }
         if(subtot.has(c.row.index)){ c.cell.styles.fontStyle='italic'; c.cell.styles.lineWidth={top:0.2}; c.cell.styles.lineColor=GOLD; }
         if(c.row.index===n1 || c.row.index===body.length-1){ c.cell.styles.fontStyle='bold'; c.cell.styles.lineWidth={top:0.4}; c.cell.styles.lineColor=IND; }
-        if(c.row.index===body.length-1 && c.column.index===5) c.cell.styles.textColor=OPEN;
+        if(c.row.index===body.length-1 && c.column.index===6) c.cell.styles.textColor=OPEN;
         if(doorgehaald.has(c.row.index)) c.cell.styles.textColor=[160,160,160];
       },
       didDrawCell:c=>{
