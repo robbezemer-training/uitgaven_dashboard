@@ -1512,7 +1512,7 @@ const TX_SOURCE_CONFIG = {
   'ING CC': {getPending:()=>pendingIngccTx,  getLedger:()=>INGCC_TX_JUL},
   'AMEX':   {getPending:()=>pendingAmexTx,   getLedger:()=>AMEX_TX_JUL},
 };
-const DASHBOARD_VERSION = '2026-10-27a - Reis-pdf verrekening (Rob, 27-10-2026): portret blijft; per post kolommen Totaal (wat het kostte), Ons aandeel en Aandeel van de medereiziger, met subtotalen en totaalregel in alle drie; voetnoot met betaalrekening R. Bezemer ING op elke verrekeningspagina. Varana Krabi betaald (AMEX 25-10, 2.848,36). Vorige versie: 2026-10-26e - Tik op een open tegel sluit nu ook op de iPhone (Rob, 26-10-2026: werkte niet in o.a. Energie & water en Salaris): iOS geeft tikken op gewone tekst/vlakken alleen door aan tikbare elementen, dus op touch-apparaten zijn tegels nu tikbaar gemarkeerd en luistert de app op #app i.p.v. document.';
+const DASHBOARD_VERSION = '2026-10-27b - Reisbetaling koppelen (Rob, 27-10-2026, B + C: "naar Ingrid en Robin geen fouten maken"): in Te bevestigen bij Reizen na de reiskeuze ook een postkeuze: welke open reispost dit is (★ = voorstel, dichtstbijzijnde bedrag binnen 10%) of nieuwe post; zonder keuze geen bevestiging. Supabase-trigger zet de gekozen post op betaald met het werkelijke bedrag en schaalt de verdeling naar rato mee (geen dubbele post meer). Controle: nieuwe view controle_reizen meldt een reisbetaling zonder keuze bij een reis met medereizigers, twee betaalde posten met hetzelfde bedrag en een verdeling die niet aansluit op het bedrag. Vorige versie: 2026-10-27a - Reis-pdf verrekening (Rob, 27-10-2026): portret blijft; per post kolommen Totaal (wat het kostte), Ons aandeel en Aandeel van de medereiziger, met subtotalen en totaalregel in alle drie; voetnoot met betaalrekening R. Bezemer ING op elke verrekeningspagina. Varana Krabi betaald (AMEX 25-10, 2.848,36). Vorige versie: 2026-10-26e - Tik op een open tegel sluit nu ook op de iPhone (Rob, 26-10-2026: werkte niet in o.a. Energie & water en Salaris): iOS geeft tikken op gewone tekst/vlakken alleen door aan tikbare elementen, dus op touch-apparaten zijn tegels nu tikbaar gemarkeerd en luistert de app op #app i.p.v. document.';
 const DASHBOARD_VERSION_PREV_2026_10_26d = '2026-10-26d - Overal in Florijn (Rob, 26-10-2026): tik ergens op een open tegel en hij gaat dicht (niet alleen op de kop); tikbare onderdelen erin blijven werken. Harmonica aangevuld waar nog meerdere tegels tegelijk open konden: C3S-posten, Reizen (uitleg/afgesloten/reis), beginscherm-balken Controle en Factuur ontbreekt.';
 const DASHBOARD_VERSION_PREV_2026_10_26c = '2026-10-26c - Overzicht: tik ergens op een open jaar- of maandtegel en hij sluit (niet alleen op de kop); tikbare onderdelen zoals de Sankey-posten blijven werken (Rob, 26-10-2026).';
 const DASHBOARD_VERSION_PREV_2026_10_26b = '2026-10-26b - Overzicht (Rob, 26-10-2026): heatmap altijd open zonder uitklapkader; daaronder een losse jaartegel met Waar ging het heen (Sankey), dan de maanden. Jaar en maanden werken als harmonica: één tegel tegelijk open. Oude spaartegel-code opgeruimd.';
@@ -1994,6 +1994,21 @@ function pendingTxLijst(){
 function pendingReisKeuzes(){
   return REIZEN_PLANNING.filter(p=>['planning','lopend'].includes(effectiveStatus(p)) && !((reisPlanOverrides[p.id]||{}).afgewikkeld));
 }
+// Rob, 27-10-2026 (B): bij Reizen kiest Rob welke open reispost deze betaling is, of bewust een nieuwe post.
+// Voorstel (★) = open post met het dichtstbijzijnde bedrag binnen 10%; er wordt nooit iets vooraf gekozen
+// zolang er open posten zijn, zodat een betaling nooit stil naast een geplande post komt (dubbel, of aandeel
+// medereizigers vergeten).
+function reisPostOptiesHtml(tripId, bedrag){
+  const open = (REISV.posten||[]).filter(p=>p.trip_id===tripId && p.status==='open');
+  if(!tripId) return '';
+  if(!open.length) return `<option value="0" selected>nieuwe post</option>`;
+  const afw = p=>Math.abs(Number(p.bedrag_eur)-bedrag)/Math.max(1,Number(p.bedrag_eur));
+  const lijst = [...open].sort((a,b)=>afw(a)-afw(b));
+  const voorstel = afw(lijst[0])<=0.10 ? lijst[0].id : null;
+  return `<option value="" selected>kies post</option>`
+    + lijst.map(p=>`<option value="${p.id}">${p.id===voorstel?'★ ':''}${p.omschrijving} · ${fmt(Number(p.bedrag_eur))}</option>`).join('')
+    + `<option value="0">nieuwe post</option>`;
+}
 function pendingTxRow2Html(t){
   const d=new Date(t.date); const dd=String(d.getUTCDate()).padStart(2,'0'); const mm=String(d.getUTCMonth()+1).padStart(2,'0');
   const selAttr = (t._key+'|'+t.source).replace(/"/g,'&quot;');
@@ -2013,6 +2028,7 @@ function pendingTxRow2Html(t){
         <option value="" ${reisVoorstel?'':'selected'}>kies reis</option>
         ${reisKeuzes.map(p=>`<option value="${p.id}" ${p.id===reisVoorstel?'selected':''}>${p.naam} ${effectiveJaar(p)||''}</option>`).join('')}
       </select>`;
+  const postSelect = `<select data-pending-reispost="${selAttr}" data-amt="${Math.abs(t.amount)}" class="edit-only" style="${t.category==='Reizen' && reisVoorstel?'':'display:none;'}max-width:100%;background:var(--c-reizen, var(--c-overig));">${reisPostOptiesHtml(reisVoorstel, Math.abs(t.amount))}</select>`;
   return `<li class="tx-row2" data-pending-row="${selAttr}">
     <div class="tx-row2-meta">
       <span>${dd}-${mm}</span>
@@ -2020,6 +2036,7 @@ function pendingTxRow2Html(t){
         ${ALLE_CATEGORIEEN.map(c=>`<option value="${c}" ${c===t.category?'selected':''}>${c}</option>`).join('')}
       </select>
       ${reisSelect}
+      ${postSelect}
       <span style="color:${SRC_COLOR_ALL[t.source]||'var(--muted)'};">${t.source}</span>
       ${eenmaligToggle}
     </div>
@@ -2048,9 +2065,15 @@ async function confirmPendingTx(key, source, opts={}){
     if(!opts.skipReload) alert('Kies eerst de reis.');
     return false;
   }
+  const postSel = document.querySelector(`select[data-pending-reispost="${cssAttrEscape(key+'|'+source)}"]`);
+  const finalPost = finalCat==='Reizen' ? (postSel ? postSel.value : '') : null;
+  if(finalCat==='Reizen' && finalPost===''){
+    if(!opts.skipReload) alert('Kies welke reispost dit is, of nieuwe post.');
+    return false;
+  }
   const account = {'RABO':'RABO','ING':'ING','ING CC':'INGCC','AMEX':'AMEX'}[source];
   const patch = {confirmed:true, category:finalCat};
-  if(finalCat==='Reizen') patch.trip_id = finalReis; // trigger in Supabase maakt er een reispost van
+  if(finalCat==='Reizen'){ patch.trip_id = finalReis; patch.reis_post_id = Number(finalPost); } // trigger in Supabase: gekozen post op betaald, of nieuwe post
   // Rob, 14-10-2026: controleren dat er echt een rij is bijgewerkt; anders melden en in Te bevestigen laten staan
   let gelukt = false;
   try{
@@ -3764,6 +3787,12 @@ async function draaiControles(){
       });
     }
   }catch(e){ fouten.push('controle_saldo: '+e.message); }
+  // Rob, 27-10-2026 (C): vangnet reisposten (betaling zonder gekozen post, dubbele post, verdeling die niet sluit)
+  try{
+    const r = await fetch(SUPABASE_URL+'/rest/v1/controle_reizen?select=sleutel,melding', {headers: SUPABASE_HEADERS});
+    if(!r.ok) fouten.push('controle_reizen: niet bereikbaar ('+r.status+')');
+    else (await r.json()).forEach(d=>fouten.push(d.sleutel+': '+d.melding));
+  }catch(e){ fouten.push('controle_reizen: '+e.message); }
   CONTROLE_FOUTEN = fouten;
   // Rob, 05-10-2026 ("trigger op het ontbreken van een factuur als de zakelijke afschrijving er af is"):
   // elke banktransactie onder ZZP uitgaven moet een inkoopfactuur hebben in zzp_inkoop. Koppeling is dezelfde
@@ -11782,9 +11811,21 @@ function render(){
   document.querySelectorAll('[data-edit-cat]').forEach(el=>el.addEventListener('click',(e)=>e.stopPropagation()));
   document.querySelectorAll('[data-pending-cat]').forEach(el=>el.addEventListener('click',(e)=>e.stopPropagation()));
   document.querySelectorAll('[data-pending-reis]').forEach(el=>el.addEventListener('click',(e)=>e.stopPropagation()));
+  document.querySelectorAll('[data-pending-reispost]').forEach(el=>el.addEventListener('click',(e)=>e.stopPropagation()));
+  const toonReisPost = (sleutel)=>{
+    const cs = document.querySelector(`select[data-pending-cat="${cssAttrEscape(sleutel)}"]`);
+    const rs = document.querySelector(`select[data-pending-reis="${cssAttrEscape(sleutel)}"]`);
+    const ps = document.querySelector(`select[data-pending-reispost="${cssAttrEscape(sleutel)}"]`);
+    if(!ps) return;
+    const reis = (cs && cs.value==='Reizen' && rs) ? rs.value : '';
+    ps.innerHTML = reisPostOptiesHtml(reis, Number(ps.dataset.amt));
+    ps.style.display = reis ? '' : 'none';
+  };
+  document.querySelectorAll('[data-pending-reis]').forEach(el=>el.addEventListener('change',()=>toonReisPost(el.dataset.pendingReis)));
   document.querySelectorAll('[data-pending-cat]').forEach(el=>el.addEventListener('change',(e)=>{
     const rs = document.querySelector(`select[data-pending-reis="${cssAttrEscape(el.dataset.pendingCat)}"]`);
     if(rs) rs.style.display = el.value==='Reizen' ? '' : 'none';
+    toonReisPost(el.dataset.pendingCat);
   }));
   document.querySelectorAll('[data-confirm-pending]').forEach(el=>el.addEventListener('click',(e)=>{
     e.stopPropagation();
